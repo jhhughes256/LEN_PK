@@ -1,0 +1,45 @@
+	~~~~~~##     Research Journal     ##~~~~~~
+	~~~~####      Jim Hughes PhD      ####~~~~
+
+	~~###### Lenalidomide PopPK Model ######~~
+	########      Clinical Data       ########
+
+######## Current Stage ########
+# Current parts being worked on
+ - Data Check
+
+######## Current Issues ########
+# Universal Issues
+ - LOQs unknown
+ - RACE identifiers unknown
+ - RATE is currently not correct for ID 8
+ 
+# Data Check Issues
+ - No documentation of datacheck results -> Rmarkdown?
+ - Number of errors + red text
+ 
+########  Git Branches  ########
+# <issuename> [<branchname>] -> <status>
+
+ - Data Check [dirty] -> WIP
+ 
+
+ 
+	~~######  Lenalidomide PBPK Model  ######~~
+	########     Preclinical Data      ########
+
+######## Current Stage ########
+# Current parts being worked on
+ - Data Check
+
+######## Current Issues ########
+# Universal Issues
+ - LOQs not known
+ 
+# Data Check Issues
+ - No documentation of datacheck results -> Rmarkdown?
+ 
+########  Git Branches  ########
+# <issuename> [<branchname>] -> <status>
+
+ - Data Check [?] -> WIP

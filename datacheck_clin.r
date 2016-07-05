@@ -176,7 +176,6 @@
 #-------------------------------------------------------------------------------
 # Check subject numbers
    with(dataall, table(ID))
-   with(dataall, table(UID))
    
    # Check the dose columns
    with(dataall, table(DOSEMG))
@@ -190,7 +189,7 @@
     plotobj
     
     filename.out <- paste(output.dir,"Histogram_DV",sep="/")
-    to.png(plotobj,filename.out)
+    suppressWarnings(to.png(plotobj,filename.out))
     #DV has a wide range of values - 4 orders of magnitude at least
     
    #Check distribution of log DV   
@@ -198,7 +197,7 @@
     plotobj
     
     filename.out <- paste(output.dir,"Histogram_DVlog",sep="/")
-    to.png(plotobj,filename.out)
+    suppressWarnings(to.png(plotobj,filename.out))
     #DV has a wide range of values - 4 orders of magnitude at least
 
 
@@ -418,7 +417,7 @@
   filename.out <- paste(output.dir,"Overview_ConcObs_vs_TIME_by_WEEK",sep="/")
   to.png(plotobj,filename.out) 
   
- #Conc vs TIME
+ #Conc vs TIME Week 1
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
   plotobj <- ggplot(data=subset(plotdata,WEEK==1))
@@ -430,6 +429,21 @@
   plotobj
 
   filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_DOSELVL",sep="/")
+  to.png(plotobj,filename.out) 
+  
+ #Conc vs TIME Week 1 per ID
+  plotobj <- NULL
+  titletext <- paste("Observed Concentrations in Week 1\n")
+  plotobj <- ggplot(data=subset(plotdata,WEEK==1))
+  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  plotobj
+
+  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID",sep="/")
   to.png(plotobj,filename.out) 
   
 
@@ -656,4 +670,6 @@ plotIndexCat("RACE2","Patient~Race")
 plotIndexCat("DXCATNUM","Diagnosis~Category")
 plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
-  
+# Concentration v Time
+ plotobj <- ggplot(data=plotdata)
+ plotobj <- plotobj + geom_point(
