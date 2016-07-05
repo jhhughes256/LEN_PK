@@ -12,7 +12,7 @@
 # Universal Issues
  - LOQs unknown
  - RACE identifiers unknown
- - RATE is currently not correct for ID 8
+ - RATE is currently not correct for ID 8 [X]
  
 # Data Check Issues
  - No documentation of datacheck results -> Rmarkdown?
