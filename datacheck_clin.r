@@ -670,6 +670,3 @@ plotIndexCat("RACE2","Patient~Race")
 plotIndexCat("DXCATNUM","Diagnosis~Category")
 plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
-# Concentration v Time
- plotobj <- ggplot(data=plotdata)
- plotobj <- plotobj + geom_point(

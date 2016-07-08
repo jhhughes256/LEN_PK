@@ -3,13 +3,13 @@
 
 ######## Current Stage ########
 # Current parts being worked on
- - Data Check
+ - NONMEM File Preparation
 
 ######## Current Issues ########
 # Universal Issues
- - RATE is currently not correct for ID 8
+ - Setup daily dosing for Weeks 2,3,4 for Group C
  
-# Data Check Issues
+# NM Preparation Issues
  - Number of errors + red text
  - No documentation of datacheck results -> Rmarkdown?
  

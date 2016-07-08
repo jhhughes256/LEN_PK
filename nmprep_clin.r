@@ -91,7 +91,7 @@
   #			Wk1				Wk2				Wk3		
   # ----------------------------------------------------    GROUP A    npat = 30	
   #	 0	25mg single													   npat =  3
-  #  1	2.5mg daily		5.0mg daily		5.0mg daily					   npat = 19
+  #  1	2.5mg daily		5.0mg daily		5.0mg daily					   npat = 19 
   #  2  2.5mg daily		5.0mg daily		7.5mg daily         		   npat =  8
   # ----------------------------------------------------    GROUP B	   npat =  5
   #  1  2.5mg daily     5.0mg daily     5.0mg daily 				   npat =  3
@@ -166,22 +166,67 @@
   with(datanew2, table(RACE2, useNA = "always"))
   
   datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
+  
 #-------------------------------------------------------------------------------
 #Create nmprep data file
-
+#Must account for additional doses for multi-week schedule
+  dataall <- datanew2
+  dataall <- orderBy(~ID+TIME, data=dataall)
+  
+  dataone <- lapplyBy(~ID, data=dataall,  oneperID)		#one line per point, includes AMT value
+  dataone <- bind.list(dataone)
+  dataone$RATE <- -2									#fix misplaced rate values
+  
+  newlines1 <- subset(dataone,DOSELVL==1|DOSELVL==2)
+  newlines1$AMT <- 5
+  newlines1$DOSEMG <- 5
+  newlines1$TIME <- 168
+  newlines1$WEEK <- 2
+  
+  newlines2 <- subset(dataone,DOSELVL==2)
+  newlines2$AMT <- 7.5
+  newlines2$DOSEMG <- 7.5
+  newlines2$TIME <- 336
+  newlines2$WEEK <- 3
+  
+  dataAMT <- rbind(dataone,newlines1,newlines2)
+  dataAMT$ADDL <- 6
+  dataAMT$ADDL[dataAMT$AMT>20] <- 20
+  dataAMT$ADDL[dataAMT$DOSELVL==1&dataAMT$TIME==168] <- 13
+  dataAMT$II <- 24
+  
+  dataDV <- dataall[dataall$TIME>0,]					#all lines not included in dataAMT
+  dataDV$AMT <- NA										#remove extra AMT values
+  dataDV$RATE <- NA										#fix misplaced rate values
+  dataDV$ADDL <- NA										
+  dataDV$II <- NA										
+  
+  dataFIX <- orderBy(~ID+TIME, data=rbind(dataAMT,dataDV))
+  colnames(dataFIX)[1] <- "#ID"
+  
 #Week 1 only - Caucasian or Non-Caucasian
 #ID TIME AMT EVID DV MDV AGE WT HT GEND RACE SECR DXCAT
 
-  nmcols1 <- datanew2[datanew2$XSAMP==0,-c(2,3,4,5,6,8,10,13,18,19,21)]  #All columns except EVID
-  nmcols1$EVID <- 1
-  nmcols1$EVID[is.na(nmcols1$AMT)] <- 0
+  nmcols <- dataFIX[-c(2,3,4,5,6,8,10,13,18,19,21)]  #All columns except EVID
+  nmcols$EVID <- 1
+  nmcols$EVID[is.na(nmcols$AMT)] <- 0
 
-  nmprep1 <- nmcols1[c(1,3,2,13,4,5,6,8,9,7,11,12,10)]
+  nmprep1 <- nmcols[datanew2$XSAMP==0,c(1,3,2,13,4,5,13,14,6,8,9,7,11,12,10)]
   nmprep1[is.na(nmprep1)] <- "."
-  nmprep1
   
-  filename.out <- paste(output.dir,"06003LEN_Wk1.csv",sep="/")
-  write.csv(nmprep1, file=filename.out)
+  filename.out <- paste(output.dir,"06003_clin_nmprepwk1.csv",sep="/")
+  write.csv(nmprep1, file=filename.out, quote=FALSE,row.names=FALSE)
   
 #All Weeks
-#ID TIME AMT EVID DV MDV AGE WT HT GEND RACE SECR DXCAT
+#ID TIME AMT EVID DV MDV ADDL II AGE WT HT GEND RACE SECR DXCAT
+  nmprep2 <- nmcols[c(1,3,2,15,4,5,13,14,6,8,9,7,11,12,10)]
+  nmprep2[is.na(nmprep2)] <- "."
+  
+  filename.out <- paste(output.dir,"06003_clin_nmprep.csv",sep="/")
+  write.csv(nmprep1, file=filename.out, quote=FALSE,row.names=FALSE)
+  
+  simprep2 <- nmprep2
+  simprep2$DV <- "."
+  
+  filename.out <- paste(output.dir,"06003_clin_simprep.csv",sep="/")
+  write.csv(simprep2, file=filename.out, quote=FALSE,row.names=FALSE)
