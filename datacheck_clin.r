@@ -399,6 +399,9 @@
 
   plotdata$DXCAT2f <- as.factor(plotdata$DXCATNUM)
   levels(plotdata$DXCAT2f) <- c("Relapsed Chronic Lymphocytic Leukaemia","Acute Myeloid Leukaemia","Acute Lymphoblastic Leukaemia")
+  
+  filename.out <- paste(output.dir,"plotdata.csv",sep="/")
+  write.csv(plotdata, file=filename.out, row.names=FALSE)
    
 #----------------------------------------------------------------------------------------------------------------------
 #Basic PK plots
@@ -420,11 +423,11 @@
  #Conc vs TIME Week 1
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(plotdata,WEEK==1))
+  plotobj <- ggplot(data=subset(plotdata))
   plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)")
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   plotobj
 
@@ -434,11 +437,11 @@
  #Conc vs TIME Week 1 per ID
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(plotdata,WEEK==1))
+  plotobj <- ggplot(data=subset(plotdata))
   plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   plotobj <- plotobj + facet_wrap(~ID)
   plotobj
@@ -446,19 +449,34 @@
   filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID",sep="/")
   to.png(plotobj,filename.out) 
   
-   #Conc vs TIME Week 1 per ID
+   #Conc vs TIME Week 1 per ID (First Half)
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(plotdata,WEEK==1))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV), size=3, alpha=0.5)
+  plotobj <- ggplot(data=subset(plotdata,ID<36))
+  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   plotobj <- plotobj + facet_wrap(~ID)
   plotobj
 
-  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID_BW",sep="/")
+  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID_p1",sep="/")
+  to.png(plotobj,filename.out) 
+  
+     #Conc vs TIME Week 1 per ID (Second Half)
+  plotobj <- NULL
+  titletext <- paste("Observed Concentrations in Week 1\n")
+  plotobj <- ggplot(data=subset(plotdata,ID>35))
+  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  plotobj
+
+  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID_p2",sep="/")
   to.png(plotobj,filename.out) 
   
 

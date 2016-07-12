@@ -3,11 +3,12 @@
 
 ######## Current Stage ########
 # Current parts being worked on
- - NONMEM File Preparation
+ - NONMEM SIM Plots (Pre Estimation)
 
 ######## Current Issues ########
 # Universal Issues
- - Setup daily dosing for Weeks 2,3,4 for Group C
+ - Create plots that have PRED (line) vs. OBS (scatter) [DOSELVL COLOUR]
+ - Create plots that have IPRED (line) vs. OBS (scatter) [DOSELVL COLOUR] [FACET ID]
  
 # NM Preparation Issues
  - Number of errors + red text

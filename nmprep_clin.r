@@ -207,11 +207,11 @@
 #Week 1 only - Caucasian or Non-Caucasian
 #ID TIME AMT EVID DV MDV AGE WT HT GEND RACE SECR DXCAT
 
-  nmcols <- dataFIX[-c(2,3,4,5,6,8,10,13,18,19,21)]  #All columns except EVID
+  nmcols <- dataFIX[-c(2,3,4,6,8,10,13,18,19,21)]  #All columns except EVID
   nmcols$EVID <- 1
   nmcols$EVID[is.na(nmcols$AMT)] <- 0
 
-  nmprep1 <- nmcols[datanew2$XSAMP==0,c(1,3,2,13,4,5,13,14,6,8,9,7,11,12,10)]
+  nmprep1 <- nmcols[datanew2$XSAMP==0,c(1,4,3,16,5,6,14,15,7,9,10,8,12,13,11,2)]
   nmprep1[is.na(nmprep1)] <- "."
   
   filename.out <- paste(output.dir,"06003_clin_nmprepwk1.csv",sep="/")
@@ -219,7 +219,7 @@
   
 #All Weeks
 #ID TIME AMT EVID DV MDV ADDL II AGE WT HT GEND RACE SECR DXCAT
-  nmprep2 <- nmcols[c(1,3,2,15,4,5,13,14,6,8,9,7,11,12,10)]
+  nmprep2 <- nmcols[c(1,4,3,16,5,6,14,15,7,9,10,8,12,13,11,2)]
   nmprep2[is.na(nmprep2)] <- "."
   
   filename.out <- paste(output.dir,"06003_clin_nmprep.csv",sep="/")
