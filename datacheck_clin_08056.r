@@ -67,23 +67,33 @@
 #------------------------------------------------------------------------------------
 #Observe Data
   
-  with(datanew, table(PK.ID, useNA = "always"))
+  print(temp <- with(datanew, table(PK.ID, useNA = "always")))
   #standard number of PK.ID values appears to be 40
   #some patients have 1 or 7?
-  #PK.ID not currently reliable for use observing data
-   
-  with(datanew, table(Dose.of.lena..mg., useNA = "always"))
-  with(datanew, table(Dose.of.lena..mg.,PK.ID))				
-  #Dose data only exists for 15 patients?
-  #Notably missing for those patients with either 1 or 7 PK.ID values
-  
-  with(datanew, table(Treatment, useNA = "always"))
-  with(datanew, table(Treatment,PK.ID))
-  #First 16 patients seem standard
-  #ID 17, 18 & 21 only have 7 values, matches with findings for PK.ID
-  #ID 22 has unique identifier "NOT RUN" -> explains why there is only one PK.ID value for this ID
-  #ID 23, 24 & 25 only have 1 value, matches with findings for PK.ID
+  #PK.ID not currently reliable for these patients
+  names(temp)[temp==7]
+  names(temp)[temp==1]
 
+  with(datanew, table(Dose.of.lena..mg., useNA = "always"))
+  print(temp <- with(datanew, table(Dose.of.lena..mg.,PK.ID)))	  
+  #Dose data only exists for these 15 patients?
+  c(names(temp[1,])[temp[1,]!=0], names(temp[2,])[temp[2,]!=0])
+  #Notably missing for those patients with either 1 or 7 PK.ID values
+  names(temp[1,])[temp[1,]==0&temp[2,]==0]
+
+  with(datanew, table(Treatment, useNA = "always"))
+  print(temp <- with(datanew, table(Treatment,PK.ID)))
+  #ID 22 has unique identifier "NOT RUN" -> explains why there is only one PK.ID value for this ID
+  #These 14 patients seem standard
+  names(temp[1,])[temp[1,]!=0]
+  #These IDs have values for Flavo alone, but no other treatments
+  names(temp[1,])[temp[1,]==0&temp[3,]!=0]
+  #only have 7 values, matches with findings for PK.ID
+  names(temp[1,])[temp[1,]==0&temp[3,]==7]
+  #only have 1 value, matches with findings for PK.ID
+  names(temp[1,])[temp[1,]==0&temp[3,]==1]
+
+  
 #Number of patients
   npat <- length(unique(datanew$PK.ID))-1		#negative one to account for NA
   npat
@@ -119,9 +129,11 @@
   #ID values
   with(datanew2, table(ID, useNA = "always"))
   with(datanew2, table(TRT, useNA = "always"))
-  with(datanew2, table(TRT,ID))
-  #ID 17, 18 and 21 really do only have 7 values! No more 1 values other than TRT 3
-  #Therefore no lena data for c(17,18,21,22)
+  print(temp <- with(datanew2, table(TRT,ID)))
+  #below really do only have 7 values! No more 1 values other than TRT 3
+  names(temp[4,])[temp[4,]==0&temp[1,]!=0]
+  #Therefore no lena data for below
+  names(temp[4,])[temp[4,]==0]
 
 #-------------------------------------------------------------------------------
 #Lena subset
@@ -131,24 +143,39 @@
   
   #Check dose values
   with(datalen, table(Dose.of.lena..mg., useNA = "always"))
-  with(datalen, table(Dose.of.lena..mg., ID))
-  with(datalen, table(Dose.of.lena..mg.,ID,TRT))
+  print(temp <- with(datalen, table(Dose.of.lena..mg., ID)))
   #theoretically there should be 34 (17x2) dose values considering there are 17 patients each with a lena alone and lena comb regimen
-  #only 4 patients have 2 values and 8 patients have 1 value -> 12/17 patients with 16/34 data points
-  #ID values c(1,2,4,9,10,11,14,15,16,19,20,24)
-  #Lena alone - see above			- 12/17 patients
-  #Lena comb  - c(1,10,14,20)		- 4/17 patients
+  length(print(t1 <- c(names(temp[1,])[temp[1,]==2],names(temp[2,])[temp[2,]==2])))
+  length(print(t2 <- c(names(temp[1,])[temp[1,]==1],names(temp[2,])[temp[2,]==1])))
+  #only 4 patients have 2 values and 8 patients have 1 value -> 12/17 patients with 16/34 data points  
+  #IDs with dose values
+  len.dose <- sort(as.numeric(c(t1,t2)))
+
+  print(temp <- with(datalen, table(Dose.of.lena..mg.,ID,TRT)))
+  #Lena alone - see below			- 12/17 patients
+  length(print(c(names(temp[1,,1])[temp[1,,1]!=0],names(temp[2,,1])[temp[2,,1]!=0])))
+  #Lena comb  - see below			- 4/17 patients
+  length(print(c(names(temp[1,,2])[temp[1,,2]!=0],names(temp[2,,2])[temp[2,,2]!=0])))
   
-  with(datalen, table(MDV,ID))
-  with(datalen, table(MDV,ID,TRT))
-  #14/17 patients with concentration data (more than dose data)
-  #ID values c(1,2,4,5,9,10,11,14,15,16,19,23,24,25)						#identical vector to flav data
-  #patients with concentration values but no dose values c(5,23,25)
-  #patients with dose values but no concentration values c(20)				#identical vector to flav data
+  print(temp <- with(datalen, table(MDV,ID)))
+  #14/17 patients with concentration data (more than dose data)				#identical to flav data
+  length(print(len.conc <- as.numeric(names(temp[1,])[temp[1,]!=0])))
+  #patients with concentration values but no dose values
+  len.conc[!len.conc %in% len.dose]
+  #patients with dose values but no concentration values 					#identical vector to flav data
+  len.dose[!len.dose %in% len.conc]
   #Lena alone - missing some values on patients 9 (1 MDV) and 19 (7 MDV)
+  with(datalen, table(MDV,ID,TRT))
+
+  print(temp <- with(datalen, table(Lena.Time..hr., ID, useNA = "always")))
+  #no time data for patients below -> this is ok there is no dose or conc data for these patients
+  print(lena.time <- as.numeric(names(temp[dim(temp)[1],])[temp[dim(temp)[1],]!=0]))
   
-  with(datalen, table(Lena.Time..hr., ID, useNA = "always"))
-  #no time data for patients 3 and 6 -> this is ok there is no dose or conc data for these patients
+  print(temp <- with(datalen, table(TRT, Lena.Time..hr., useNA = "always")))
+  #TRT 1 time points
+  names(temp[1,])[temp[1,]!=0][!is.na(names(temp[1,])[temp[1,]!=0])]
+  #TRT 2 time points
+  names(temp[2,])[temp[2,]!=0][!is.na(names(temp[2,])[temp[2,]!=0])]
   
   #Found when checking "empty" columns
   with(datalen, table(Flavo.Time..hr., useNA = "always"))
@@ -162,110 +189,142 @@
   
   #Check dose values
   with(datafla, table(total.Flavo..mg., useNA = "always"))	
-  with(datafla, table(total.Flavo..mg.,ID,TRT))
-  #should be 37 dose values
+  print(temp <- with(subset(datafla,!is.na(total.Flavo..mg.)), table(TRT,ID)))
+  #Flavo alone - see below			- 10/20 patients
+  length(print(t1 <- names(temp[1,][temp[1,]!=0])))
+  #Flavo comb  - see below			- 5/17 patients
+  length(print(t2 <- names(temp[2,][temp[2,]!=0])))
+  #IDs with dose values
+  flav.dose <- sort(unique(as.numeric(c(t1,t2))))
+  #there should be 37 dose values
   #only 3 patients have 2 values and 9 patients have 1 value -> 12/20 patients with 15/37 data points
-  #ID values c(1,2,3,5,10,11,14,16,17,18,19,20)
-  #Flav alone - c(1,2,3,5,11,14,16,17,18,19)	- 10/20 patients
-  #Flav comb  - c(1,10,14,19,20)				- 5/17 patients	
-  
-  with(datafla, table(MDV,ID))
-  with(datafla, table(MDV,ID,TRT))
-  #all 20 patients have concentration data for flavopiridol
-  #patients with concentration values but no dose values c(4,6,9,15,21,23,24,25)
-  #Flav alone - all patients have data
-  #Flav comb  - c(1,2,4,5,9,10,11,14,15,16,19,23,24,25)						#identical vector to lena data
-  #			  - conc w/ no dose -> c(2,4,5,9,11,15,16,23,24,25)
-  #			  - dose w/ no conc -> c(20)									#identical vector to lena data
+  length(t1[t1 %in% t2])
 
-  with(datafla, table(Flavo.Time..hr., ID, TRT, useNA = "always"))
+  print(temp <- with(datafla, table(MDV,ID)))
+  #all 20 patients have concentration data for flavopiridol
+  length(print(as.numeric(names(temp[1,])[temp[1,]!=0])))
+  print(temp <- with(datafla, table(MDV,ID,TRT)))
+  
+  #flavo comb patients with concentration data		- 14/17 patients
+  length(print(flav.conc <- as.numeric(names(temp[1,,2])[temp[1,,2]!=0])))
+  #identical to vector for len data
+  flav.conc[!flav.conc %in% flav.conc]
+  #patients with concentration values but no dose values
+  flav.conc[!flav.conc %in% as.numeric(t2)]
+  #patients with dose values but no concentration values 					#identical vector to flav data
+  as.numeric(t2)[!as.numeric(t2) %in% flav.conc]
+
+  print(temp <- with(subset(datafla,TRT==-1), table(Flavo.Time..hr., ID, useNA = "always")))
   #time values for all flav alone patients except 1x48hr time -> explained by lena subset
-  #no time values for flav comb patients 3 and 6 -> identical to lena data
+  names(temp[dim(temp)[1],])[temp[dim(temp)[1],]!=0]
+  
+  print(temp <- with(subset(datafla,TRT==-2), table(Flavo.Time..hr., ID, useNA = "always")))
+  #no time values for ID below
+  print(flav.time <- as.numeric(names(temp[dim(temp)[1],])[temp[dim(temp)[1],]!=0]))
+  #identical to lena data
+  flav.time[!flav.time %in% lena.time]
   
   #no Lena data in this subset
+  
+#Alter flav dataset to fix missing 48hr value that was located in lena dataset
+  temp <- subset(datalen,ID==15)
+  #row 420 contains the stray values
+  temp[6]==48
+  temp <- subset(datafla,ID==15)
+  #must replace row 401 in datanew
+  is.na(temp[6])
+  #this equates to row 191 in datafla
+  which(rownames(datafla)==401,)
+  
+  #WARNING: Not ordered by TIME
+  #Added zero to end of datanew2 as it does not include MDV
+  #col 2 of datafla changed as its TRT is set to that of lena
+  datafla[191,] <- c(datanew2[420,],0)
+  datafla[191,2] <- -1
+  
+  datafla$TRT <- as.numeric(datafla$TRT)
+  temp <- orderBy(~ID+TRT+Flavo.Time..hr., data=datafla)
+  temp <- lapplyBy(~ID, data=temp, oneperID)
+  t1 <- bind.list(temp)
+  temp <- orderBy(~ID+Flavo.Time..hr.+-TRT, data=datafla)
+  temp <- lapplyBy(~ID, data=temp, oneperID)
+  t2 <- bind.list(temp)
    
 #------------------------------------------------------------------------------
-  #Convert datalena to old format
+  #Convert datanew2 to old format
+  #Additionally stack flav and lena AMT, TIME, DV
   
-  datalen2 <- data.frame("ID" = datalena$PK.ID, "STUDY" = 8056)
-    
-  datalen2$STUDY <- 8056
+  #Treatment Groups
+  #-----------------------------------------	n = 21
+  #TRT -1	-> Flavopiridol alone				n = 20		#unique IDs c(17,18,21)
+  #TRT -2	-> Flavopiridol in combination		n = 17
+  #TRT 1	-> Lenalidomide alone				n = 17
+  #TRT 2	-> Lenalidomide in combination		n = 17
+  #TRT 0	-> "NOT RUN" (discard)				n =  1		#unique IDs c(22)
   
+  datanew3 <- data.frame("ID" = c(datafla$ID,datalen$ID), "STUDY" = 8056, "TRT" = c(datafla$TRT,datalen$TRT))
 
-  
-  #Dose Level 											     		   total patients = 22?
-  # ------------------ 	  		       npat = 30	
-  #  1	2.5mg daily					   npat = 19
-  #  2  2.5mg daily					   npat =  8
-  #  1  2.5mg daily     			   npat =  3
-  #  2  2.5mg daily     			   npat =  2  
-  #  3  25mg daily					   npat =  4
-  #	 4	35mg daily					   npat =  9
-  #  5	50mg daily					   npat = 10
-  #	 6	75mg daily					   npat =  3
+  datanew3$AMT <- c(datafla$total.Flavo..mg.,datalen$Dose.of.lena..mg.)
 
-  datanew2$DOSEMG <- datanew$dose..mg.
-        
-  datanew2$AMT <- datanew$amt				     #dose in mg
+  datanew3$TIME <- c(datafla$Flavo.Time..hr.,datalen$Lena.Time..hr.)
   
-  datanew2$RATE <- datanew$rate
-   
-  datanew2$TIME <- datanew$time..hr.
-  
-  datanew2$WEEK <- ceiling(floor(datanew2$TIME/84)/2)+1
-  
-  datanew2$DV <- datanew$dv..ug.ml.    			 #ug/ml
+  datanew3$DV <- c(datafla$Flavo.Concentration..nM.,datalen$Lena.Concentration..nM.)
+  datanew3$DV[datanew3$DV<=0] <- NA
  
-  datanew2$MDV <- datanew$mdv
+  datanew3$MDV <- c(datafla$MDV,datalen$MDV)
+  
+  datanew3$LNDV <- log(datanew3$DV)
+  
+  datanew3$DAY <- 3
+  datanew3$DAY[datanew3$TRT==-1] <- 1
+  datanew3$DAY[datanew3$TRT==1]  <- 2
     
   #datanew2$BLQ <- 0
   #datanew2$BLQ[datanew$NOTE == "DV_BLQ"] <- 1
   #with(datanew2, table(BLQ, useNA = "always"))
   #datanew2$DV[datanew2$BLQ==1] <- NA
-     
-  datanew2$LNDV <- log(datanew2$DV)
- 
+
   #datanew2$DNUM <- datanew$Dose.no
   #datanew2$DNUM <- unlist(lapplyBy(~ID, data=datanew2, function(d) impute(d$DNUM)))
   
   #datanew2$OCC <- datanew2$DNUM
   
-  datanew2$AGE <- datanew$Age
+  #datanew2$AGE <- datanew$Age
   
-  datanew2$GEND <- datanew$Sex				  	#1 is male, 0 is female
-  with(datanew2, table(GEND, useNA = "always"))
+  #datanew2$GEND <- datanew$Sex				  	#1 is male, 0 is female
+  #with(datanew2, table(GEND, useNA = "always"))
   
-  datanew2$WT <- datanew$Weight..lbs./2.2		#conversion to kgs
+  #datanew2$WT <- datanew$Weight..lbs./2.2		#conversion to kgs
   
-  datanew2$HT <- datanew$Height/3.28			#conversion to m	
+  #datanew2$HT <- datanew$Height/3.28			#conversion to m	
    
-  datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
+  #datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
   
-  datanew2$BMI <- datanew2$WT/datanew2$HT**2
+  #datanew2$BMI <- datanew2$WT/datanew2$HT**2
   
     
 	#DXCATNUM == 1 -> Chronic Lymphocytic Leukaemia - K. Maddocks et al. 2014
 	#DXCATNUM == 2 -> Acute Myeloid Leukaemia		- W. Blum et al. 2010
 	#DXCATNUM == 3 -> Acute Lymphoblastic Leukaemia	- W. Blum et al. 2010
-  with(datanew, table(Disease, useNA = "always"))
-  datanew2$DXCATNUM <- datanew$Disease
+  #with(datanew, table(Disease, useNA = "always"))
+  #datanew2$DXCATNUM <- datanew$Disease
   
     #Caucasian 	1
 	#??			2
 	#??			3
-  with(datanew, table(Race, useNA = "always"))
-  datanew2$RACE <- datanew$Race
+  #with(datanew, table(Race, useNA = "always"))
+  #datanew2$RACE <- datanew$Race
     
-  datanew2$RACE2 <- 2
-  datanew2$RACE2[datanew$Race == 1] <- 1
-  with(datanew2, table(RACE2, useNA = "always"))
+  #datanew2$RACE2 <- 2
+  #datanew2$RACE2[datanew$Race == 1] <- 1
+  #with(datanew2, table(RACE2, useNA = "always"))
   
-  datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
+  #datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
 
  #----------------------------------------------------------------- 
-  dataall <- datanew2
+  dataall <- datanew3
    
-  dataall <- orderBy(~ID+TIME, data=dataall)
+  dataall <- orderBy(~ID+TRT+TIME, data=dataall)
   
 #-------------------------------------------------------------------------------
 # Check subject numbers
