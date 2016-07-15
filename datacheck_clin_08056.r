@@ -180,6 +180,28 @@
   #Found when checking "empty" columns
   with(datalen, table(Flavo.Time..hr., useNA = "always"))
   #problematic, single time + conc datapoint from Flavo is included in subset ID15
+  
+#Need to separate AMT values from OBS values for sake of MDV, EVID etc.
+  datalen$TRT <- as.numeric(datalen$TRT)
+  temp <- orderBy(~TRT+ID+Flavo.Time..hr., data=datalen)
+  temp <- lapplyBy(~ID, data=temp, oneperID)
+  t1 <- bind.list(temp)	
+  temp <- orderBy(~-TRT+ID+Flavo.Time..hr., data=datalen)
+  temp <- lapplyBy(~ID, data=temp, oneperID)
+  t2 <- bind.list(temp)	
+  
+  #remove empty dose row
+  len.amt <- rbind(t1[!is.na(t1[8]),],t2[!is.na(t2[8]),])
+  len.amt$Lena.Concentration..nM. <- NA
+  len.amt$MDV <- 1
+  
+#Setup datalen for rbind with len.amt
+#Needs Rate values <- 0 (as dataframe only contains observations)
+#Needs Dose values <- NA (	""		""		""		""	)
+  datalen$Dose.of.lena..mg. <- NA
+  datalen$Lena.Dose..mmol. <- NA
+  datalen <- rbind(datalen,len.amt)
+  datalen$RATE <- 0
 
 #-------------------------------------------------------------------------------  
 #Flav subset
@@ -242,14 +264,50 @@
   datafla[191,] <- c(datanew2[420,],0)
   datafla[191,2] <- -1
   
+#Alter flav dataset to have AMT at correct time (first dose at TIME=0, second dose at TIME=0.5
+#t1 is dataset containing AMT values for each ID for Flav alone
+#t2 is		""		""		""		for Flav comb
   datafla$TRT <- as.numeric(datafla$TRT)
-  temp <- orderBy(~ID+TRT+Flavo.Time..hr., data=datafla)
+  temp <- orderBy(~-TRT+ID+Flavo.Time..hr., data=datafla)
   temp <- lapplyBy(~ID, data=temp, oneperID)
   t1 <- bind.list(temp)
-  temp <- orderBy(~ID+Flavo.Time..hr.+-TRT, data=datafla)
+  temp <- orderBy(~TRT+ID+Flavo.Time..hr., data=datafla)
   temp <- lapplyBy(~ID, data=temp, oneperID)
-  t2 <- bind.list(temp)
-   
+  t2 <- bind.list(temp)[1:17,]			#final 3 rows excluded as only 17 patients for flav comb
+  
+  #remove empty dose row
+  t1 <- t1[!is.na(t1[4]),]
+  t2 <- t2[!is.na(t2[4]),]
+
+  #split dose values into pairs then select second value of the pair
+  dose1 <- as.numeric(unlist(strsplit(t1$Dose.of.Flavo..mg.,"/")))
+  dose2 <- as.numeric(unlist(strsplit(t2$Dose.of.Flavo..mg.,"/")))
+  
+  #Create AMT dataframe to rbind to datafla
+  flav.amt <- data.frame("ID" 						= c(rep(t1$ID,each=2),rep(t2$ID,each=2)),
+ 						 "TRT"						= c(rep(t1$TRT,each=2),rep(t2$TRT,each=2)),
+ 						 "Dose.of.Flavo..mg." 		= c(dose1,dose2),
+						 "total.Flavo..mg." 		= c(as.vector(rbind(t1$total.Flavo..mg.,rep(0,length(t1$ID)))),as.vector(rbind(t2$total.Flavo..mg.,rep(0,length(t2$ID))))),
+						 "Total.Flavo..mmol."		= c(as.vector(rbind(t1$Total.Flavo..mmol.,rep(0,length(t1$ID)))),as.vector(rbind(t2$Total.Flavo..mmol.,rep(0,length(t2$ID))))),
+						 "Flavo.Time..hr."			= c(rep(c(0,0.5),times=length(t1$ID)),rep(c(0,0.5),times=length(t2$ID))),
+						 "Flavo.Concentration..nM."	= NA,
+						 "Dose.of.lena..mg."		= NA,
+						 "Lena.Dose..mmol."			= NA,
+						 "Lena.Time..hr."			= NA,
+						 "Lena.Concentration..nM."	= NA,
+						 "MDV"						= 1,
+						 "RATE"						= c(as.vector(rbind(rep(0,length(t1$ID)),dose1[1:(length(dose1)/2)*2]/4)),as.vector(rbind(rep(0,length(t2$ID)),dose1[1:(length(dose2)/2)*2]/4))))
+
+#Setup datafla for rbind with flav.amt
+#Needs Rate values <- 0 (as dataframe only contains observations)
+#Needs Dose values <- NA (	""		""		""		""	)
+  datafla$RATE <- 0
+  datafla$Dose.of.Flavo..mg. <- NA
+  datafla$total.Flavo..mg. <- NA
+  datafla$Total.Flavo..mmol. <- NA
+  
+  datafla <- rbind(datafla,flav.amt)
+
 #------------------------------------------------------------------------------
   #Convert datanew2 to old format
   #Additionally stack flav and lena AMT, TIME, DV
@@ -264,7 +322,9 @@
   
   datanew3 <- data.frame("ID" = c(datafla$ID,datalen$ID), "STUDY" = 8056, "TRT" = c(datafla$TRT,datalen$TRT))
 
-  datanew3$AMT <- c(datafla$total.Flavo..mg.,datalen$Dose.of.lena..mg.)
+  datanew3$AMT <- c(datafla$Dose.of.Flavo..mg.,datalen$Dose.of.lena..mg.)
+  
+  datanew3$RATE <- c(datafla$RATE,datalen$RATE)
 
   datanew3$TIME <- c(datafla$Flavo.Time..hr.,datalen$Lena.Time..hr.)
   
@@ -278,61 +338,62 @@
   datanew3$DAY <- 3
   datanew3$DAY[datanew3$TRT==-1] <- 1
   datanew3$DAY[datanew3$TRT==1]  <- 2
+  
+  datanew3$DOSEMG <- c(datafla$total.Flavo..mg.,datalen$Dose.of.lena..mg.)
+  datanew3$DOSEMG[datanew3$DOSEMG==0] <- NA
     
-  #datanew2$BLQ <- 0
-  #datanew2$BLQ[datanew$NOTE == "DV_BLQ"] <- 1
-  #with(datanew2, table(BLQ, useNA = "always"))
-  #datanew2$DV[datanew2$BLQ==1] <- NA
+  #datanew3$BLQ <- 0
+  #datanew3$BLQ[datanew$NOTE == "DV_BLQ"] <- 1
+  #with(datanew3, table(BLQ, useNA = "always"))
+  #datanew3$DV[datanew3$BLQ==1] <- NA
 
-  #datanew2$DNUM <- datanew$Dose.no
-  #datanew2$DNUM <- unlist(lapplyBy(~ID, data=datanew2, function(d) impute(d$DNUM)))
+  #datanew3$DNUM <- datanew$Dose.no
+  #datanew3$DNUM <- unlist(lapplyBy(~ID, data=datanew3, function(d) impute(d$DNUM)))
   
-  #datanew2$OCC <- datanew2$DNUM
+  #datanew3$OCC <- datanew3$DNUM
   
-  #datanew2$AGE <- datanew$Age
+  #datanew3$AGE <- datanew$Age
   
-  #datanew2$GEND <- datanew$Sex				  	#1 is male, 0 is female
-  #with(datanew2, table(GEND, useNA = "always"))
+  #datanew3$GEND <- datanew$Sex				  	#1 is male, 0 is female
+  #with(datanew3, table(GEND, useNA = "always"))
   
-  #datanew2$WT <- datanew$Weight..lbs./2.2		#conversion to kgs
+  #datanew3$WT <- datanew$Weight..lbs./2.2		#conversion to kgs
   
-  #datanew2$HT <- datanew$Height/3.28			#conversion to m	
+  #datanew3$HT <- datanew$Height/3.28			#conversion to m	
    
-  #datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
+  #datanew3$BSA <- 0.007184*datanew3$WT**0.425*datanew3$HT**0.725
   
-  #datanew2$BMI <- datanew2$WT/datanew2$HT**2
+  #datanew3$BMI <- datanew3$WT/datanew3$HT**2
   
     
 	#DXCATNUM == 1 -> Chronic Lymphocytic Leukaemia - K. Maddocks et al. 2014
 	#DXCATNUM == 2 -> Acute Myeloid Leukaemia		- W. Blum et al. 2010
 	#DXCATNUM == 3 -> Acute Lymphoblastic Leukaemia	- W. Blum et al. 2010
   #with(datanew, table(Disease, useNA = "always"))
-  #datanew2$DXCATNUM <- datanew$Disease
+  #datanew3$DXCATNUM <- datanew$Disease
   
     #Caucasian 	1
 	#??			2
 	#??			3
   #with(datanew, table(Race, useNA = "always"))
-  #datanew2$RACE <- datanew$Race
+  #datanew3$RACE <- datanew$Race
     
-  #datanew2$RACE2 <- 2
-  #datanew2$RACE2[datanew$Race == 1] <- 1
-  #with(datanew2, table(RACE2, useNA = "always"))
+  #datanew3$RACE2 <- 2
+  #datanew3$RACE2[datanew$Race == 1] <- 1
+  #with(datanew3, table(RACE2, useNA = "always"))
   
-  #datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
+  #datanew3$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
 
  #----------------------------------------------------------------- 
   dataall <- datanew3
    
-  dataall <- orderBy(~ID+TRT+TIME, data=dataall)
+  dataall <- orderBy(~ID+TRT+TIME+AMT, data=dataall)
+  
+  lenadata <- subset(dataall,TRT>0)
   
 #-------------------------------------------------------------------------------
 # Check subject numbers
    with(dataall, table(ID))
-   
-   # Check the dose columns
-   with(dataall, table(DOSEMG))
-   with(dataall, table(DOSEMG,DOSELVL))	#dose by dose group
  
 #----------------------------------------------------------------------------------------------------------------------  
 #Calculate dose normalized concentrations
