@@ -886,3 +886,56 @@ plotByFactor <- function(factorColname,factorText)
 #plotIndexCat("DXCATNUM","Diagnosis~Category")
 #plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
+#Data prep
+	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"    
+	#[10] "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"       "BSA"     
+	#[19] "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"    	  
+	
+	dataFIX <- data.frame("ID" = (dataall.lena$ID+96), "STUDY" = dataall.lena$STUDY)
+  
+  dataFIX$XSAMP <- 0
+  dataFIX$GRP <- 5
+	dataFIX$GRP[dataall.lena$TRT==2] <- 6 
+	
+  dataFIX$DOSELVL <- 1
+	dataFIX$DOSELVL[dataall.lena$DOSEMG==5] <- 2
+	
+  dataFIX$DOSEMG <- dataall.lena$DOSEMG
+	dataFIX$AMT <- dataall.lena$AMT
+  dataFIX$RATE <- dataall.lena$RATE
+  dataFIX$TIME <- dataall.lena$TIME+24	
+	dataFIX$TIME[!is.na(dataFIX$AMT)] <- 0
+	
+  dataFIX$DAY <- dataall.lena$DAY
+	dataFIX$DAY[dataFIX$TIME==0] <- 1
+	dataFIX$TIME[dataFIX$DAY==3] <- dataFIX$TIME[dataFIX$DAY==3]+24	
+	dataFIX$DAY[dataFIX$TIME==48] <- 2
+
+  dataFIX$DV <- dataall.lena$DV
+  dataFIX$MDV <- dataall.lena$MDV
+  dataFIX$LNDV <- dataall.lena$LNDV
+	
+  dataFIX$AGE <- NA
+  dataFIX$GEND <- NA
+  dataFIX$WT <- NA
+  dataFIX$HT <- NA
+  dataFIX$BSA <- NA
+  dataFIX$BMI <- NA
+  dataFIX$DXCATNUM <- dataall.lena$DXCATNUM
+  dataFIX$RACE <- NA
+  dataFIX$RACE2 <- NA
+  dataFIX$SECR <- NA
+  dataFIX$DVNORM <- dataall.lena$DVNORM
+  
+  dataFIX$ADDL <- NA
+  dataFIX$ADDL[!is.na(dataFIX$AMT)] <- 20
+	
+  dataFIX$II <- NA
+	dataFIX$II[!is.na(dataFIX$AMT)] <- 24
+	
+	dataFIX[(dataFIX$GRP==6&!is.na(dataFIX$AMT)),] <- NA
+	dataFIX <- orderBy(~ID+TIME+GRP+AMT, data=dataFIX)
+	colnames(dataFIX)[1] <- "#ID"
+	
+	filename.out <- paste(output.dir,"08056_finaldata.csv",sep="/")
+  write.csv(dataFIX[1:(dim(dataFIX)[1]-4),], file=filename.out, row.names=FALSE)

@@ -200,6 +200,10 @@
   #datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
 
  #----------------------------------------------------------------- 
+	#Fixes for extra amt values
+	temp <- rownames(datanew2[datanew2$TIME==0&!is.na(datanew2$DV)&!is.na(datanew2$AMT),])
+	datanew2[temp,6] <- NA
+	
   dataall <- datanew2
    
   dataall <- orderBy(~ID+TIME, data=dataall)
@@ -718,3 +722,49 @@ plotByFactor <- function(factorColname,factorText)
   #plotIndexCat("DXCATNUM","Diagnosis~Category")
   #plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
+	#Data prep
+	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"    
+	#[10] "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"       "BSA"     
+	#[19] "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"   
+	
+	dataFIX <- data.frame("ID" = (dataall$ID+120), "STUDY" = dataall$STUDY)
+  
+  dataFIX$XSAMP <- 0
+  dataFIX$GRP <- dataall$GRP+6
+	
+  dataFIX$DOSELVL <- dataall$DOSELVL
+	
+  dataFIX$DOSEMG <- dataall$DOSEMG
+	dataFIX$AMT <- dataall$AMT
+  dataFIX$RATE <- 0
+  dataFIX$TIME <- dataall$TIME+(dataall$DAY-1)*24
+	
+  dataFIX$DAY <- dataall$DAY
+  dataFIX$DV <- dataall$DV
+  dataFIX$MDV <- dataall$MDV
+  dataFIX$LNDV <- dataall$LNDV
+  dataFIX$AGE <- dataall$AGE
+  dataFIX$GEND <- dataall$GEND
+	
+  dataFIX$WT <- NA
+  dataFIX$HT <- NA
+  dataFIX$BSA <- NA
+  dataFIX$BMI <- NA
+  dataFIX$DXCATNUM <- dataall$DXCATNUM
+  dataFIX$RACE <- NA
+  dataFIX$RACE2 <- NA
+  dataFIX$SECR <- NA
+  dataFIX$DVNORM <- dataall$DVNORM
+  
+  dataFIX$ADDL <- NA
+  dataFIX$ADDL[!is.na(dataFIX$AMT)] <- 20
+	
+  dataFIX$II <- NA
+	dataFIX$II[!is.na(dataFIX$AMT)] <- 24
+	
+	dataFIX[(dataFIX$DAY==5&!is.na(dataFIX$AMT)),] <- NA
+	dataFIX <- orderBy(~ID+TIME+DAY+AMT, data=dataFIX)
+	colnames(dataFIX)[1] <- "#ID"
+	
+	filename.out <- paste(output.dir,"10016_finaldata.csv",sep="/")
+  write.csv(dataFIX[1:(dim(dataFIX)[1]-25),], file=filename.out, row.names=FALSE)

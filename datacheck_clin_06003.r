@@ -626,21 +626,21 @@ plotByFactor <- function(factorColname,factorText)
  
 
    #Define a custom age bin
-   covdataone$AGEBIN <- cut2(covdataone$AGE, cuts=c(18,50,75,85))
+   #covdataone$AGEBIN <- cut2(covdataone$AGE, cuts=c(18,50,75,85))
    #covdataone$AGEBIN <- as.numeric(paste(covdataone$AGEBIN))
 
 
    #GEND Summary
-    with(covdataone, table(GEND))
+    #with(covdataone, table(GEND))
   
-    with(covdataone, table(GEND,AGEBIN))
+    #with(covdataone, table(GEND,AGEBIN))
    
  
    #RACE Summary
-    RACEtable <-  with(dataallone, table(RACEf))
+    #RACEtable <-  with(dataallone, table(RACEf))
         
-    filename.out <- paste(output.dir,"RACEtable.csv",sep="/")
-    write.csv(RACEtable, file=filename.out, row.names=T)
+    #filename.out <- paste(output.dir,"RACEtable.csv",sep="/")
+    #write.csv(RACEtable, file=filename.out, row.names=T)
      
     
 #-----------------------------------------------------------------------------------------------------------------
@@ -694,12 +694,55 @@ plotIndexCat <- function(CovColname,CovText)
 
 
 #Generate Index plots - CovText is an expression
-plotIndexCont("AGE","Age~(years)")
-plotIndexCont("WT","Weight~(kg)")
-plotIndexCont("BSA","Body~Surface~Area~(m^2)")
-plotIndexCont("BMI","Body~Mass~Index~(kg/m^2)")
-plotIndexCat("GEND","Patient~Sex")
-plotIndexCat("RACE2","Patient~Race")
-plotIndexCat("DXCATNUM","Diagnosis~Category")
-plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
+	plotIndexCont("AGE","Age~(years)")
+	plotIndexCont("WT","Weight~(kg)")
+	plotIndexCont("BSA","Body~Surface~Area~(m^2)")
+	plotIndexCont("BMI","Body~Mass~Index~(kg/m^2)")
+	plotIndexCat("GEND","Patient~Sex")
+	plotIndexCat("RACE2","Patient~Race")
+	plotIndexCat("DXCATNUM","Diagnosis~Category")
+	plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
+
+#--------------------
+#Data prep
+	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"    
+	#[10] "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"       "BSA"     
+	#[19] "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"    	  "EVID"
+  dataone <- lapplyBy(~ID, data=dataall,  oneperID)		#one line per point, includes AMT value
+  dataone <- bind.list(dataone)
+  dataone$RATE <- -2									#fix misplaced rate values
+  
+  newlines1 <- subset(dataone,DOSELVL==1|DOSELVL==2)
+  newlines1$AMT <- 5
+  newlines1$DOSEMG <- 5
+  newlines1$TIME <- 168
+  newlines1$WEEK <- 2
+  
+  newlines2 <- subset(dataone,DOSELVL==2)
+  newlines2$AMT <- 7.5
+  newlines2$DOSEMG <- 7.5
+  newlines2$TIME <- 336
+  newlines2$WEEK <- 3
+  
+  dataAMT <- rbind(dataone,newlines1,newlines2)
+  dataAMT$ADDL <- 6
+  dataAMT$ADDL[dataAMT$AMT>20] <- 20
+  dataAMT$ADDL[dataAMT$DOSELVL==1&dataAMT$TIME==168] <- 13
+  dataAMT$II <- 24
+  
+  dataDV <- dataall[dataall$TIME>0,]					#all lines not included in dataAMT
+  dataDV$AMT <- NA														#remove extra AMT values
+  dataDV$RATE <- NA														#fix misplaced rate values
+  dataDV$ADDL <- NA										
+  dataDV$II <- NA										
+  
+  dataFIX <- orderBy(~ID+TIME, data=rbind(dataAMT,dataDV))
+  colnames(dataFIX)[1] <- "#ID"
+  
+  dataFIX$WEEK <- dataFIX$WEEK*7-7
+  dataFIX$WEEK[dataFIX$WEEK==0] <- 1
+  colnames(dataFIX)[10] <- "DAY"
+  
+  filename.out <- paste(output.dir,"06003_finaldata.csv",sep="/")
+  write.csv(dataFIX, file=filename.out, row.names=FALSE)
 
