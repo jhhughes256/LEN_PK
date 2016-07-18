@@ -290,31 +290,31 @@
 
 #DV count by Group and DoseLevel
   #Calculates data for Report Table 1
-  DVcount <- summaryBy(DV ~ GRP+DOSELVL, data=dataall, FUN=lengthNA)
-  names(DVcount) <- c("Group","Dose Level","DVcount")
-  DVcount
+  #DVcount <- summaryBy(DV ~ GRP+DOSELVL, data=dataall, FUN=lengthNA)
+  #names(DVcount) <- c("Group","Dose Level","DVcount")
+  #DVcount
  
  
 #Subject count by Group and DoseLevel
-  SUBcount <- ddply(dataall, .(GRP,DOSELVL), function(df) count.unique(df$ID))
-  names(SUBcount) <- c("Group","Dose Level","SUBcount")
-  SUBcount
+  #SUBcount <- ddply(dataall, .(GRP,DOSELVL), function(df) count.unique(df$ID))
+  #names(SUBcount) <- c("Group","Dose Level","SUBcount")
+  #SUBcount
 
 
 #Dose count by Group and DoseLevel
-  AMTcount <- ddply(dataall, .(GRP,DOSELVL), function(df) lengthNA(df$AMT))
-  names(AMTcount) <- c("Group","Dose Level","AMTcount")
-  AMTcount
+  #AMTcount <- ddply(dataall, .(GRP,DOSELVL), function(df) lengthNA(df$AMT))
+  #names(AMTcount) <- c("Group","Dose Level","AMTcount")
+  #AMTcount
  
 
 #Average DV and AMT per Subject 
-  DVsum <- cbind(DVcount,SUBcount,AMTcount)
-  DVsum$DVperSUB <-  round(DVsum$DVcount/DVsum$SUBcount,0)
-  DVsum$AMTperSUB <-  round(DVsum$AMTcount/DVsum$SUBcount,0)
-  DVsum
+  #DVsum <- cbind(DVcount,SUBcount,AMTcount)
+  #DVsum$DVperSUB <-  round(DVsum$DVcount/DVsum$SUBcount,0)
+  #DVsum$AMTperSUB <-  round(DVsum$AMTcount/DVsum$SUBcount,0)
+  #DVsum
 
-  filename.out <- paste(output.dir,"DVsum_DOSELVL.csv",sep="/")
-  write.csv(DVsum, file=filename.out)
+  #filename.out <- paste(output.dir,"DVsum_DOSELVL.csv",sep="/")
+  #write.csv(DVsum, file=filename.out)
 
 #DV data present by Group
   DV.present <- function(x)  if (any(is.numeric(x))==T) result <- 1 else result <- 0 
