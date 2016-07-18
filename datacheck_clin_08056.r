@@ -1,6 +1,5 @@
 ###datacheck.r
-##Ch-ch-ch-ch-changes
-##Goal: To collate tables of missing data contained within nonclinical raw data obtained on 23rd March 2016
+##Goal: To collate tables of missing data contained within nonclinical raw data obtained on 10th July 2016
 ##Note: Based heavily off of datacheck_cyt_script2.r -> Richards code
 
 # Remove any previous objects in the workspace
@@ -366,11 +365,8 @@
   #datanew3$BMI <- datanew3$WT/datanew3$HT**2
   
     
-	#DXCATNUM == 1 -> Chronic Lymphocytic Leukaemia - K. Maddocks et al. 2014
-	#DXCATNUM == 2 -> Acute Myeloid Leukaemia		- W. Blum et al. 2010
-	#DXCATNUM == 3 -> Acute Lymphoblastic Leukaemia	- W. Blum et al. 2010
-  #with(datanew, table(Disease, useNA = "always"))
-  #datanew3$DXCATNUM <- datanew$Disease
+  #DXCATNUM == 1 -> (Relapsed/Refactory) Chronic Lymphocytic Leukaemia - Maddocks K. et al. 2015
+  datanew3$DXCATNUM <- 1
   
     #Caucasian 	1
 	#??			2

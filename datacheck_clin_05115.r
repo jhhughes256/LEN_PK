@@ -1,5 +1,5 @@
 ###datacheck.r
-##Goal: To collate tables of missing data contained within nonclinical raw data
+##Goal: To collate tables of missing data contained within nonclinical raw data obtained on 10th July 2016
 ##Note: Based heavily off of datacheck_cyt_script2.r -> Richards code
 
 # Remove any previous objects in the workspace
@@ -8,7 +8,7 @@
    
 # Set the working directory
   master.dir <- "D:/Hughes/Data"
-  scriptname <- "datacheck_clin_?????"
+  scriptname <- "datacheck_clin_05115"
   setwd(master.dir)
    
 # Load libraries
@@ -19,6 +19,7 @@
   library(grid)
   library(reshape)
   library(stringr)
+  library(GGally)
 
 # Source utility functions file
   source("D:/Hughes/functions_utility.r")
@@ -37,7 +38,7 @@
    
 ### ------------------------------------- Clinical Data ------------------------------------- ###
 ### Updated from datacheck_front.r 			#reproducible
-  file.name.in <- "RAW_Clinical/rawdata-lena_05115_allinfo.csv"
+  file.name.in <- "RAW_Clinical/rawdata-lena_05115_allinfo_creatinine.csv"
   datanew <- read.csv(file.name.in, stringsAsFactors=F, na.strings=c("."))
    
 #------------------------------------------------------------------------------------
@@ -50,74 +51,52 @@
   
   #Structure
   str(datanew)
-
-  #datasub the same except missing CrCl1 column
    
 #------------------------------------------------------------------------------------
 #Plot PK data
   
-  with(datanew, table(study, useNA = "always"))
-   
-  with(datanew, table(dose..mg., useNA = "always"))
-  with(datasub, table(dose..mg., useNA = "always"))
-  with(datasub, table(dose..mg.,ID))
+#9 data entries for each individual
+  with(datanew, table(ID, useNA = "always"))
+  
+#3 dose levels  
+  with(datanew, table(dose, useNA = "always"))
+  with(datanew, table(dose,ID))
      
+#23 mdv values
+  with(datanew, table(mdv, useNA = "always"))
+  #all mdv values are on NA DV values
+  temp <- with(datanew, table(mdv, dv..ug.mL., useNA = "always"))
+  temp[2,dim(temp)[2]]
+	 
   #Number of patients
   npat <- length(unique(datanew$ID))
   npat
-  nsub <- length(unique(datasub$ID))
-  nsub
 
 #-------------------------------------------------------------------------------
 #Convert datanew to old format 
   
-  datanew2 <- data.frame("ID" = datanew$ID, "STUDY" = 6003)
-    
-  datanew2$STUDY <- 6003
-  
-  datanew2$XSAMP <- 0
-  datanew2$XSAMP[datanew$X.Note=="#"] <- 1
-  
-  #Group A 	  -> 1 	30 patients	(relapsed CLL)			K. Maddocks et al. 2014
-  #Group B 	  -> 2  5 patients (relapsed CLL w/ PR)		K. Maddocks et al. 2014
-  #Group C 	  -> 3  24 patients (AML + ALL)				W. Blum et al. 2010
-  datanew2$GRP <- 3
-  datanew2$GRP[datanew$ID %in% unique(datasub$ID)] <- 1
-  datanew2$GRP[datanew$dose..mg.<25&datanew2$GRP!=1] <- 2
+  datanew2 <- data.frame("ID" = datanew$ID, "STUDY" = 5115)
   
   #Dose Level 											     		   total patients = 61
-  #			Wk1				Wk2				Wk3		
-  # ----------------------------------------------------    GROUP A    npat = 30	
-  #	 0	25mg single													   npat =  3
-  #  1	2.5mg daily		5.0mg daily		5.0mg daily					   npat = 19
-  #  2  2.5mg daily		5.0mg daily		7.5mg daily         		   npat =  8
-  # ----------------------------------------------------    GROUP B	   npat =  5
-  #  1  2.5mg daily     5.0mg daily     5.0mg daily 				   npat =  3
-  #  2  2.5mg daily     5.0mg daily     7.5mg daily 				   npat =  2  
-  # ----------------------------------------------------    GROUP C    npat = 24
-  #  3  25mg daily		25mg daily		25mg daily					   npat =  4
-  #	 4	35mg daily		35mg daily		35mg daily					   npat =  9
-  #  5	50mg daily		50mg daily		50mg daily					   npat = 10
-  #	 6	75mg daily		75mg daily		75mg daily					   npat =  3
-  datanew2$DOSELVL <- 1
-  datanew2$DOSELVL[datanew$dose..mg.==25] <- 0
-  datanew2$DOSELVL[datanew$dose..mg.==25&datanew2$GRP==3] <- 3
-  datanew2$DOSELVL[datanew$dose..mg.==35] <- 4
-  datanew2$DOSELVL[datanew$dose..mg.==50] <- 5
-  datanew2$DOSELVL[datanew$dose..mg.==75] <- 6
-  datanew2$DOSELVL[datanew$ID %in% unique(subset(datanew,dose..mg.==7.5)$ID)] <- 2
+  #				
+  # -----------------   npat = 20	
+  #	 1	15mg daily		npat =  1
+  #  2	20mg daily		npat =  6
+  #  3  25mg daily      npat = 13
   
-  datanew2$DOSEMG <- datanew$dose..mg.
+  datanew2$DOSELVL <- 3
+  datanew2$DOSELVL[datanew$dose==20] <- 2
+  datanew2$DOSELVL[datanew$dose==15] <- 1
+  
+  datanew2$DOSEMG <- datanew$dose
         
   datanew2$AMT <- datanew$amt				     #dose in mg
-  
-  datanew2$RATE <- datanew$rate
    
   datanew2$TIME <- datanew$time..hr.
   
-  datanew2$WEEK <- ceiling(floor(datanew2$TIME/84)/2)+1
+  datanew2$EVID <- datanew$dvid
   
-  datanew2$DV <- datanew$dv..ug.ml.    			 #ug/ml
+  datanew2$DV <- datanew$dv..ug.mL.    			 #ug/ml
  
   datanew2$MDV <- datanew$mdv
     
@@ -133,37 +112,33 @@
   
   #datanew2$OCC <- datanew2$DNUM
   
-  datanew2$AGE <- datanew$Age
+  datanew2$AGE <- datanew$age
   
-  datanew2$GEND <- datanew$Sex				  	#1 is male, 0 is female
+  datanew2$GEND <- datanew$sex				  	#1 is male, 0 is female
   with(datanew2, table(GEND, useNA = "always"))
   
-  datanew2$WT <- datanew$Weight..lbs./2.2		#conversion to kgs
+  datanew2$WT <- datanew$wt..lbs./2.2		#conversion to kgs
   
-  datanew2$HT <- datanew$Height/3.28			#conversion to m	
+  #datanew2$HT <- datanew$Height/3.28			#conversion to m	
    
-  datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
+  #datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
   
-  datanew2$BMI <- datanew2$WT/datanew2$HT**2
+  #datanew2$BMI <- datanew2$WT/datanew2$HT**2
   
+  #DXCATNUM == 4 -> Relapsed Multiple Myeloma - Hofmeister et. al 2011
+  datanew2$DXCATNUM <- 4
+  
+  #Caucasian 	1
+  #??			2
+  #??			3
+  #with(datanew, table(Race, useNA = "always"))
+  #datanew2$RACE <- datanew$Race
     
-	#DXCATNUM == 1 -> Chronic Lymphocytic Leukaemia - K. Maddocks et al. 2014
-	#DXCATNUM == 2 -> Acute Myeloid Leukaemia		- W. Blum et al. 2010
-	#DXCATNUM == 3 -> Acute Lymphoblastic Leukaemia	- W. Blum et al. 2010
-  with(datanew, table(Disease, useNA = "always"))
-  datanew2$DXCATNUM <- datanew$Disease
+  #datanew2$RACE2 <- 2
+  #datanew2$RACE2[datanew$Race == 1] <- 1
+  #with(datanew2, table(RACE2, useNA = "always"))
   
-    #Caucasian 	1
-	#??			2
-	#??			3
-  with(datanew, table(Race, useNA = "always"))
-  datanew2$RACE <- datanew$Race
-    
-  datanew2$RACE2 <- 2
-  datanew2$RACE2[datanew$Race == 1] <- 1
-  with(datanew2, table(RACE2, useNA = "always"))
-  
-  datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
+  datanew2$SECR <- datanew$Cr..mg.dL.*88.4	#convert from mg/dL to umol/L
 
  #----------------------------------------------------------------- 
   dataall <- datanew2
@@ -207,14 +182,14 @@
 #Count missing covariate data
 #Missing by Study
 
-  covnames <- as.formula("~AGE+GEND+WT+HT+BSA+BMI+RACE+RACE2+DXCATNUM+SECR")
-  covdata <- subset(dataall, select=c("ID","GRP","AGE","GEND","WT","HT","BSA","BMI","RACE","RACE2","DXCATNUM","SECR"))
+  covnames <- as.formula("~AGE+GEND+WT+DXCATNUM+SECR")
+  covdata <- subset(dataall, select=c("ID","DOSELVL","AGE","GEND","WT","DXCATNUM","SECR"))
    
   #Reassign missing
   covdata[covdata==-1] <- NA
   
   #finish off
-  missingbystudy <- ddply(covdata, .(GRP), colwise(calculate.percent.missing))
+  missingbystudy <- ddply(covdata, .(DOSELVL), colwise(calculate.percent.missing))
  
   filename.out <- paste(output.dir,"Missing_by_Group.csv",sep="/")
   write.csv(missingbystudy, file=filename.out, row.names=F)
@@ -222,7 +197,7 @@
   
 
 #Missing by Subject
-  missingbysubject <- ddply(covdata, .(GRP,ID), colwise(calculate.percent.missing))
+  missingbysubject <- ddply(covdata, .(DOSELVL,ID), colwise(calculate.percent.missing))
   filename.out <- paste(output.dir,"Missing_by_Subject.csv",sep="/")
   write.csv(missingbysubject, file=filename.out, row.names=F)
 
@@ -235,7 +210,7 @@
   dataallone <- bind.list(dataallone)
   dim(dataallone)
    
-  with(dataallone,table(RATE,useNA="always"))
+  #with(dataallone,table(RATE,useNA="always"))
   
   #Sets missing to NA - use for continuous summary
   covdataone <- lapplyBy(~ID, data=covdata,  oneperID)
@@ -243,7 +218,7 @@
   dim(covdataone)
   
   
-  dataallone$RACEf <- factor(dataallone$RACE2, labels=c("White or Caucasian","Other"))
+  #dataallone$RACEf <- factor(dataallone$RACE2, labels=c("White or Caucasian","Other"))
 
   dataallone$SEXf <- as.factor(dataallone$GEND)
   levels(dataallone$SEXf) <- c("female","male")
@@ -251,11 +226,9 @@
   dataallone$IDf <- as.factor(dataallone$ID)
   
   dataallone$DXCAT2f <- as.factor(dataallone$DXCATNUM) 
-  levels(dataallone$DXCAT2f) <- c("CLL","AML","ALL")
+  levels(dataallone$DXCAT2f) <- c("CLL")
 
-  #DXCAT2 "Relapsed Chronic Lymphocytic Leukaemia" <- 1 
-  #DXCAT2 "Acute Myeloid Leukaemia" <- 2 
-  #DXCAT2 "Acute Lymphoblastic Leukaemia" <- 3 
+  #DXCAT2 "Relapsed Multiple Myeloma" <- 4
 
 #-----------------------------------------------------------------------
 #Summary of study characteristics
@@ -277,27 +250,27 @@
   #All subjects have dose data
   
  #Do all subjects have nmRATE data
-  RATEtest <- summaryBy(RATE ~ ID, data=dataall, FUN=mean, na.rm=T)
-  RATEtest <- RATEtest[is.na(RATEtest$RATE.mean)==T,]
-  RATEtestID <- RATEtest$ID
-  RATEtestID
-  with(dataallone,table(RATE,useNA="always"))
-  #All subjects have nmRATE data but not in the right place in some cases
+  #RATEtest <- summaryBy(RATE ~ ID, data=dataall, FUN=mean, na.rm=T)
+  #RATEtest <- RATEtest[is.na(RATEtest$RATE.mean)==T,]
+  #RATEtestID <- RATEtest$ID
+  #RATEtestID
+  #with(dataallone,table(RATE,useNA="always"))
+  
 
  #DV count by Study
  #Calculates data for Report Table 1
-  DVcount <- summaryBy(DV ~ GRP, data=dataall, FUN=lengthNA)
+  DVcount <- summaryBy(DV ~ DOSELVL, data=dataall, FUN=lengthNA)
   names(DVcount) <- c("Group","DVcount")
   DVcount
 
  
  #Subject count by Study 
-  SUBcount <- ddply(dataall, .(GRP), function(df) count.unique(df$ID))
+  SUBcount <- ddply(dataall, .(DOSELVL), function(df) count.unique(df$ID))
   names(SUBcount) <- c("Group","SUBcount")
   SUBcount
 
  #Dose count by Study
-  AMTcount <- ddply(dataall, .(GRP), function(df) lengthNA(df$AMT))
+  AMTcount <- ddply(dataall, .(DOSELVL), function(df) lengthNA(df$AMT))
   names(AMTcount) <- c("Group","AMTcount")
   AMTcount
  
@@ -343,18 +316,18 @@
   filename.out <- paste(output.dir,"DVsum_DOSELVL.csv",sep="/")
   write.csv(DVsum, file=filename.out)
 
-#DV data present by Group and Week
+#DV data present by Group
   DV.present <- function(x)  if (any(is.numeric(x))==T) result <- 1 else result <- 0 
-  DVcountdata <-  ddply(dataall, .(GRP,ID,WEEK), function(df) DV.present(df$DV))
+  DVcountdata <-  ddply(dataall, .(DOSELVL,ID), function(df) DV.present(df$DV))
  
 
-  withDVbyGRPWEEK <- ddply(DVcountdata, .(GRP,WEEK), function(df) sum(df$V1))  #GOLD
-  withDVbyGRPWEEK
+  withDVbyGRP <- ddply(DVcountdata, .(DOSELVL), function(df) sum(df$V1))  #GOLD
+  withDVbyGRP
  
 
   #Not all subjects with Day 1 data also have Day 4 data
-  filename.out <- paste(output.dir,"DVwith_group_week.csv",sep="/")
-  write.csv(withDVbyGRPWEEK, file=filename.out)
+  filename.out <- paste(output.dir,"DVwith_group.csv",sep="/")
+  write.csv(withDVbyGRP, file=filename.out)
  
 #----------------------------------------------------------------------------------------------------------------------
 #Subset some plot data
@@ -364,62 +337,48 @@
 
   plotdata$DOSEMGf <- as.factor(plotdata$DOSEMG)
  
-  plotdata$GRPf <- as.factor(plotdata$GRP)
-  levels(plotdata$STUDYf) <- paste("Group",levels(plotdata$STUDYf))
+  #plotdata$GRPf <- as.factor(plotdata$GRP)
+  #levels(plotdata$STUDYf) <- paste("Group",levels(plotdata$STUDYf))
   
-  plotdata$VOSf <- as.factor(plotdata$VOS)
-  levels(plotdata$VOSf) <- c("Placebo","Adrug")
+  #plotdata$VOSf <- as.factor(plotdata$VOS)
+  #levels(plotdata$VOSf) <- c("Placebo","Adrug")
 
-  plotdata$WEEKf <- as.factor(plotdata$WEEK)
-  levels(plotdata$WEEKf) <- paste("Week",levels(plotdata$WEEKf))
+  #plotdata$WEEKf <- as.factor(plotdata$WEEK)
+  #levels(plotdata$WEEKf) <- paste("Week",levels(plotdata$WEEKf))
    
   plotdata$SEXf <- as.factor(plotdata$GEND)
   levels(plotdata$SEXf) <- c("female","male")
   
-  plotdata$RACEf <- as.factor(plotdata$RACE2)
-  levels(plotdata$RACEf) <- c("White or Caucasian","Other")
+  #plotdata$RACEf <- as.factor(plotdata$RACE2)
+  #levels(plotdata$RACEf) <- c("White or Caucasian","Other")
 
   plotdata$DOSELVLf <- as.factor(plotdata$DOSELVL)
   levels(plotdata$DOSELVLf) <- paste("Dose Level",levels(plotdata$DOSELVLf))
 
-  plotdata$DOSE_bin <- cut2(plotdata$DOSEMG, g=BINnumber) 
+  #plotdata$DOSE_bin <- cut2(plotdata$DOSEMG, g=BINnumber) 
 
   plotdata$AGE_bin <- cut2(plotdata$AGE, g=BINnumber) 
 
   plotdata$WT_bin <- cut2(plotdata$WT, g=BINnumber) 
   
-  plotdata$HT_bin <- cut2(plotdata$HT, g=BINnumber)
+  #plotdata$HT_bin <- cut2(plotdata$HT, g=BINnumber)
 
-  plotdata$BSA_bin <- cut2(plotdata$BSA, g=BINnumber) 
+  #plotdata$BSA_bin <- cut2(plotdata$BSA, g=BINnumber) 
 
-  plotdata$BMI_bin <- cut2(plotdata$BMI, g=BINnumber) 
+  #plotdata$BMI_bin <- cut2(plotdata$BMI, g=BINnumber) 
 
   plotdata$DXCAT2f <- as.factor(plotdata$DXCATNUM)
-  levels(plotdata$DXCAT2f) <- c("Relapsed Chronic Lymphocytic Leukaemia","Acute Myeloid Leukaemia","Acute Lymphoblastic Leukaemia")
+  levels(plotdata$DXCAT2f) <- c("Relapsed Multiple Myeloma")
   
   filename.out <- paste(output.dir,"plotdata.csv",sep="/")
   write.csv(plotdata, file=filename.out, row.names=FALSE)
    
 #----------------------------------------------------------------------------------------------------------------------
 #Basic PK plots
-
- #Conc vs Time
-  plotobj <- NULL
-  titletext <- paste("Observed Concentrations\n")
-  plotobj <- ggplot(data=plotdata)  #, colour=AMTMGf
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=WEEKf), size=3, alpha=0.5)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)")
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Week")
-  plotobj
-
-  filename.out <- paste(output.dir,"Overview_ConcObs_vs_TIME_by_WEEK",sep="/")
-  to.png(plotobj,filename.out) 
   
  #Conc vs TIME Week 1
   plotobj <- NULL
-  titletext <- paste("Observed Concentrations in Week 1\n")
+  titletext <- paste("Observed Concentrations\n")
   plotobj <- ggplot(data=subset(plotdata))
   plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
@@ -428,52 +387,36 @@
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   plotobj
 
-  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_DOSELVL",sep="/")
+  filename.out <- paste(output.dir,"ConcObs_vs_TIME_by_DOSELVL",sep="/")
   to.png(plotobj,filename.out) 
   
  #Conc vs TIME Week 1 per ID
   plotobj <- NULL
-  titletext <- paste("Observed Concentrations in Week 1\n")
+  titletext <- paste("Observed Concentrations\n")
   plotobj <- ggplot(data=subset(plotdata))
   plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
+  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)")
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   plotobj <- plotobj + facet_wrap(~ID)
   plotobj
 
-  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID",sep="/")
+  filename.out <- paste(output.dir,"ConcObs_vs_TIME_by_ID",sep="/")
   to.png(plotobj,filename.out) 
   
-   #Conc vs TIME Week 1 per ID (First Half)
+   #DVNORM vs TIME
   plotobj <- NULL
-  titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(plotdata,ID<36))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  titletext <- paste("Dose Normalised Concentrations\n")
+  plotobj <- ggplot(data=subset(plotdata))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DVNORM, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
+  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)")
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  plotobj <- plotobj + facet_wrap(~ID)
   plotobj
 
-  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID_p1",sep="/")
-  to.png(plotobj,filename.out) 
-  
-     #Conc vs TIME Week 1 per ID (Second Half)
-  plotobj <- NULL
-  titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(plotdata,ID>35))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  plotobj <- plotobj + facet_wrap(~ID)
-  plotobj
-
-  filename.out <- paste(output.dir,"Week1_ConcObs_vs_TIME_by_ID_p2",sep="/")
+  filename.out <- paste(output.dir,"DVNORM_vs_TIME",sep="/")
   to.png(plotobj,filename.out) 
   
 
@@ -521,48 +464,48 @@ plotByFactor <- function(factorColname,factorText)
 
 
 #Use the function
-  plotByFactor("GRPf","Group")
+  #plotByFactor("GRPf","Group")
   plotByFactor("SEXf","SEX")
   plotByFactor("DOSELVLf","Dose Level")
-  plotByFactor("WEEKf","Week")
-  plotByFactor("DOSE_bin","Binned Dose (mg)")
+  #plotByFactor("WEEKf","Week")
+  #plotByFactor("DOSE_bin","Binned Dose (mg)")
   plotByFactor("AGE_bin","Binned Age (years)")
   plotByFactor("WT_bin","Binned Weight (kg)")
-  plotByFactor("HT_bin","Binned Height (kg)")
-  plotByFactor("BSA_bin","Binned BSA (m2)")
-  plotByFactor("BMI_bin","Binned BMI (kg per m2)")
-  plotByFactor("DXCAT2f","Disease category")
+  #plotByFactor("HT_bin","Binned Height (kg)")
+  #plotByFactor("BSA_bin","Binned BSA (m2)")
+  #plotByFactor("BMI_bin","Binned BMI (kg per m2)")
+  #plotByFactor("DXCAT2f","Disease category")
 
 
 #-------------------------------------------------------------------------
 #Summarize Categorical covariates
 
-  dataallone$SUMCOL <- "All Groups"
+  #dataallone$SUMCOL <- "All Groups"
     
   #Sex
-  covCatSexStudy <- with(dataallone,ftable(GRP,SEXf, useNA="ifany", dnn=c("GRP","CATEGORY")))
-  covCatSexStudy  <- data.frame("COV"="SEX",covCatSexStudy)
+  #covCatSexStudy <- with(dataallone,ftable(DOSELVL,SEXf, useNA="ifany", dnn=c("GRP","CATEGORY")))
+  #covCatSexStudy  <- data.frame("COV"="SEX",covCatSexStudy)
 
 
   #Race
-  covCatRaceStudy <- with(dataallone,ftable(GRP,RACEf, useNA="ifany", dnn=c("GRP","CATEGORY")))
-  covCatRaceStudy  <- data.frame("COV"="RACE",covCatRaceStudy)
+  #covCatRaceStudy <- with(dataallone,ftable(DOSELVL,RACEf, useNA="ifany", dnn=c("GRP","CATEGORY")))
+  #covCatRaceStudy  <- data.frame("COV"="RACE",covCatRaceStudy)
 
 
   #DXcategory
-  covCatDXcatStudy <- with(dataallone,ftable(GRP,DXCAT2f, useNA="ifany", dnn=c("GRP","CATEGORY")))
-  covCatDXcatStudy <- data.frame("COV"="DXCAT",covCatDXcatStudy)
+  #covCatDXcatStudy <- with(dataallone,ftable(DOSELVL,DXCAT2f, useNA="ifany", dnn=c("GRP","CATEGORY")))
+  #covCatDXcatStudy <- data.frame("COV"="DXCAT",covCatDXcatStudy)
 
 
   #Collate
-  covCatTable <- rbind(covCatSexStudy,covCatRaceStudy,covCatDXcatStudy)
-  covCatTable
+  #covCatTable <- rbind(covCatSexStudy,covCatRaceStudy,covCatDXcatStudy)
+  #covCatTable
 
   #Return to original order
-  covCatTable <- orderBy(~COV, covCatTable)  #GOLD - sort by factor levels
+  #covCatTable <- orderBy(~COV, covCatTable)  #GOLD - sort by factor levels
 
   #Define reassignment of column names (if any) rtf allowed
-  colNames <- c(
+  #colNames <- c(
                 "COV","Covariate Code",
                 "CATEGORY","Category",
                 "RACE","Race",
@@ -571,39 +514,37 @@ plotByFactor <- function(factorColname,factorText)
 				"DXCAT","Disease"
                 )
 
-  colData <- data.frame(matrix(colNames, byrow=T, ncol=2),stringsAsFactors=F)
-  names(colData) <- c("ColNameOld","ColNameNew")
+  #colData <- data.frame(matrix(colNames, byrow=T, ncol=2),stringsAsFactors=F)
+  #names(colData) <- c("ColNameOld","ColNameNew")
 
   #Reassign column names
-  covCatTable$COV <- gsub.all(colData$ColNameOld,colData$ColNameNew,covCatTable$COV)
-  names(covCatTable) <- gsub.all(colData$ColNameOld,colData$ColNameNew,names(covCatTable))
+  #covCatTable$COV <- gsub.all(colData$ColNameOld,colData$ColNameNew,covCatTable$COV)
+  #names(covCatTable) <- gsub.all(colData$ColNameOld,colData$ColNameNew,names(covCatTable))
 
   #Write as an rtf file
-  filename.out <- paste(output.dir,"CatCovSummary",sep="/")
-  write.csv(covCatTable, file=filename.out)
+  #filename.out <- paste(output.dir,"CatCovSummary",sep="/")
+  #write.csv(covCatTable, file=filename.out)
 
 #-----------------------------------------------------------------------------------------------------
   #Pairs-plot of continuous covariates
   plotobj <- NULL
-  covdataonecont <- subset(covdataone, select=c("AGE","WT","BSA","BMI","SECR"))
+  covdataonecont <- subset(covdataone, select=c("AGE","WT","SECR"))
   plotobj <- ggpairs(na.omit(covdataonecont))
   
   filename.out <- paste(output.dir,"Overview_cont_cov_pairs",sep="/")
   to.png(plotobj,filename.out)
 
-
 #-----------------------------------------------------------------------------------------------------
  #Pairs-plot of categorical covariates
 
-  covcatdataonecat <- subset(dataallone, select=c("SEXf","RACEf","DXCAT2f"))  
+  #covcatdataonecat <- subset(dataallone, select=c("SEXf","RACEf","DXCAT2f"))  
 
-  plotobj <- NULL
-  plotobj <- ggpairs(na.omit(covcatdataonecat))
+  #plotobj <- NULL
+  #plotobj <- ggpairs(na.omit(covcatdataonecat))
 
-  filename.out <- paste(output.dir,"Overview_cat_cat_pairs",sep="/")
-  to.png(plotobj,filename.out)            
+  #filename.out <- paste(output.dir,"Overview_cat_cat_pairs",sep="/")
+  #to.png(plotobj,filename.out)            
 
-      
 #-----------------------------------------------------------------------------------------------------------------
 #Demographic Summary
 #AGE, SEX, WT, BSA
@@ -623,21 +564,21 @@ plotByFactor <- function(factorColname,factorText)
  
 
   #Define a custom age bin
-  covdataone$AGEBIN <- cut2(covdataone$AGE, cuts=c(18,50,75,85))
+  #covdataone$AGEBIN <- cut2(covdataone$AGE, cuts=c(18,50,75,85))
   #covdataone$AGEBIN <- as.numeric(paste(covdataone$AGEBIN))
 
 
   #GEND Summary
-  with(covdataone, table(GEND))
+  #with(covdataone, table(GEND))
   
-  with(covdataone, table(GEND,AGEBIN))
+  #with(covdataone, table(GEND,AGEBIN))
    
  
   #RACE Summary
-  RACEtable <-  with(dataallone, table(RACEf))
+  #RACEtable <-  with(dataallone, table(RACEf))
         
-  filename.out <- paste(output.dir,"RACEtable.csv",sep="/")
-  write.csv(RACEtable, file=filename.out, row.names=T)
+  #filename.out <- paste(output.dir,"RACEtable.csv",sep="/")
+  #write.csv(RACEtable, file=filename.out, row.names=T)
      
     
 #-----------------------------------------------------------------------------------------------------------------
@@ -693,10 +634,10 @@ plotByFactor <- function(factorColname,factorText)
   #Generate Index plots - CovText is an expression
   plotIndexCont("AGE","Age~(years)")
   plotIndexCont("WT","Weight~(kg)")
-  plotIndexCont("BSA","Body~Surface~Area~(m^2)")
-  plotIndexCont("BMI","Body~Mass~Index~(kg/m^2)")
+  #plotIndexCont("BSA","Body~Surface~Area~(m^2)")
+  #plotIndexCont("BMI","Body~Mass~Index~(kg/m^2)")
   plotIndexCat("GEND","Patient~Sex")
-  plotIndexCat("RACE2","Patient~Race")
-  plotIndexCat("DXCATNUM","Diagnosis~Category")
+  #plotIndexCat("RACE2","Patient~Race")
+  #plotIndexCat("DXCATNUM","Diagnosis~Category")
   plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 

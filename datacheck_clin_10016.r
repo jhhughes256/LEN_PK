@@ -1,5 +1,5 @@
 ###datacheck.r
-##Goal: To collate tables of missing data contained within nonclinical raw data
+##Goal: To collate tables of missing data contained within nonclinical raw data obtained on 10th July 2016
 ##Note: Based heavily off of datacheck_cyt_script2.r -> Richards code
 
 # Remove any previous objects in the workspace
@@ -8,7 +8,7 @@
    
 # Set the working directory
   master.dir <- "D:/Hughes/Data"
-  scriptname <- "datacheck_clin_?????"
+  scriptname <- "datacheck_clin_10016"
   setwd(master.dir)
    
 # Load libraries
@@ -37,7 +37,7 @@
    
 ### ------------------------------------- Clinical Data ------------------------------------- ###
 ### Updated from datacheck_front.r 			#reproducible
-  file.name.in <- "RAW_Clinical/rawdata-lena_05115_allinfo.csv"
+  file.name.in <- "RAW_Clinical/rawdata-lena_10016_allinfo.csv"
   datanew <- read.csv(file.name.in, stringsAsFactors=F, na.strings=c("."))
    
 #------------------------------------------------------------------------------------
@@ -56,66 +56,102 @@
 #------------------------------------------------------------------------------------
 #Plot PK data
   
-  with(datanew, table(study, useNA = "always"))
+#13-27 data points per ID
+  with(datanew, table(ID, useNA = "always"))
    
+#2 dose levels
   with(datanew, table(dose..mg., useNA = "always"))
-  with(datasub, table(dose..mg., useNA = "always"))
-  with(datasub, table(dose..mg.,ID))
-     
-  #Number of patients
+  with(datanew, table(dose..mg.,ID))
+  
+  #not correlated with days, however higher drop-off for day 5 with 30mg dose?
+  with(datanew, table(dose..mg.,Day))
+  
+#range of amt value counts
+  print(temp <- with(datanew, table(amt, ID)))
+  #one amt value
+  length(print(dose1 <- c(names(temp[1,])[temp[1,]==1], names(temp[2,])[temp[2,]==1])))
+  #two amt values
+  length(print(c(names(temp[1,])[temp[1,]==2], names(temp[2,])[temp[2,]==2])))
+  #three amt values
+  length(print(dose3 <- c(names(temp[1,])[temp[1,]==3], names(temp[2,])[temp[2,]==3])))
+  
+  #all amt values are at time==0
+  print(temp <- with(datanew, table(amt, time..hr.)))
+  unique(c(names(temp[1,])[temp[1,]!=0], names(temp[2,])[temp[2,]!=0]))
+  
+  #have 2 time==0 concentrations where amt is defined, perhaps an error encountered by placing all amt values at time==0
+  temp <- with(datanew, table(amt, dv..ug.ml.))
+  c(names(temp[1,])[temp[1,]!=0], names(temp[2,])[temp[2,]!=0])
+  
+#more time==0 values than others, >= 57 time values for all time slots
+  with(datanew, table(time..hr., useNA = "always"))
+  #21 concentrations at time==0, 57 single times + 21 extra time==0
+  #will need to check patients with 3 amt values against others for signs of additional dose
+  temp <- with(datanew, table(time..hr., dv..ug.ml.))
+  length(print(names(temp[1,])[temp[1,]!=0]))
+  
+#60 mdv values
+  with(datanew, table(mdv, useNA = "always"))
+  #all mdv values are on NA DV values
+  temp <- with(datanew, table(mdv, dv..ug.ml., useNA = "always"))
+  temp[2,dim(temp)[2]]
+  
+#2 cohorts, differ in how cytarabine was given
+  with(datanew, table(Cohort, useNA = "always"))
+  temp <- with(datanew, table(Cohort, ID))
+  #first cohort patients and pop size
+  length(print(names(temp[1,])[temp[1,]!=0]))
+  #second cohort patients and pop size
+  length(print(names(temp[2,])[temp[2,]!=0]))
+  
+#Dose levels in each cohort
+  temp <- with(datanew, table(dose..mg.,ID,Cohort))
+  #Cohort 1 - 25mg
+  length(print(names(temp[1,,1])[temp[1,,1]!=0]))
+  #Cohort 1 - 30mg
+  length(print(names(temp[2,,1])[temp[2,,1]!=0]))
+  #Cohort 2 - 25mg
+  length(print(names(temp[1,,2])[temp[1,,2]!=0]))
+  #Cohort 2 - 30mg
+  length(print(names(temp[2,,2])[temp[2,,2]!=0]))
+  
+#Number of patients
   npat <- length(unique(datanew$ID))
   npat
-  nsub <- length(unique(datasub$ID))
-  nsub
 
 #-------------------------------------------------------------------------------
 #Convert datanew to old format 
   
-  datanew2 <- data.frame("ID" = datanew$ID, "STUDY" = 6003)
-    
-  datanew2$STUDY <- 6003
+  datanew2 <- data.frame("ID" = datanew$ID, "STUDY" = 10016)
   
-  datanew2$XSAMP <- 0
-  datanew2$XSAMP[datanew$X.Note=="#"] <- 1
+  #Cohort 1 -> 18 patients	
+							#INDUCTION - lenalidomide PO QD D1-D21 - cytarabine IV over 96hrs D5-D8 - idarubicin IV over 1hr D5-D7
+						#CONSOLIDATION - lenalidomide PO QD D1-D14 - cytarabine continuous D5-D7 - idarubicin IV over 1hr D5-D6
+  #Cohort 2	-> 14 patients
+							#INDUCTION - lenalidomide PO QD D1-D21 - cytarabine IV over 24hrs D5-D11 - idarubicin IV over 1hr D5-D7
+						#CONSOLIDATION - lenalidomide PO QD D1-D14 - cytarabine IV q24h D5,D7,D9
+						
+  datanew2$GRP <- datanew$Cohort
   
-  #Group A 	  -> 1 	30 patients	(relapsed CLL)			K. Maddocks et al. 2014
-  #Group B 	  -> 2  5 patients (relapsed CLL w/ PR)		K. Maddocks et al. 2014
-  #Group C 	  -> 3  24 patients (AML + ALL)				W. Blum et al. 2010
-  datanew2$GRP <- 3
-  datanew2$GRP[datanew$ID %in% unique(datasub$ID)] <- 1
-  datanew2$GRP[datanew$dose..mg.<25&datanew2$GRP!=1] <- 2
-  
-  #Dose Level 											     		   total patients = 61
-  #			Wk1				Wk2				Wk3		
-  # ----------------------------------------------------    GROUP A    npat = 30	
-  #	 0	25mg single													   npat =  3
-  #  1	2.5mg daily		5.0mg daily		5.0mg daily					   npat = 19
-  #  2  2.5mg daily		5.0mg daily		7.5mg daily         		   npat =  8
-  # ----------------------------------------------------    GROUP B	   npat =  5
-  #  1  2.5mg daily     5.0mg daily     5.0mg daily 				   npat =  3
-  #  2  2.5mg daily     5.0mg daily     7.5mg daily 				   npat =  2  
-  # ----------------------------------------------------    GROUP C    npat = 24
-  #  3  25mg daily		25mg daily		25mg daily					   npat =  4
-  #	 4	35mg daily		35mg daily		35mg daily					   npat =  9
-  #  5	50mg daily		50mg daily		50mg daily					   npat = 10
-  #	 6	75mg daily		75mg daily		75mg daily					   npat =  3
+  #Dose Level
+  #	
+  # -------------------   Cohort 1  	npat = 18	
+  #  1	25mg daily						npat = 12
+  #  2  30mg daily		         		npat =  6
+  # -------------------   Cohort 2	    npat = 14
+  #  1  25mg daily    				   	npat =  7
+  #  2  30mg daily      				npat =  7  
+
   datanew2$DOSELVL <- 1
-  datanew2$DOSELVL[datanew$dose..mg.==25] <- 0
-  datanew2$DOSELVL[datanew$dose..mg.==25&datanew2$GRP==3] <- 3
-  datanew2$DOSELVL[datanew$dose..mg.==35] <- 4
-  datanew2$DOSELVL[datanew$dose..mg.==50] <- 5
-  datanew2$DOSELVL[datanew$dose..mg.==75] <- 6
-  datanew2$DOSELVL[datanew$ID %in% unique(subset(datanew,dose..mg.==7.5)$ID)] <- 2
+  datanew2$DOSELVL[datanew$dose..mg.==30] <- 2
   
   datanew2$DOSEMG <- datanew$dose..mg.
         
   datanew2$AMT <- datanew$amt				     #dose in mg
   
-  datanew2$RATE <- datanew$rate
-   
   datanew2$TIME <- datanew$time..hr.
   
-  datanew2$WEEK <- ceiling(floor(datanew2$TIME/84)/2)+1
+  datanew2$DAY <- datanew$Day
   
   datanew2$DV <- datanew$dv..ug.ml.    			 #ug/ml
  
@@ -138,32 +174,30 @@
   datanew2$GEND <- datanew$Sex				  	#1 is male, 0 is female
   with(datanew2, table(GEND, useNA = "always"))
   
-  datanew2$WT <- datanew$Weight..lbs./2.2		#conversion to kgs
+  #datanew2$WT <- datanew$Weight..lbs./2.2		#conversion to kgs
   
-  datanew2$HT <- datanew$Height/3.28			#conversion to m	
+  #datanew2$HT <- datanew$Height/3.28			#conversion to m	
    
-  datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
+  #datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
   
-  datanew2$BMI <- datanew2$WT/datanew2$HT**2
+  #datanew2$BMI <- datanew2$WT/datanew2$HT**2
   
     
-	#DXCATNUM == 1 -> Chronic Lymphocytic Leukaemia - K. Maddocks et al. 2014
-	#DXCATNUM == 2 -> Acute Myeloid Leukaemia		- W. Blum et al. 2010
-	#DXCATNUM == 3 -> Acute Lymphoblastic Leukaemia	- W. Blum et al. 2010
-  with(datanew, table(Disease, useNA = "always"))
-  datanew2$DXCATNUM <- datanew$Disease
+
+  #DXCATNUM == 2 -> Acute Myeloid Leukaemia		- Not Published NCT01132586
+  datanew2$DXCATNUM <- 2
   
-    #Caucasian 	1
-	#??			2
-	#??			3
-  with(datanew, table(Race, useNA = "always"))
-  datanew2$RACE <- datanew$Race
+  #Caucasian 	1
+  #??			2
+  #??			3
+  #with(datanew, table(Race, useNA = "always"))
+  #datanew2$RACE <- datanew$Race
     
-  datanew2$RACE2 <- 2
-  datanew2$RACE2[datanew$Race == 1] <- 1
-  with(datanew2, table(RACE2, useNA = "always"))
+  #datanew2$RACE2 <- 2
+  #datanew2$RACE2[datanew$Race == 1] <- 1
+  #with(datanew2, table(RACE2, useNA = "always"))
   
-  datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
+  #datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
 
  #----------------------------------------------------------------- 
   dataall <- datanew2
