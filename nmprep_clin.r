@@ -145,7 +145,7 @@
 													"No. Patients"	= gt3)
 													
 	#if factor change to character
-	i <- sapply(grp.table,is.factor)										
+	i <- sapply(grp.table,is.factor)
 	grp.table[i] <- lapply(grp.table[i],as.character)
 	#paste study numbers
   grp.table[which(grp.table$Regimen=="STUDY"),2] <- paste(grp.table[which(grp.table$Regimen=="STUDY"),2],unique(datanew$STUDY))
@@ -155,17 +155,21 @@
 	filename.out <- paste(output.dir,"group_table.csv",sep="/")
   write.csv(grp.table, file=filename.out, row.names=F)
 	
-#Create full nmprep data file	
+#Create full nmprep data file
 	filename.out <- paste(output.dir,"fulldata.csv",sep="/")
   write.csv(datanew, file=filename.out, row.names=FALSE)
-	
+
 #Prepare nm file
 #ID TIME AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
-
   nmprep <- subset(datanew,X.ID!=delID)[c(1,9,7,8,11,12,25,26,2,4,5,14,15,16,17,23,22,20)]
-	
-  nmprep[is.na(nmprep)] <- "."
+
+	nmprep[is.na(nmprep)] <- "."
 	colnames(nmprep)[c(1,17)] <- c("#ID","RACE")
-  
+	 
   filename.out <- paste(output.dir,"nmprep_allstudies.csv",sep="/")
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
+	
+	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,8,9,10,11)]
+	simdata[5] <- "."
+	filename.out <- paste(output.dir,"simprep_allstudies.csv",sep="/")
+  write.csv(simdata, file=filename.out, quote=FALSE,row.names=FALSE)
