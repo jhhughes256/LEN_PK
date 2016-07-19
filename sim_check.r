@@ -42,12 +42,13 @@
    levels(fitdata$DOSELVLf) <- paste("Dose Level",levels(fitdata$DOSELVLf))
    
 #------------------------------- IPRED vs TIME Facetted for ID (no overlay)
-   
-      #Conc vs TIME Week 1 per ID
+  filename.out <- paste(output.dir,"SIM8_CL12_V60_KA4",sep="/")
+
+     #Conc vs TIME Week 1 per ID (1/4)
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(fitdata))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- ggplot(data=subset(fitdata,ID<46))
+  plotobj <-  plotobj + geom_point(aes(x=TIME, y=IPRED, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
@@ -55,14 +56,13 @@
   plotobj <- plotobj + facet_wrap(~ID)
   #plotobj
 
-  filename.out <- paste(output.dir,"SIM7_CL12_V60_KA4",sep="/")
-  to.png(plotobj,filename.out) 
+  to.png(plotobj,paste(filename.out,"IDfacet_p1",sep="_"))
   
-     #Conc vs TIME Week 1 per ID (First Half)
+     #Conc vs TIME Week 1 per ID (2/4)
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(fitdata,ID<36))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- ggplot(data=subset(fitdata,ID>45&ID<92))
+  plotobj <-  plotobj + geom_point(aes(x=TIME, y=IPRED, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
@@ -70,25 +70,40 @@
   plotobj <- plotobj + facet_wrap(~ID)
   #plotobj
 
-  to.png(plotobj,paste(filename.out,"p1",sep="_"))
+  to.png(plotobj,paste(filename.out,"IDfacet_p2",sep="_"))
+	
+     #Conc vs TIME Week 1 per ID (3/4)
+  plotobj <- NULL
+  titletext <- paste("Observed Concentrations in Week 1\n")
+  plotobj <- ggplot(data=subset(fitdata,ID>91&ID<138))
+  plotobj <-  plotobj + geom_point(aes(x=TIME, y=IPRED, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+
+  to.png(plotobj,paste(filename.out,"IDfacet_p3",sep="_"))
+			 
+			 #Conc vs TIME Week 1 per ID (4/4)
+  plotobj <- NULL
+  titletext <- paste("Observed Concentrations in Week 1\n")
+  plotobj <- ggplot(data=subset(fitdata,ID>137))
+  plotobj <-  plotobj + geom_point(aes(x=TIME, y=IPRED, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+
+  to.png(plotobj,paste(filename.out,"IDfacet_p4",sep="_"))
   
-     #Conc vs TIME Week 1 per ID (Second Half)
-  plotobj <- NULL
-  titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(fitdata,ID>35))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  plotobj <- plotobj + facet_wrap(~ID)
-  #plotobj
-
-  to.png(plotobj,paste(filename.out,"p2",sep="_"))
   
 #------------------------------- IPRED w/ OBS vs TIME Facetted for ID 	-> COLOUR = DOSELVLf
 #pull observed data from datacheck_clin.r into r environment
-  plotdata <- read.csv(paste(working.dir,"datacheck_clin_Output","plotdata.csv",sep="/"))	
+  plotdata <- read.csv(paste(output.dir,"fulldata.csv",sep="/"), stringsAsFactors=F, na.strings=c("."))
   
   plotobj <- NULL
   titletext <- paste("log IPRED on OBSERVED - Week 1\n")

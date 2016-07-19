@@ -327,9 +327,10 @@
 
   datanew3$TIME <- c(datafla$Flavo.Time..hr.,datalen$Lena.Time..hr.)
   
-  datanew3$DV <- c(datafla$Flavo.Concentration..nM.,datalen$Lena.Concentration..nM.)
+  datanew3$DV <- c(datafla$Flavo.Concentration..nM.*401.84,datalen$Lena.Concentration..nM.*259.26)		#molar mass for flavo and lena
   datanew3$DV[datanew3$DV<=0] <- NA
- 
+	datanew3$DV <- datanew3$DV/(1000*1000)																																		#conversion from ng/L to ug/mL
+	
   datanew3$MDV <- c(datafla$MDV,datalen$MDV)
   
   datanew3$LNDV <- log(datanew3$DV)

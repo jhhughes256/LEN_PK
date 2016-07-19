@@ -79,7 +79,12 @@
 	dose.levels[datanew$DOSEMG==75] <- 11
 	dose.levels[datanew$GRP<=2&datanew$DOSELVL==1] <- 2
 	dose.levels[datanew$GRP<=2&datanew$DOSELVL==2] <- 3
-	
+
+	temp <- with(datanew,table(MDV,X.ID))
+	#ID with DV values (should be removed)
+	print(delID <- names(temp[1,])[temp[1,]==0])
+	#ID with more NA values than DV values (questionable usability)
+	print(MDVoverDV <- names(temp[1,])[temp[1,]<temp[2,]])
 	
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
@@ -100,6 +105,7 @@
 	filename.out <- paste(output.dir,"dose_table.csv",sep="/")
   write.csv(dose.table, file=filename.out, row.names=F)
 
+	temp <- with(dataone,table(GRP,DOSELVL))
 	gt1 <- c(""," ",sort(unique(datanew[datanew$GRP==1,]$DOSELVL)),
 					 " ",sort(unique(datanew[datanew$GRP==2,]$DOSELVL)),
 					 " ",sort(unique(datanew[datanew$GRP==3,]$DOSELVL)),
@@ -156,7 +162,8 @@
 #Prepare nm file
 #ID TIME AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
 
-  nmprep <- datanew[c(1,9,7,8,11,12,25,26,2,4,5,14,15,16,17,23,22,20)]
+  nmprep <- subset(datanew,X.ID!=delID)[c(1,9,7,8,11,12,25,26,2,4,5,14,15,16,17,23,22,20)]
+	
   nmprep[is.na(nmprep)] <- "."
 	colnames(nmprep)[c(1,17)] <- c("#ID","RACE")
   
