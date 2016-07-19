@@ -46,40 +46,119 @@
 	data08056 <- read.csv(file08056, stringsAsFactors=F)
 	data10016 <- read.csv(file10016, stringsAsFactors=F)
   
-#Create nmprep data file
+#FINAL datacheck and process for nmprep
   datanew <- rbind(data06003,data05115,data08056,data10016)
-	filename.out <- paste(output.dir,"fulldata.csv",sep="/")
-  write.csv(datanew, file=filename.out, row.names=FALSE)
-	
-#Nmprep FINAL datacheck
 	names(datanew)
   str(datanew)
   npat <- length(unique(datanew$X.ID))
   npat
 	
-#Week 1 only - Caucasian or Non-Caucasian
-#ID TIME AMT EVID DV MDV AGE WT HT GEND RACE SECR DXCAT
+	#RATE should be zero for all? Is RATE even necessary as they are all oral doses! 
+	with(datanew, table(RATE, useNA = "always"))
+	#replace with EVID? far more useful
+	colnames(datanew)[8] <- "EVID"
+	datanew$EVID <- 0
+	datanew$EVID[!is.na(datanew$AMT)] <- 1
+	
+	#DOSELVL is not uniform between study groups
+	print(temp <- with(datanew, table(DOSEMG)))
+	#10 different dose levels.. except that patients from 06003 have multiple different dosage levels!
+	length(print(names(temp)))
+	#There are 9 dose levels +2 unique dose levels from 06003
+	with(datanew, table(DOSEMG,STUDY))
+	
+	dose.levels <- rep(0,length(datanew$DOSELVL))
+	dose.levels[datanew$DOSEMG==2.5&datanew$STUDY==8056] <- 1
+	dose.levels[datanew$DOSEMG==5&datanew$STUDY==8056] <- 4
+	dose.levels[datanew$DOSEMG==15] <- 5
+	dose.levels[datanew$DOSEMG==20] <- 6
+	dose.levels[datanew$DOSEMG==25] <- 7
+	dose.levels[datanew$DOSEMG==30] <- 8
+	dose.levels[datanew$DOSEMG==35] <- 9
+	dose.levels[datanew$DOSEMG==50] <- 10
+	dose.levels[datanew$DOSEMG==75] <- 11
+	dose.levels[datanew$GRP<=2&datanew$DOSELVL==1] <- 2
+	dose.levels[datanew$GRP<=2&datanew$DOSELVL==2] <- 3
+	
+	
+#Create summary tables
+	datanew$DOSELVL <- dose.levels
+	
+  dataone <- lapplyBy(~X.ID, data=datanew,  oneperID)
+  dataone <- bind.list(dataone)
+  dim(dataone)
+	
+	dose.levelsF <- as.factor(dose.levels)
+	levels(dose.levelsF) <- c("2.5mg daily","2.5mg daily (escalate to 5.0mg daily)",
+														"2.5mg daily (escalate to 7.5mg daily)","5.0mg daily",
+														"15mg daily","20mg daily","25mg daily","30mg daily",
+														"35mg daily","50mg daily","75mg daily")
+	dose.table <- data.frame("Dose Levels" = c(1:11,""),
+													 "Regimen" = c(levels(dose.levelsF),"Total Patients"),
+													 "No. Patients" = c(with(dataone,table(DOSELVL)),125))
+	
+	filename.out <- paste(output.dir,"dose_table.csv",sep="/")
+  write.csv(dose.table, file=filename.out, row.names=F)
 
-  nmcols <- dataFIX[-c(2,3,4,6,8,10,13,18,19,21)]  #All columns except EVID
-  nmcols$EVID <- 1
-  nmcols$EVID[is.na(nmcols$AMT)] <- 0
+	gt1 <- c(""," ",sort(unique(datanew[datanew$GRP==1,]$DOSELVL)),
+					 " ",sort(unique(datanew[datanew$GRP==2,]$DOSELVL)),
+					 " ",sort(unique(datanew[datanew$GRP==3,]$DOSELVL)),
+					 ""," ",sort(unique(datanew[datanew$GRP==4,]$DOSELVL)),
+					 ""," ",sort(unique(datanew[datanew$GRP==5,]$DOSELVL)),
+					 "  ", #group 6 exists simply to mark lena in comb not a real group
+					 ""," ",sort(unique(datanew[datanew$GRP==7,]$DOSELVL)),
+					 " ",sort(unique(datanew[datanew$GRP==8,]$DOSELVL)))
+	gt2 <- as.factor(gt1)
+	levels(gt2) <- c("STUDY","Group","Group 6 made up of Group 5 patients","2.5mg daily",
+									 "50mg daily","75mg daily",
+									 "2.5mg daily (escalate to 5.0mg daily)",
+									 "2.5mg daily (escalate to 7.5mg daily)",
+									 "5.0mg daily","15mg daily","20mg daily",
+									 "25mg daily","30mg daily","35mg daily")
+	gt3 <- c(with(dataone,table(STUDY))[2],		#specify study patients
+					 with(dataone,table(GRP))[1],			#specify group patients
+					 temp[1,][temp[1,]!=0],						#specify number of patients for each regimen
+					 with(dataone,table(GRP))[2],			#repeat ad nauseam
+					 temp[2,][temp[2,]!=0],
+					 with(dataone,table(GRP))[3],
+					 temp[3,][temp[3,]!=0],
+					 with(dataone,table(STUDY))[1],
+					 with(dataone,table(GRP))[4],
+					 temp[4,][temp[4,]!=0],
+					 with(dataone,table(STUDY))[3],
+					 with(dataone,table(GRP))[5],
+					 temp[5,][temp[5,]!=0],						#group 6 exists simply to mark lena in comb not a real group
+					 "(4)",
+					 with(dataone,table(STUDY))[4],
+					 with(dataone,table(GRP))[6],
+					 temp[6,][temp[6,]!=0],						#actually group 7
+					 with(dataone,table(GRP))[7],
+					 temp[7,][temp[7,]!=0])						#actually group 8
+	grp.table <- data.frame("Dose Levels"		= gt1,
+													"Regimen" 			= gt2,
+													"No. Patients"	= gt3)
+													
+	#if factor change to character
+	i <- sapply(grp.table,is.factor)										
+	grp.table[i] <- lapply(grp.table[i],as.character)
+	#paste study numbers
+  grp.table[which(grp.table$Regimen=="STUDY"),2] <- paste(grp.table[which(grp.table$Regimen=="STUDY"),2],unique(datanew$STUDY))
+	#paste group numbers
+	grp.table[which(grp.table$Regimen=="Group"),2] <- paste(grp.table[which(grp.table$Regimen=="Group"),2],c(1:5,7,8))
+	
+	filename.out <- paste(output.dir,"group_table.csv",sep="/")
+  write.csv(grp.table, file=filename.out, row.names=F)
+	
+#Create full nmprep data file	
+	filename.out <- paste(output.dir,"fulldata.csv",sep="/")
+  write.csv(datanew, file=filename.out, row.names=FALSE)
+	
+#Prepare nm file
+#ID TIME AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
 
-  nmprep1 <- nmcols[datanew2$XSAMP==0,c(1,4,3,16,5,6,14,15,7,9,10,8,12,13,11,2)]
-  nmprep1[is.na(nmprep1)] <- "."
+  nmprep <- datanew[c(1,9,7,8,11,12,25,26,2,4,5,14,15,16,17,23,22,20)]
+  nmprep[is.na(nmprep)] <- "."
+	colnames(nmprep)[c(1,17)] <- c("#ID","RACE")
   
-  filename.out <- paste(output.dir,"06003_clin_nmprepwk1.csv",sep="/")
-  write.csv(nmprep1, file=filename.out, quote=FALSE,row.names=FALSE)
-  
-#All Weeks
-#ID TIME AMT EVID DV MDV ADDL II AGE WT HT GEND RACE SECR DXCAT
-  nmprep2 <- nmcols[c(1,4,3,16,5,6,14,15,7,9,10,8,12,13,11,2)]
-  nmprep2[is.na(nmprep2)] <- "."
-  
-  filename.out <- paste(output.dir,"06003_clin_nmprep.csv",sep="/")
-  write.csv(nmprep1, file=filename.out, quote=FALSE,row.names=FALSE)
-  
-  simprep2 <- nmprep2
-  simprep2$DV <- "."
-  
-  filename.out <- paste(output.dir,"06003_clin_simprep.csv",sep="/")
-  write.csv(simprep2, file=filename.out, quote=FALSE,row.names=FALSE)
+  filename.out <- paste(output.dir,"nmprep_allstudies.csv",sep="/")
+  write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)

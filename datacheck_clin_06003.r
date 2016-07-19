@@ -90,18 +90,18 @@
   
   #Dose Level 											     		   total patients = 61
   #			Wk1				Wk2				Wk3		
-  # ----------------------------------------------------    GROUP A    npat = 30	
-  #	 0	25mg single													   npat =  3
-  #  1	2.5mg daily		5.0mg daily		5.0mg daily					   npat = 19
-  #  2  2.5mg daily		5.0mg daily		7.5mg daily         		   npat =  8
-  # ----------------------------------------------------    GROUP B	   npat =  5
-  #  1  2.5mg daily     5.0mg daily     5.0mg daily 				   npat =  3
-  #  2  2.5mg daily     5.0mg daily     7.5mg daily 				   npat =  2  
-  # ----------------------------------------------------    GROUP C    npat = 24
-  #  3  25mg daily		25mg daily		25mg daily					   npat =  4
-  #	 4	35mg daily		35mg daily		35mg daily					   npat =  9
-  #  5	50mg daily		50mg daily		50mg daily					   npat = 10
-  #	 6	75mg daily		75mg daily		75mg daily					   npat =  3
+  # ----------------------------------------------------    GROUP A   	npat = 30	
+  #	 0	25mg single													   													npat =  3
+  #  1	2.5mg daily		5.0mg daily		5.0mg daily					   							npat = 18
+  #  2  2.5mg daily		5.0mg daily		7.5mg daily         								npat =  9
+  # ----------------------------------------------------    GROUP B	  	npat =  5
+  #  1  2.5mg daily   5.0mg daily   5.0mg daily 				   							npat =  3
+  #  2  2.5mg daily   5.0mg daily   7.5mg daily 				   							npat =  2  
+  # ----------------------------------------------------    GROUP C   	npat = 24
+  #  3  25mg daily		25mg daily		25mg daily					  							npat =  4
+  #	 4	35mg daily		35mg daily		35mg daily					  							npat =  9
+  #  5	50mg daily		50mg daily		50mg daily					  							npat = 10
+  #	 6	75mg daily		75mg daily		75mg daily					 								npat =  3
   datanew2$DOSELVL <- 1
   datanew2$DOSELVL[datanew$dose..mg.==25] <- 0
   datanew2$DOSELVL[datanew$dose..mg.==25&datanew2$GRP==3] <- 3

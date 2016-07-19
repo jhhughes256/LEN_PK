@@ -51,7 +51,7 @@
   
   #Structure
   str(datanew)
-   
+  
 #------------------------------------------------------------------------------------
 #Plot PK data
   
@@ -80,8 +80,8 @@
   #Dose Level 											     		   total patients = 61
   #				
   # -----------------   npat = 20	
-  #	 1	15mg daily		npat =  1
-  #  2	20mg daily		npat =  6
+  #	 1	15mg daily			npat =  1
+  #  2	20mg daily			npat =  6
   #  3  25mg daily      npat = 13
   
   datanew2$DOSELVL <- 3
