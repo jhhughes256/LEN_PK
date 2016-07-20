@@ -643,9 +643,9 @@ plotByFactor <- function(factorColname,factorText)
 
 #--------------------
 #Data prep
-	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"    
-	#[10] "DAY"     "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"       "BSA"     
-	#[19] "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"    
+	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
+	#[10] "TAD"			 "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
+	#[19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
 	
   dataFIX <- data.frame("ID" = (dataall$ID+75), "STUDY" = dataall$STUDY)
   
@@ -656,6 +656,7 @@ plotByFactor <- function(factorColname,factorText)
 	dataFIX$AMT <- dataall$AMT
   dataFIX$RATE <- 0
   dataFIX$TIME <- dataall$TIME
+	dataFIX$TAD <- dataall$TIME
   dataFIX$DAY <- 1
   dataFIX$DV <- dataall$DV
   dataFIX$MDV <- dataall$MDV

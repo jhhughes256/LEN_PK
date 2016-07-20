@@ -723,9 +723,9 @@ plotByFactor <- function(factorColname,factorText)
   #plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
 	#Data prep
-	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"    
-	#[10] "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"       "BSA"     
-	#[19] "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"   
+	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
+	#[10] "TAD"      "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
+	#[19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
 	
 	dataFIX <- data.frame("ID" = (dataall$ID+120), "STUDY" = dataall$STUDY)
   
@@ -738,6 +738,7 @@ plotByFactor <- function(factorColname,factorText)
 	dataFIX$AMT <- dataall$AMT
   dataFIX$RATE <- 0
   dataFIX$TIME <- dataall$TIME+(dataall$DAY-1)*24
+	dataFIX$TAD <- dataall$TIME
 	
   dataFIX$DAY <- dataall$DAY
   dataFIX$DV <- dataall$DV

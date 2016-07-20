@@ -888,9 +888,9 @@ plotByFactor <- function(factorColname,factorText)
 #plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
 #Data prep
-	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"    
-	#[10] "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"       "BSA"     
-	#[19] "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"    	  
+	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
+	#[10] "TAD"      "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
+	#[19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
 	
 	dataFIX <- data.frame("ID" = (dataall.lena$ID+96), "STUDY" = dataall.lena$STUDY)
   
@@ -906,11 +906,14 @@ plotByFactor <- function(factorColname,factorText)
   dataFIX$RATE <- dataall.lena$RATE
   dataFIX$TIME <- dataall.lena$TIME+24	
 	dataFIX$TIME[!is.na(dataFIX$AMT)] <- 0
+	dataFIX$TAD <- dataall.lena$TIME
+	dataFIX$TAD[dataFIX$TAD==48] <- 24
 	
   dataFIX$DAY <- dataall.lena$DAY
 	dataFIX$DAY[dataFIX$TIME==0] <- 1
 	dataFIX$TIME[dataFIX$DAY==3] <- dataFIX$TIME[dataFIX$DAY==3]+24	
 	dataFIX$DAY[dataFIX$TIME==48] <- 2
+	dataFIX$DAY[dataFIX$TIME==96] <- 4
 
   dataFIX$DV <- dataall.lena$DV
   dataFIX$MDV <- dataall.lena$MDV

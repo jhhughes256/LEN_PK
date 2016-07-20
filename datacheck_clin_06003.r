@@ -117,6 +117,8 @@
   datanew2$RATE <- datanew$rate
    
   datanew2$TIME <- datanew$time..hr.
+	
+	datanew2$TAD <- datanew$time..hr.
   
   datanew2$WEEK <- ceiling(floor(datanew2$TIME/84)/2)+1
   
@@ -705,9 +707,9 @@ plotIndexCat <- function(CovColname,CovText)
 
 #--------------------
 #Data prep
-	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"    
-	#[10] "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"       "BSA"     
-	#[19] "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"    	  "EVID"
+	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
+	#[10] "TAD"			 "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
+	#[19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
   dataone <- lapplyBy(~ID, data=dataall,  oneperID)		#one line per point, includes AMT value
   dataone <- bind.list(dataone)
   dataone$RATE <- -2									#fix misplaced rate values
@@ -739,9 +741,10 @@ plotIndexCat <- function(CovColname,CovText)
   dataFIX <- orderBy(~ID+TIME, data=rbind(dataAMT,dataDV))
   colnames(dataFIX)[1] <- "#ID"
   
-  dataFIX$WEEK <- dataFIX$WEEK*7-7
-  dataFIX$WEEK[dataFIX$WEEK==0] <- 1
-  colnames(dataFIX)[10] <- "DAY"
+  colnames(dataFIX)[11] <- "DAY"
+	dataFIX$DAY[dataFIX$TIME==0] <- 1
+	dataFIX$DAY[dataFIX$TIME!=0] <- ceiling(dataFIX$TIME[dataFIX$TIME!=0]/24)
+	dataFIX$TAD <- dataFIX$TIME - (24*(dataFIX$DAY-1))
   
   filename.out <- paste(output.dir,"06003_finaldata.csv",sep="/")
   write.csv(dataFIX, file=filename.out, row.names=FALSE)

@@ -38,6 +38,8 @@
    fit.file <- "D:/Hughes/Data/RAW_Clinical/nmprep_clin_Output/06003LEN_1comp1abs_SIM.nm7/06003len_1comp1abs_sim.fit"
    fitdata <- read.table(file=fit.file, sep="", skip=1, header=T, na.strings=c("NA","***********","1.#INFE+00"))
    fitdata$Y[fitdata$Y==0] <- NA
+	 fitdata$IPRED[fitdata$IPRED==0] <- NA
+	 fitdata$PRED[fitdata$PRED==0] <- NA
    fitdata$DOSELVLf <- as.factor(fitdata$DOSELVL)
    levels(fitdata$DOSELVLf) <- paste("Dose Level",levels(fitdata$DOSELVLf))
    
@@ -103,12 +105,16 @@
   
 #------------------------------- IPRED w/ OBS vs TIME Facetted for ID 	-> COLOUR = DOSELVLf
 #pull observed data from datacheck_clin.r into r environment
-  plotdata <- read.csv(paste(output.dir,"fulldata.csv",sep="/"), stringsAsFactors=F, na.strings=c("."))
+  plotdata <- read.csv(paste(output.dir,"fulldata.csv",sep="/"), stringsAsFactors=F, na.strings=c("NA"))
+	plotdata$DOSELVLf <- as.factor(plotdata$DOSELVL)
+  levels(plotdata$DOSELVLf) <- paste("Dose Level",levels(plotdata$DOSELVLf))
+	plotdata$DV[plotdata$DV==0] <- NA
+	colnames(plotdata)[1] <- "ID"
   
   plotobj <- NULL
-  titletext <- paste("log IPRED on OBSERVED - Week 1\n")
+  titletext <- paste("log IPRED on OBSERVED\n")
   plotobj <- ggplot(data=subset(fitdata))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=plotdata, size=3, alpha=0.5)
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=plotdata, size=2, alpha=0.8)
   plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
@@ -117,17 +123,44 @@
   plotobj <- plotobj + facet_wrap(~ID)
   #plotobj
   
-  to.png(plotobj,paste(filename.out,"logIPREDall",sep="_")) 
+  to.png.wx2(plotobj,paste(filename.out,"logIPREDall",sep="_")) 
     
+#  plotobj <- NULL
+#  titletext <- paste("IPRED on OBSERVED - Dose Level 1(2.5mg daily)\n")
+#  doseflag <- 1
+#  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+#  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+#  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
+#  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+#  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+#  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+#  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+#  plotobj <- plotobj + facet_wrap(~ID)
+#  #plotobj
+ 
+#  to.png(plotobj,paste(filename.out,"IPRED_d01",sep="_")) 
+  
   plotobj <- NULL
-  titletext <- paste("IPRED on OBSERVED - Dose Level 0 and 3 (25mg)\n")
-  doseflag <- 0
-  doseflag2 <- 3
+  titletext <- paste("IPRED on OBSERVED - Dose Level 2 (2.5 - 5mg daily)\n")
+  doseflag <- 2
   plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
   plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag2), size=3, alpha=0.5)
-  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", data=subset(fitdata,DOSELVL==doseflag2), size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+ 
+  to.png(plotobj,paste(filename.out,"IPRED_d02",sep="_")) 
+  
+  plotobj <- NULL
+  titletext <- paste("IPRED on OBSERVED - Dose Level 3 (2.5 - 7.5mg daily)\n")
+  doseflag <- 3
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
@@ -137,56 +170,26 @@
  
   to.png(plotobj,paste(filename.out,"IPRED_d03",sep="_")) 
   
-  plotobj <- NULL
-  titletext <- paste("IPRED on OBSERVED - Dose Level 1 (2.5 - 5mg)\n")
-  doseflag <- 1
-  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
-  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  plotobj <- plotobj + facet_wrap(~ID)
-  #plotobj
+#  plotobj <- NULL
+#  titletext <- paste("IPRED on OBSERVED - Dose Level 4 (5mg daily)\n")
+#  doseflag <- 4
+#  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+#  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+#  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
+#  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+#  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+#  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+#  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+#  plotobj <- plotobj + facet_wrap(~ID)
+# #plotobj
  
-  to.png(plotobj,paste(filename.out,"IPRED_d1",sep="_")) 
+#  to.png(plotobj,paste(filename.out,"IPRED_d04",sep="_")) 
   
   plotobj <- NULL
-  titletext <- paste("IPRED on OBSERVED - Dose Level 2 (2.5 - 7.5mg)\n")
-  doseflag <- 2
-  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
-  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  plotobj <- plotobj + facet_wrap(~ID)
-  #plotobj
- 
-  to.png(plotobj,paste(filename.out,"IPRED_d2",sep="_")) 
-  
-  plotobj <- NULL
-  titletext <- paste("IPRED on OBSERVED - Dose Level 4 35mg)\n")
-  doseflag <- 4
-  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
-  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  plotobj <- plotobj + facet_wrap(~ID)
-  #plotobj
- 
-  to.png(plotobj,paste(filename.out,"IPRED_d4",sep="_")) 
-  
-  plotobj <- NULL
-  titletext <- paste("IPRED on OBSERVED - Dose Level 5 35mg)\n")
+  titletext <- paste("IPRED on OBSERVED - Dose Level 5 (15mg daily)\n")
   doseflag <- 5
   plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
   plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
@@ -195,13 +198,13 @@
   plotobj <- plotobj + facet_wrap(~ID)
   #plotobj
  
-  to.png(plotobj,paste(filename.out,"IPRED_d5",sep="_")) 
+  to.png(plotobj,paste(filename.out,"IPRED_d05",sep="_")) 
   
   plotobj <- NULL
-  titletext <- paste("IPRED on OBSERVED - Dose Level 6 35mg)\n")
+  titletext <- paste("IPRED on OBSERVED - Dose Level 6 (20mg daily)\n")
   doseflag <- 6
   plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
   plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
   plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
@@ -210,7 +213,82 @@
   plotobj <- plotobj + facet_wrap(~ID)
   #plotobj
  
-  to.png(plotobj,paste(filename.out,"IPRED_d6",sep="_")) 
+  to.png(plotobj,paste(filename.out,"IPRED_d06",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("IPRED on OBSERVED - Dose Level 7 (25mg daily)\n")
+  doseflag <- 7
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+ 
+  to.png(plotobj,paste(filename.out,"IPRED_d07",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("IPRED on OBSERVED - Dose Level 8 (30mg daily)\n")
+  doseflag <- 8
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+ 
+  to.png(plotobj,paste(filename.out,"IPRED_d08",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("IPRED on OBSERVED - Dose Level 9 (35mg daily)\n")
+  doseflag <- 9
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+ 
+  to.png(plotobj,paste(filename.out,"IPRED_d09",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("IPRED on OBSERVED - Dose Level 10 (50mg daily)\n")
+  doseflag <- 10
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+ 
+  to.png(plotobj,paste(filename.out,"IPRED_d10",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("IPRED on OBSERVED - Dose Level 11 (75mg daily)\n")
+  doseflag <- 11
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.8)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  plotobj <- plotobj + facet_wrap(~ID)
+  #plotobj
+ 
+  to.png(plotobj,paste(filename.out,"IPRED_d11",sep="_")) 
   
 #------------------------------- PRED w/ OBS vs TIME 					-> COLOUR = DOSELVLf
   
@@ -228,39 +306,22 @@
   
   to.png(plotobj,paste(filename.out,"logPREDall",sep="_")) 
   
-  plotobj <- NULL
-  titletext <- paste("PRED on OBSERVED - Dose Level 0 and 3 (25mg)\n")
-  doseflag <- 0
-  doseflag2 <- 3
-  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
-  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag2), size=3, alpha=0.5)
-  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), data=subset(fitdata,DOSELVL==doseflag2), colour="black", size=1, alpha =1)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  #plotobj
+#  plotobj <- NULL
+#  titletext <- paste("PRED on OBSERVED - Dose Level 1 (2.5mg daily)\n")
+#  doseflag <- 1
+#  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+#  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+#  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
+#  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+#  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+#  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+#  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+#  #plotobj
   
-  to.png(plotobj,paste(filename.out,"PRED_d03",sep="_")) 
+#  to.png(plotobj,paste(filename.out,"PRED_d01",sep="_")) 
     
   plotobj <- NULL
-  titletext <- paste("PRED on OBSERVED - Dose Level 1 (2.5mg - 5mg)\n")
-  doseflag <- 1
-  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
-  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
-  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
-  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
-  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
-  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
-  plotobj <- plotobj + scale_colour_discrete("Dose Level")
-  #plotobj
-  
-  to.png(plotobj,paste(filename.out,"PRED_d1",sep="_")) 
-  
-  plotobj <- NULL
-  titletext <- paste("PRED on OBSERVED - Dose Level 2 (2.5mg - 7.5mg)\n")
+  titletext <- paste("PRED on OBSERVED - Dose Level 2 (2.5mg - 5mg daily)\n")
   doseflag <- 2
   plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
   plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
@@ -271,11 +332,11 @@
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   #plotobj
   
-  to.png(plotobj,paste(filename.out,"PRED_d2",sep="_")) 
+  to.png(plotobj,paste(filename.out,"PRED_d02",sep="_")) 
   
   plotobj <- NULL
-  titletext <- paste("PRED on OBSERVED - Dose Level 4 (35mg)\n")
-  doseflag <- 4
+  titletext <- paste("PRED on OBSERVED - Dose Level 3 (2.5mg - 7.5mg)\n")
+  doseflag <- 3
   plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
   plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
   plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
@@ -285,10 +346,24 @@
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   #plotobj
   
-  to.png(plotobj,paste(filename.out,"PRED_d4",sep="_")) 
+  to.png(plotobj,paste(filename.out,"PRED_d03",sep="_")) 
+  
+#  plotobj <- NULL
+#  titletext <- paste("PRED on OBSERVED - Dose Level 4 (5mg daily)\n")
+#  doseflag <- 4
+#  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+#  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+#  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
+#  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+#  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+#  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+#  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+#  #plotobj
+  
+  to.png(plotobj,paste(filename.out,"PRED_d04",sep="_")) 
   
   plotobj <- NULL
-  titletext <- paste("PRED on OBSERVED - Dose Level 5 (50mg)\n")
+  titletext <- paste("PRED on OBSERVED - Dose Level 5 (15mg daily)\n")
   doseflag <- 5
   plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
   plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
@@ -299,10 +374,10 @@
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   #plotobj
   
-  to.png(plotobj,paste(filename.out,"PRED_d5",sep="_")) 
+  to.png(plotobj,paste(filename.out,"PRED_d05",sep="_")) 
   
   plotobj <- NULL
-  titletext <- paste("PRED on OBSERVED - Dose Level 6 (75mg)\n")
+  titletext <- paste("PRED on OBSERVED - Dose Level 6 (20mg daily)\n")
   doseflag <- 6
   plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
   plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
@@ -313,4 +388,74 @@
   plotobj <- plotobj + scale_colour_discrete("Dose Level")
   #plotobj
   
-  to.png(plotobj,paste(filename.out,"PRED_d6",sep="_")) 
+  to.png(plotobj,paste(filename.out,"PRED_d06",sep="_")) 
+	
+	  plotobj <- NULL
+  titletext <- paste("PRED on OBSERVED - Dose Level 7 (25mg daily)\n")
+  doseflag <- 7
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  #plotobj
+  
+  to.png(plotobj,paste(filename.out,"PRED_d07",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("PRED on OBSERVED - Dose Level 8 (30mg daily)\n")
+  doseflag <- 8
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  #plotobj
+  
+  to.png(plotobj,paste(filename.out,"PRED_d08",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("PRED on OBSERVED - Dose Level 9 (35mg daily)\n")
+  doseflag <- 9
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  #plotobj
+  
+  to.png(plotobj,paste(filename.out,"PRED_d09",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("PRED on OBSERVED - Dose Level 10 (50mg daily)\n")
+  doseflag <- 10
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  #plotobj
+  
+  to.png(plotobj,paste(filename.out,"PRED_d10",sep="_")) 
+	
+	plotobj <- NULL
+  titletext <- paste("PRED on OBSERVED - Dose Level 11 (75mg daily)\n")
+  doseflag <- 11
+  plotobj <- ggplot(data=subset(fitdata,DOSELVL==doseflag))
+  plotobj <- plotobj + geom_point(aes(x=TIME, y=DV,colour=DOSELVLf), data=subset(plotdata,DOSELVL==doseflag), size=3, alpha=0.5)
+  plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour="black", size=1, alpha =1)
+  plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+  plotobj <- plotobj +  scale_y_continuous("Concentration (ng/ml)")
+  plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+  plotobj <- plotobj + scale_colour_discrete("Dose Level")
+  #plotobj
+  
+  to.png(plotobj,paste(filename.out,"PRED_d11",sep="_")) 

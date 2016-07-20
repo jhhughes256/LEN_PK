@@ -86,6 +86,10 @@
 	#ID with more NA values than DV values (questionable usability)
 	print(MDVoverDV <- names(temp[1,])[temp[1,]<temp[2,]])
 	
+	#Fix up MDV as it has had some errors sneak in
+	datanew$MDV <- 0
+	datanew$MDV[is.na(datanew$DV)] <- 1
+	
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
 	
@@ -160,16 +164,17 @@
   write.csv(datanew, file=filename.out, row.names=FALSE)
 
 #Prepare nm file
-#ID TIME AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
-  nmprep <- subset(datanew,X.ID!=delID)[c(1,9,7,8,11,12,25,26,2,4,5,14,15,16,17,23,22,20)]
+#ID TIME TAD AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
+  nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,12,13,26,27,2,4,5,15,16,17,18,24,23,21)]
 
+	
 	nmprep[is.na(nmprep)] <- "."
-	colnames(nmprep)[c(1,17)] <- c("#ID","RACE")
+	colnames(nmprep)[c(1,18)] <- c("#ID","RACE")
 	 
-  filename.out <- paste(output.dir,"nmprep_allstudies.csv",sep="/")
+  filename.out <- "D:/Hughes/Data/PK/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
 	
-	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,8,9,10,11)]
-	simdata[5] <- "."
+	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,6,8,9,10,11,12)]
+	simdata[6] <- "."
 	filename.out <- paste(output.dir,"simprep_allstudies.csv",sep="/")
   write.csv(simdata, file=filename.out, quote=FALSE,row.names=FALSE)
