@@ -120,7 +120,7 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   
   plotobj1 <- NULL
   plotobj1 <-  ggplot(fitdata[fitdata$DV>0.001,])
-  plotobj1 <- plotobj1 + geom_point(aes(x=PRED, y=DV, colour=DOSELVLf), shape=1)
+  plotobj1 <- plotobj1 + geom_point(aes(x=PRED, y=DV, colour=GRPf), shape=1)
   plotobj1 <- plotobj1 + geom_abline(aes(x=PRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
   plotobj1 <- plotobj1 + geom_smooth(aes(x=PRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
 	plotobj1 <- plotobj1 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
@@ -136,7 +136,7 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   
   plotobj2 <- NULL
   plotobj2 <-  ggplot(fitdata)
-  plotobj2 <- plotobj2 + geom_point(aes(x=IPRED, y=DV, colour=DOSELVLf), shape=1)
+  plotobj2 <- plotobj2 + geom_point(aes(x=IPRED, y=DV, colour=GRPf), shape=1)
   plotobj2 <- plotobj2 + geom_abline(aes(x=IPRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
   plotobj2 <- plotobj2 + geom_smooth(aes(x=IPRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
 	plotobj2 <- plotobj2 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
@@ -153,7 +153,7 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   
   plotobj3 <- NULL
   plotobj3 <-  ggplot(fitdata)
-  plotobj3 <- plotobj3 + geom_point(aes(x=TAD, y=CWRES, colour=DOSELVLf), shape=1)
+  plotobj3 <- plotobj3 + geom_point(aes(x=TAD, y=CWRES, colour=GRPf), shape=1)
   plotobj3 <- plotobj3 + geom_abline(aes(x=TAD, y=CWRES),intercept=0, slope=0, colour="black")  #Add zero line
   plotobj3 <- plotobj3 + geom_smooth(aes(x=TAD, y=CWRES), method=loess, se=T, colour="red")        #Add loess smoothing line
   plotobj3 <- plotobj3+ scale_x_continuous(name="Time after dose (h)")
@@ -168,7 +168,7 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   
   plotobj4 <- NULL
   plotobj4 <-  ggplot(fitdata)
-  plotobj4 <- plotobj4 + geom_point(aes(x=PRED, y=CWRES, colour=DOSELVLf), shape=1)
+  plotobj4 <- plotobj4 + geom_point(aes(x=PRED, y=CWRES, colour=GRPf), shape=1)
   plotobj4 <- plotobj4 + geom_abline(aes(x=PRED, y=CWRES),intercept=0, slope=0, colour="black")  #Add zero line
   plotobj4 <- plotobj4 + geom_smooth(aes(x=PRED, y=CWRES), method=loess, se=T, colour="red")        #Add loess smoothing line
   plotobj4 <- plotobj4 + scale_x_continuous(name="Population Predicted conc (ug/mL)")

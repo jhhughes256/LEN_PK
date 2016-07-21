@@ -167,7 +167,7 @@
 #ID TIME TAD AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
   nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,12,13,26,27,2,4,5,15,16,17,18,24,23,21)]
 
-	
+	nmprep$WT[is.na(nmprep$WT)] <- 70
 	nmprep[is.na(nmprep)] <- "."
 	colnames(nmprep)[c(1,18)] <- c("#ID","RACE")
 	 
