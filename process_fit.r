@@ -98,6 +98,12 @@
 																		c("mg QD","mg-5mg QD","mg-7.5mg QD",rep("mg QD",8)),sep="")
 	fitdata$GENDf <- factor(fitdata$GEND)
 	levels(fitdata$GENDf) <- c("F","M")
+	
+	fitdata$RACEf <- factor(fitdata$RACE)
+	levels(fitdata$RACEf) <- c("Unknown","Caucasian","Non-Caucasian")
+	
+	fitdata$DXCATf <- factor(fitdata$DXCAT)
+	levels(fitdata$DXCATf) <- c("CLL","AML","ALL","MM")
 
 #--------------------------------------------------------------------------------------------------	  
 #Diagnostic plots
@@ -205,7 +211,7 @@ dev.off()
   plotobj <- plotobj + geom_density(aes(x=CWRES, y=..density..))
   plotobj <- plotobj + scale_x_continuous(name="Residual", limits=c(-4,4))
   plotobj <- plotobj + scale_y_continuous(name="distribution density") 
-  plotobj
+  #plotobj
  
   to.png.sqr(plotobj,"residual_density")
 
@@ -213,7 +219,7 @@ dev.off()
  #Condition density plot on group
   plotobj <- plotobj + geom_density(aes(x=CWRES, y=..density.., colour=GRPf))
   plotobj  <-  plotobj + scale_colour_brewer(name="Group", palette="Set1")
-  plotobj
+  #plotobj
 
   to.png.sqr(plotobj,"residual_density_group")
 
@@ -235,13 +241,11 @@ eta.cols <-  grep(glob2rx("ETA*"), names(fitdataone))
 eta.cols <- names(fitdataone)[eta.cols]
 etadata <- subset(fitdataone, select=eta.cols)
 
-
 if (ncol(etadata)>1)  #more than 1 ETA is scatterplot matrix
 {
   plotobj <- NULL
   plotobj <-  ggpairs(etadata, title ="Correlation between random effects")
-  plotobj
-  plotobj
+  #plotobj
   to.png(plotobj,"etascatter")
 } else               #only 1 ETA  is density plot
 {
@@ -264,16 +268,16 @@ if (ncol(etadata)>1)  #more than 1 ETA is scatterplot matrix
 #eta.cols <- eta.cols[eta.cols %in% etabov.cols==F]
 
 #Get the columns with categorical covariates
-covcat.cols <- c("GEND","ROUTE","DOSING")
+covcat.cols <- c("DOSELVLf","GENDf","RACEf","DXCATf")
 
 #Get the columns with continuous covariates
-covcont.cols <- c("WEIGHT","AGE")
+covcont.cols <- c("AGE","WT","HT","SECR")
 
 #-------------------------------------------------------------------------------------------------------
 #Categorical covariates    
 covcatdf <- expand.grid(eta.cols,covcat.cols,stringsAsFactors = F)
 names(covcatdf) <- c("ETAname","covname")
-covcatdf
+#covcatdf
 
 
 #Function to count numbers in a boxplot and return as a coardinate,label pair
@@ -297,7 +301,7 @@ ETACovariatePlotCAT <- function(ETAname,covname)
   #plotobj  <- plotobj + ggtitle("Final PK model\n")  #legend.position="none", 
   #plotobj <- plotobj + ggtitle("Base PK model\n")  #legend.position="none",
   plotobj <- plotobj + ggtitle("ETA PLOT\n")
-  plotobj
+  #plotobj
   
   png.file.name <- paste(ETAname,"_vs_",covname,sep="")
   
@@ -335,7 +339,7 @@ ETACovariatePlotCONT <- function(ETAname,covname)
   #plotobj <- plotobj + theme(legend.position="none") + ggtitle("Final PK model\n")
   #plotobj <- plotobj + ggtitle("Base PK model\n")
   plotobj <- plotobj + ggtitle("ETA PLOT\n")
-  plotobj
+  #plotobj
   
   png.file.name <- paste(ETAname,"_vs_",covname,sep="")
   to.png.sqr(plotobj,png.file.name)     
@@ -351,35 +355,35 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 #--------------------------------------------------------------------------------------------------	
 #Complex ETA grids
 
-	plotobj1 <- NULL
-	plotobj1 <- ggplot(fitdata)
-	titletext <- expression(atop("ETA1 v's ROUTE",
-													atop("BY ROUTE",
-															 "coloured by DOSING")))
-	plotobj1 <- plotobj1 + ggtitle(titletext) 
-	plotobj1 <- plotobj1 + geom_point(aes(x=ROUTE, y=ETA1, colour = DOSING), shape=1)
-	plotobj1 <- plotobj1+ scale_x_discrete(name="ROUTE")
-	plotobj1 <- plotobj1+ scale_y_continuous(name="ETA1")
-	plotobj1 <- plotobj1 + facet_wrap(~DOSING)
-	plotobj1 
+	#plotobj1 <- NULL
+	#plotobj1 <- ggplot(fitdata)
+	#titletext <- expression(atop("ETA1 v's ROUTE",
+	#												atop("BY ROUTE",
+	#														 "coloured by DOSING")))
+	#plotobj1 <- plotobj1 + ggtitle(titletext) 
+	#plotobj1 <- plotobj1 + geom_point(aes(x=ROUTE, y=ETA1, colour = DOSING), shape=1)
+	#plotobj1 <- plotobj1+ scale_x_discrete(name="ROUTE")
+	#plotobj1 <- plotobj1+ scale_y_continuous(name="ETA1")
+	#plotobj1 <- plotobj1 + facet_wrap(~DOSING)
+	#plotobj1 
 
-	png.file.name <- paste("ETA1_grid")
-	to.png.sqr(plotobj1,png.file.name)   
+	#png.file.name <- paste("ETA1_grid")
+	#to.png.sqr(plotobj1,png.file.name)   
 	
-	plotobj2 <- NULL
-	plotobj2 <- ggplot(fitdata)
-	titletext <- expression(atop("ETA2 v's ROUTE",
-													atop("BY ROUTE",
-															 "coloured by DOSING")))
-	plotobj2 <- plotobj2 + ggtitle(titletext) 
-	plotobj2 <- plotobj2 + geom_point(aes(x=ROUTE, y=ETA2, colour = DOSING), shape=1)
-	plotobj2 <- plotobj2+ scale_x_discrete(name="ROUTE")
-	plotobj2 <- plotobj2+ scale_y_continuous(name="ETA2")
-	plotobj2 <- plotobj2 + facet_wrap(~DOSING)
-	plotobj2 
+	#plotobj2 <- NULL
+	#plotobj2 <- ggplot(fitdata)
+	#titletext <- expression(atop("ETA2 v's ROUTE",
+	#												atop("BY ROUTE",
+	#														 "coloured by DOSING")))
+	#plotobj2 <- plotobj2 + ggtitle(titletext) 
+	#plotobj2 <- plotobj2 + geom_point(aes(x=ROUTE, y=ETA2, colour = DOSING), shape=1)
+	#plotobj2 <- plotobj2+ scale_x_discrete(name="ROUTE")
+	#plotobj2 <- plotobj2+ scale_y_continuous(name="ETA2")
+	#plotobj2 <- plotobj2 + facet_wrap(~DOSING)
+	#plotobj2 
 	
-	png.file.name <- paste("ETA2_grid")
-	to.png.sqr(plotobj2,png.file.name) 
+	#png.file.name <- paste("ETA2_grid")
+	#to.png.sqr(plotobj2,png.file.name) 
 	
 #--------------------------------------------------------------------------------------------------
 # Plot individual fits and population fits by individual 
@@ -390,9 +394,11 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 															 "Red = individual prediction, blue = population prediction")))
 	plotobj <- plotobj + ggtitle(titletext) 
   plotobj <- plotobj + geom_point(aes(x=TAD, y=DV), shape=1)
- #plotobj <- plotobj + geom_point(aes(x=TAFDE, y=DV))
-  plotobj <- plotobj + geom_line(aes(x=TAD, y=PRED), colour = "blue")
-	plotobj <- plotobj + geom_line(aes(x=TAD, y=IPRED), colour = "red")
+  #plotobj <- plotobj + geom_point(aes(x=TIME, y=DV), shape=1)
+  plotobj <- plotobj + geom_line(aes(x=TAD, y=PRED), colour = "blue", data=fitdata[fitdata$DV>0.001&fitdata$STUDY==8056,])	#to account for non day 1 dataset
+	plotobj <- plotobj + geom_line(aes(x=TAD, y=IPRED), colour = "red", data=fitdata[fitdata$DV>0.001&fitdata$STUDY==8056,])	#to account for non day 1 dataset
+	plotobj <- plotobj + geom_line(aes(x=TIME, y=PRED), colour = "blue")		#not TAD due to graphical errors due to two IPREDs
+	plotobj <- plotobj + geom_line(aes(x=TIME, y=IPRED), colour = "red")		#not TAD due to graphical errors due to two PREDs
 	plotobj <- plotobj + geom_hline(yintercept=0.25, linetype = 2, colour = "darkgreen")
  #plotobj <- plotobj + geom_hline(yintercept=0.3, linetype = 2, colour = "brown")
  #plotobj <- plotobj + geom_hline(yintercept=0.2, linetype = 2, colour = "purple")
@@ -401,11 +407,11 @@ ETACovariatePlotCONT <- function(ETAname,covname)
   plotobj <- plotobj+ scale_y_continuous(name="Lenalidomide (ug/mL)")
   #plotobj  
 
-	ggsave("Individual_concs_by_dose_ID_DOSELVL.png", width=90, height=30, units=c("cm"))
+	ggsave("Individual_concs_by_dose_ID_DOSELVL.png", width=90, height=50, units=c("cm"))
 	
-	plotobj <- plotobj+ scale_y_log10(name="Ketamine Conc (ug/mL)", lim=c(0.01, 500))
+	plotobj <- plotobj+ scale_y_log10(name="Lenalidomide Conc (ug/mL)", lim=c(0.01, 5))
 	
-	ggsave("Individual_concs_by_dose_ID_DOSELVL_log.png", width=90, height=30, units=c("cm"))
+	ggsave("Individual_concs_by_dose_ID_DOSELVL_log.png", width=90, height=50, units=c("cm"))
 		
 #--------------------------------------------------------------------------------------------------		
 # Plot 20 best/worst individual fits based on the median prediction errors.
@@ -450,7 +456,7 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	write.csv(MSE.df.sorted,file="MSE.df.sorted.csv", row.names=F)
     
 #Plot top 2 fits medianPE---------------------------
-  IDtop <- head(medianPE.df.sorted$ID, 2)
+  IDtop <- head(subset(medianPE.df.sorted,PE.length>3)$ID, 2)	
   fitdatatop <- fitdata[fitdata$ID %in% IDtop,]
 	
 	plotobjtop <- NULL
@@ -460,17 +466,17 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 															 "Red = individual prediction, blue = population prediction")))
 	plotobjtop <- plotobjtop + ggtitle(titletext) 
 	plotobjtop <- plotobjtop + geom_point(aes(x=TAD, y=DV), colour = "black")
-  plotobjtop <- plotobjtop + geom_line(aes(x=TAD, y=PRED), colour = "blue")
-	plotobjtop <- plotobjtop + geom_line(aes(x=TAD, y=IPRED), colour = "red")
+  plotobjtop <- plotobjtop + geom_line(aes(x=TIME, y=PRED), colour = "blue")
+	plotobjtop <- plotobjtop + geom_line(aes(x=TIME, y=IPRED), colour = "red")
 	plotobjtop <- plotobjtop + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-	plotobjtop <- plotobjtop + scale_x_continuous(name="Time after dose (h)")
-  plotobjtop <- plotobjtop + scale_y_continuous(name="Ketamine Conc (ug/mL)")
-	plotobjtop <- plotobjtop + facet_grid(DOSING ~ ID+ROUTE)
-	plotobjtop
+	plotobjtop <- plotobjtop + scale_x_continuous(name="Time after dose (h)",lim=(0,24))
+  plotobjtop <- plotobjtop + scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
+	plotobjtop <- plotobjtop + facet_grid(~ ID)
+	#plotobjtop
     
   to.png(plotobjtop,"CONC_vs_TAD_by_ID_best_medianPE")	
 	
-	plotobjtop <- plotobjtop + scale_y_log10(name="Ketamine Conc (ug/mL)")
+	plotobjtop <- plotobjtop + scale_y_log10(name="Lenalidomide Conc (ug/mL)")
 	
 	to.png(plotobjtop,"LOG_CONC_vs_TAD_by_ID_best_medianPE")
 
@@ -486,22 +492,22 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	plotobjbottom <- plotobjbottom + ggtitle(titletext) 
 	
 	plotobjbottom <- plotobjbottom + geom_point(aes(x=TAD, y=DV), colour = "black")
-  plotobjbottom <- plotobjbottom + geom_line(aes(x=TAD, y=PRED), colour = "blue")
-	plotobjbottom <- plotobjbottom + geom_line(aes(x=TAD, y=IPRED), colour = "red")
+  plotobjbottom <- plotobjbottom + geom_line(aes(x=TIME, y=PRED), colour = "blue")
+	plotobjbottom <- plotobjbottom + geom_line(aes(x=TIME, y=IPRED), colour = "red")
   plotobjbottom <- plotobjbottom + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-	plotobjbottom <- plotobjbottom + scale_x_continuous(name="Time after dose (h)")
-  plotobjbottom <- plotobjbottom+ scale_y_continuous(name="Ketamine Conc (ug/mL)")
-	plotobjbottom <- plotobjbottom +  facet_grid(DOSING ~ ID+ROUTE)
-	plotobjbottom
+	plotobjbottom <- plotobjbottom + scale_x_continuous(name="Time after dose (h)",lim=(0,24))
+  plotobjbottom <- plotobjbottom+ scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
+	plotobjbottom <- plotobjbottom +  facet_grid( ~ ID)
+	#plotobjbottom
     
   to.png(plotobjbottom,"CONC_vs_TAD_by_ID_worst_medianPE")
 	
-	plotobjbottom <- plotobjbottom+ scale_y_log10(name="Ketamine Conc (ug/mL)")
+	plotobjbottom <- plotobjbottom+ scale_y_log10(name="Lenalidomide Conc (ug/mL)")
 	
 	to.png(plotobjbottom,"LOG_CONC_vs_TAD_by_ID_worst_medianPE")
 	
 #Plot top 2 fits MSE---------------------------
-  IDtop <- head(MSE.df.sorted$ID, 2)
+  IDtop <- head(subset(MSE.df.sorted,nData>3)$ID, 2)
   fitdatatop <- fitdata[fitdata$ID %in% IDtop,]
 	
 	plotobjtop <- NULL
@@ -515,13 +521,13 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	plotobjtop <- plotobjtop + geom_line(aes(x=TAD, y=IPRED), colour = "red")
 	plotobjtop <- plotobjtop + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
 	plotobjtop <- plotobjtop + scale_x_continuous(name="Time after dose (h)")
-  plotobjtop <- plotobjtop + scale_y_continuous(name="Ketamine Conc (ug/mL)")
+  plotobjtop <- plotobjtop + scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
 	plotobjtop <- plotobjtop + facet_wrap(~ID)
-	plotobjtop
+	#plotobjtop
     
   to.png(plotobjtop,"CONC_vs_TAD_by_ID_best_MSE")	
 	
-	plotobjtop <- plotobjtop + scale_y_log10(name="Ketamine Conc (ug/mL)")
+	plotobjtop <- plotobjtop + scale_y_log10(name="Lenalidomide Conc (ug/mL)")
 	
 	to.png(plotobjtop,"LOG_CONC_vs_TAD_by_ID_best_MSE")	
 	
@@ -542,13 +548,13 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	plotobjbottom <- plotobjbottom + geom_line(aes(x=TAD, y=IPRED), colour = "red")
   plotobjbottom <- plotobjbottom + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
   plotobjbottom <- plotobjbottom + scale_x_continuous(name="Time after dose (h)")
-  plotobjbottom <- plotobjbottom+ scale_y_continuous(name="Ketamine Conc (ug/mL)")
+  plotobjbottom <- plotobjbottom+ scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
 	plotobjbottom <- plotobjbottom + facet_wrap(~ID)
-	plotobjbottom
+	#plotobjbottom
     
   to.png(plotobjbottom,"CONC_vs_TAD_by_ID_worst_MSE")	
 	
-	plotobjbottom <- plotobjbottom+ scale_y_log10(name="Ketamine Conc (ug/mL)")
+	plotobjbottom <- plotobjbottom+ scale_y_log10(name="Lenalidomide Conc (ug/mL)")
 	
 	to.png(plotobjbottom,"LOG_CONC_vs_TAD_by_ID_worst_MSE")	
 	
