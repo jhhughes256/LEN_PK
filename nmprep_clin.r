@@ -90,6 +90,10 @@
 	datanew$MDV <- 0
 	datanew$MDV[is.na(datanew$DV)] <- 1
 	
+	#Add CMT column
+	datanew$CMT <- 2
+	datanew$CMT[!is.na(datanew$AMT)] <- 1
+	
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
 	
@@ -165,11 +169,11 @@
 
 #Prepare nm file
 #ID TIME TAD AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
-  nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,12,13,26,27,2,4,5,15,16,17,18,24,23,21)]
+  nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,12,28,13,26,27,2,4,5,15,16,17,18,24,23,21)]
 
 	nmprep$WT[is.na(nmprep$WT)] <- 70
 	nmprep[is.na(nmprep)] <- "."
-	colnames(nmprep)[c(1,18)] <- c("#ID","RACE")
+	colnames(nmprep)[c(1,19)] <- c("#ID","RACE")
 	 
   filename.out <- "D:/Hughes/Data/PK/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
