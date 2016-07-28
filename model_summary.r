@@ -7,7 +7,7 @@
    graphics.off()
    
 # Set the working directory
-   work.dir <- "D:/Hughes/Data/PK"
+   work.dir <- "E:/Hughes/Data/PK"
    scriptname <- "model_summary"
    setwd(work.dir)
    
@@ -16,7 +16,7 @@
   library(plyr)
 
 # Source utility functions file
-   source("D:/Hughes/functions_utility.r")
+   source("E:/Hughes/functions_utility.r")
    
 #Set NONMEM directory extension
   nm.dir <- "nm7" 

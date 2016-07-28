@@ -7,7 +7,7 @@
   graphics.off()
    
 # Set the working directory
-  master.dir <- "D:/Hughes/Data"
+  master.dir <- "E:/Hughes/Data"
   scriptname <- "nmprep_clin"
   setwd(master.dir)
    
@@ -21,7 +21,7 @@
   library(stringr)
 
 # Source utility functions file
-  source("D:/Hughes/functions_utility.r")
+  source("E:/Hughes/functions_utility.r")
    
 # Customize ggplot2 theme - R 2.15.3
   setthemebw2.1()
@@ -175,7 +175,7 @@
 	nmprep[is.na(nmprep)] <- "."
 	colnames(nmprep)[c(1,19)] <- c("#ID","RACE")
 	 
-  filename.out <- "D:/Hughes/Data/PK/nmprep_allstudies.csv"
+  filename.out <- "E:/Hughes/Data/PK/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
 	
 	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,6,8,9,10,11,12)]

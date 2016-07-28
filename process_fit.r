@@ -7,7 +7,7 @@
 	graphics.off()
 
 # Set the working directory
-   master.dir <- "D:/Hughes/Data/PK"
+   master.dir <- "E:/Hughes/Data/PK"
    scriptname <- "process_fit"
    setwd(master.dir)
 	 
@@ -23,7 +23,7 @@
   library(GGally)
 	
 # Source utility functions file
-  source("D:/Hughes/functions_utility.r")
+  source("E:/Hughes/functions_utility.r")
 
 #Use custom ggplot 2 theme
 	theme_custom <- theme_set(theme_bw(18))
@@ -50,7 +50,7 @@
 
 #Generating script - this is added using a macro defined in Notepad++ - invoked using ctl-alt-M
 	metafilepath <- NULL
-	metafilepath <- "D:/Hughes/lena_scripts/process_fit.r"
+	metafilepath <- "E:/Hughes/lena_scripts/process_fit.r"
 	scriptname <- gsub(".r","",basename(metafilepath))
 	working.dir <- dirname(metafilepath)
 
@@ -183,7 +183,75 @@ dev.off()
   to.png.sqr(plotobj2, "DV_IPRED")
   to.png.sqr(plotobj3, "CWRES_TAFDE")
   to.png.sqr(plotobj4, "CWRES_PRED")
+
+#--------------------------------------------------------------------------------------------------
+diag.plot<-function(df1,icol,dlow,dup){
+filename <- paste("diagnostic_dashboard_",icol,dlow,ifelse(dlow!=dup,dup,""),".png",sep="")
+col.interest <- which(names(fitdata)%in%icol)
+fitdata <- df1[df1[col.interest]<=dup&df1[col.interest]>=dlow,]
+png(filename, width = 720, height = 920)
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(4,4)))
   
+  #Plot 1
+  
+  plotobj1 <- NULL
+  plotobj1 <-  ggplot(fitdata[fitdata$DV>0.001,])
+  plotobj1 <- plotobj1 + geom_point(aes(x=PRED, y=DV), shape=1)
+  plotobj1 <- plotobj1 + geom_abline(aes(x=PRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
+  plotobj1 <- plotobj1 + geom_smooth(aes(x=PRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
+	plotobj1 <- plotobj1 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
+  plotobj1 <- plotobj1+ scale_x_continuous(name="Population Predicted conc (ug/mL)", limits=c(-1,max.OBS1))
+  plotobj1 <- plotobj1+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-1,max.OBS1))
+  print(plotobj1, vp=vplayout(1:2,1:2))
+
+  
+  #Plot 2
+
+  plotobj2 <- NULL
+  plotobj2 <-  ggplot(fitdata)
+  plotobj2 <- plotobj2 + geom_point(aes(x=IPRED, y=DV), shape=1)
+  plotobj2 <- plotobj2 + geom_abline(aes(x=IPRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
+  plotobj2 <- plotobj2 + geom_smooth(aes(x=IPRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
+	plotobj2 <- plotobj2 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
+  plotobj2 <- plotobj2+ scale_x_continuous(name="IPRED conc (ug/mL)", limits=c(-1,max.OBS2))
+  plotobj2 <- plotobj2+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-1,max.OBS2))
+  print(plotobj2, vp=vplayout(1:2,3:4))
+  
+  
+  #Plot 3  CWRES vs TAFDE
+  
+  plotobj3 <- NULL
+  plotobj3 <-  ggplot(fitdata)
+  plotobj3 <- plotobj3 + geom_point(aes(x=TAD, y=CWRES), shape=1)
+  plotobj3 <- plotobj3 + geom_abline(aes(x=TAD, y=CWRES),intercept=0, slope=0, colour="black")  #Add zero line
+  plotobj3 <- plotobj3 + geom_smooth(aes(x=TAD, y=CWRES), method=loess, se=T, colour="red")        #Add loess smoothing line
+  plotobj3 <- plotobj3+ scale_x_continuous(name="Time after dose (h)")
+  plotobj3 <- plotobj3+ scale_y_continuous(name="CWRES", limits=c(-max.CWRES ,max.CWRES))
+  print(plotobj3, vp=vplayout(3,1:4))
+  
+  
+  #Plot 4   CWRES vs PRED
+  
+  plotobj4 <- NULL
+  plotobj4 <-  ggplot(fitdata)
+  plotobj4 <- plotobj4 + geom_point(aes(x=PRED, y=CWRES), shape=1)
+  plotobj4 <- plotobj4 + geom_abline(aes(x=PRED, y=CWRES),intercept=0, slope=0, colour="black")  #Add zero line
+  plotobj4 <- plotobj4 + geom_smooth(aes(x=PRED, y=CWRES), method=loess, se=T, colour="red")        #Add loess smoothing line
+  plotobj4 <- plotobj4 + scale_x_continuous(name="Population Predicted conc (ug/mL)")
+  plotobj4 <- plotobj4 + scale_y_continuous(name="CWRES", limits=c(-max.CWRES ,max.CWRES))
+  print(plotobj4, vp=vplayout(4,1:4))
+
+dev.off()
+	}
+	diag.plot(fitdata,"DOSELVL",1,4)
+	diag.plot(fitdata,"DOSELVL",5,7)
+	diag.plot(fitdata,"DOSELVL",8,9)
+	diag.plot(fitdata,"DOSELVL",10,11)
+	diag.plot(fitdata,"STUDY",5115,5115)
+	diag.plot(fitdata,"STUDY",6003,6003)
+	diag.plot(fitdata,"STUDY",8056,8056)
+	diag.plot(fitdata,"STUDY",10016,10016)
 #--------------------------------------------------------------------------------------------------	 
 #Examine Residual distribution
  #QQ plot
@@ -339,6 +407,7 @@ ETACovariatePlotCONT <- function(ETAname,covname)
   #plotobj <- plotobj + theme(legend.position="none") + ggtitle("Final PK model\n")
   #plotobj <- plotobj + ggtitle("Base PK model\n")
   plotobj <- plotobj + ggtitle("ETA PLOT\n")
+	plotobj <- plotobj + theme(axis.text.x = element_text(angle=45, hjust = 1))
   #plotobj
   
   png.file.name <- paste(ETAname,"_vs_",covname,sep="")

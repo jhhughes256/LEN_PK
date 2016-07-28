@@ -7,7 +7,7 @@
    graphics.off()
    
 # Set the working directory
-   master.dir <- "D:/Hughes/Data"
+   master.dir <- "E:/Hughes/Data"
    scriptname <- "datacheck_nonclin"
    setwd(master.dir)
    
@@ -22,7 +22,7 @@
    library(readxl)
 
 # Source utility functions file
-   source("D:/Hughes/functions_utility.r")
+   source("E:/Hughes/functions_utility.r")
    
 # Customize ggplot2 theme - R 2.15.3
    setthemebw2.1()

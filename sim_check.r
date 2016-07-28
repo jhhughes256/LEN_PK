@@ -7,7 +7,7 @@
    graphics.off()
    
 # Set the working directory
-   master.dir <- "D:/Hughes/Data"
+   master.dir <- "E:/Hughes/Data"
    scriptname <- "nmprep_clin"
    setwd(master.dir)
    
@@ -21,7 +21,7 @@
    library(stringr)
 
 # Source utility functions file
-   source("D:/Hughes/functions_utility.r")
+   source("E:/Hughes/functions_utility.r")
    
 # Customize ggplot2 theme - R 2.15.3
    setthemebw2.1()
@@ -35,7 +35,7 @@
 		dir.create(output.dir)
     }
 	
-   fit.file <- "D:/Hughes/Data/RAW_Clinical/nmprep_clin_Output/06003LEN_1comp1abs_SIM.nm7/06003len_1comp1abs_sim.fit"
+   fit.file <- "E:/Hughes/Data/RAW_Clinical/nmprep_clin_Output/06003LEN_1comp1abs_SIM.nm7/06003len_1comp1abs_sim.fit"
    fitdata <- read.table(file=fit.file, sep="", skip=1, header=T, na.strings=c("NA","***********","1.#INFE+00"))
    fitdata$Y[fitdata$Y==0] <- NA
 	 fitdata$IPRED[fitdata$IPRED==0] <- NA
