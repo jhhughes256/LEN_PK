@@ -292,6 +292,6 @@ collate_SHK_AIC <- function(dir.name)
   allrundata <- rename(allrundata, c("ctl.file.name"="Run","term.code"="Minimization Step","cov.code"="Covariance Step"))
 
 #Write to file
- write.csv(allrundata, file="TERM_SE_AIC_SHK_PVAL.csv", row.names=F)
+  write.csv(allrundata, file="TERM_SE_AIC_SHK_PVAL.csv", row.names=F)
  
-
+	View(read.csv("TERM_SE_AIC_SHK_PVAL.csv"))
