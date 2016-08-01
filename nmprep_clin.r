@@ -94,6 +94,11 @@
 	datanew$CMT <- 2
 	datanew$CMT[!is.na(datanew$AMT)] <- 1
 	
+	#Add OCC column
+	datanew$OCC <- 1
+	datanew$OCC[datanew$DAY>=8] <- 2
+	datanew$OCC[datanew$DAY>=15] <- 3
+	
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
 	
@@ -169,16 +174,16 @@
 
 #Prepare nm file
 #ID TIME TAD AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
-  nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,12,28,13,26,27,2,4,5,15,16,17,18,24,23,21)]
+  nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,23,21)]
 
 	nmprep$WT[is.na(nmprep$WT)] <- 70
 	nmprep[is.na(nmprep)] <- "."
-	colnames(nmprep)[c(1,19)] <- c("#ID","RACE")
+	colnames(nmprep)[c(1,20)] <- c("#ID","RACE")
 	 
   filename.out <- "E:/Hughes/Data/PK/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
 	
-	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,6,8,9,10,11,12)]
+	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,9,10,11,12,13)]
 	simdata[6] <- "."
 	filename.out <- paste(output.dir,"simprep_allstudies.csv",sep="/")
   write.csv(simdata, file=filename.out, quote=FALSE,row.names=FALSE)
