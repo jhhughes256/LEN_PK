@@ -183,6 +183,9 @@
   filename.out <- "E:/Hughes/Data/PK/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
 	
+	filename.out <- "E:/Hughes/Data/PK/nmprep_06003.csv"
+	write.csv(nmprep[nmprep$STUDY==06003,], file=filename.out, quote=FALSE,row.names=FALSE)
+	
 	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,9,10,11,12,13)]
 	simdata[6] <- "."
 	filename.out <- paste(output.dir,"simprep_allstudies.csv",sep="/")

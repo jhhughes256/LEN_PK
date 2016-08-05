@@ -7,7 +7,7 @@
 	graphics.off()
 
 # Set the working directory
-   master.dir <- "E:/Hughes/Data/PK"
+   master.dir <- "E:/Hughes/Data/PK/NO_ALLOM"
    scriptname <- "process_fit"
    setwd(master.dir)
 	 
@@ -124,8 +124,8 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   plotobj1 <- plotobj1 + geom_abline(aes(x=PRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
   plotobj1 <- plotobj1 + geom_smooth(aes(x=PRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
 	plotobj1 <- plotobj1 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-  plotobj1 <- plotobj1+ scale_x_continuous(name="Population Predicted conc (ug/mL)", limits=c(-1,max.OBS1))
-  plotobj1 <- plotobj1+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-1,max.OBS1))
+  plotobj1 <- plotobj1+ scale_x_continuous(name="Population Predicted conc (ug/mL)", limits=c(-0.1,max.OBS1))
+  plotobj1 <- plotobj1+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-0.1,max.OBS1))
   plotobj1  <-  plotobj1 + scale_colour_brewer(name="Dose Level", palette="Set1")
   plotobj1  <-  plotobj1 + theme(legend.position="none")
   print(plotobj1, vp=vplayout(1:2,1:2))
@@ -140,8 +140,8 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   plotobj2 <- plotobj2 + geom_abline(aes(x=IPRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
   plotobj2 <- plotobj2 + geom_smooth(aes(x=IPRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
 	plotobj2 <- plotobj2 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-  plotobj2 <- plotobj2+ scale_x_continuous(name="IPRED conc (ug/mL)", limits=c(-1,max.OBS2))
-  plotobj2 <- plotobj2+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-1,max.OBS2))
+  plotobj2 <- plotobj2+ scale_x_continuous(name="IPRED conc (ug/mL)", limits=c(-0.1,max.OBS2))
+  plotobj2 <- plotobj2+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-0.1,max.OBS2))
   plotobj2  <-  plotobj2 + scale_colour_brewer(name="Dose Level", palette="Set1")
   plotobj2  <-  plotobj2 + theme(legend.position="none")
   print(plotobj2, vp=vplayout(1:2,3:4))
@@ -194,6 +194,7 @@ grid.newpage()
 pushViewport(viewport(layout = grid.layout(4,4)))
   
   #Plot 1
+	max.OBS1 <- max(c(fitdata$PRED, fitdata$DV),na.rm=T)
   
   plotobj1 <- NULL
   plotobj1 <-  ggplot(fitdata[fitdata$DV>0.001,])
@@ -201,12 +202,13 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   plotobj1 <- plotobj1 + geom_abline(aes(x=PRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
   plotobj1 <- plotobj1 + geom_smooth(aes(x=PRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
 	plotobj1 <- plotobj1 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-  plotobj1 <- plotobj1+ scale_x_continuous(name="Population Predicted conc (ug/mL)", limits=c(-1,max.OBS1))
-  plotobj1 <- plotobj1+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-1,max.OBS1))
+  plotobj1 <- plotobj1+ scale_x_continuous(name="Population Predicted conc (ug/mL)", limits=c(-0.1,max.OBS1))
+  plotobj1 <- plotobj1+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-0.1,max.OBS1))
   print(plotobj1, vp=vplayout(1:2,1:2))
 
   
   #Plot 2
+	max.OBS2 <- max(c(fitdata$IPRED, fitdata$DV),na.rm=T)
 
   plotobj2 <- NULL
   plotobj2 <-  ggplot(fitdata)
@@ -214,12 +216,14 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   plotobj2 <- plotobj2 + geom_abline(aes(x=IPRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
   plotobj2 <- plotobj2 + geom_smooth(aes(x=IPRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
 	plotobj2 <- plotobj2 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-  plotobj2 <- plotobj2+ scale_x_continuous(name="IPRED conc (ug/mL)", limits=c(-1,max.OBS2))
-  plotobj2 <- plotobj2+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-1,max.OBS2))
+  plotobj2 <- plotobj2+ scale_x_continuous(name="IPRED conc (ug/mL)", limits=c(-0.1,max.OBS2))
+  plotobj2 <- plotobj2+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-0.1,max.OBS2))
   print(plotobj2, vp=vplayout(1:2,3:4))
   
   
   #Plot 3  CWRES vs TAFDE
+  max.CWRES <- max(abs(fitdata$CWRES),na.rm=T)
+  if (max.CWRES < 0.1) max.CWRES <- 0.1
   
   plotobj3 <- NULL
   plotobj3 <-  ggplot(fitdata)
@@ -232,6 +236,8 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   
   
   #Plot 4   CWRES vs PRED
+  max.CWRES <- max(abs(fitdata$CWRES),na.rm=T)
+  if (max.CWRES < 0.1) max.CWRES <- 0.1
   
   plotobj4 <- NULL
   plotobj4 <-  ggplot(fitdata)
