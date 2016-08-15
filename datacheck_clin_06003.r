@@ -749,3 +749,24 @@ plotIndexCat <- function(CovColname,CovText)
   filename.out <- paste(output.dir,"06003_finaldata.csv",sep="/")
   write.csv(dataFIX, file=filename.out, row.names=FALSE)
 
+	
+#------------------
+#Covariate data
+	# [1] "UID"      "ID"       "STUDY"    "GRP"      "DOSELVL"  "DOSEMG"   "AGE"      "GEND"    
+	# [8] "WEIGHTLB" "HEIGHTFT" "DXCATNUM" "RACE"     "SECRMGDL"
+	
+	dataCOV <- data.frame("UID" = (dataallone$ID), "ID" = dataallone$ID, "STUDY" = dataallone$STUDY)
+  
+  dataCOV$GRP <- dataallone$GRP
+  dataCOV$DOSELVL <- dataallone$DOSELVL
+  dataCOV$DOSEMG <- dataallone$DOSEMG
+  dataCOV$AGE <- dataallone$AGE
+  dataCOV$GEND <- dataallone$GEND
+  dataCOV$WEIGHTLB <- dataallone$WT*2.2
+  dataCOV$HEIGHTFT <- dataallone$HT*3.28
+  dataCOV$DXCATNUM <- dataallone$DXCATNUM
+  dataCOV$RACE <- dataallone$RACE
+  dataCOV$SECRMGDL <- dataallone$SECR/88.4
+
+	filename.out <- paste(output.dir,"06003_covdata.csv",sep="/")
+  write.csv(dataCOV, file=filename.out, row.names=FALSE)

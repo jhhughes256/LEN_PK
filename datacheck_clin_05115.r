@@ -234,8 +234,8 @@
 #Summary of study characteristics
 
  #Do all subjects have PK data 
-  DVtest <- summaryBy(DV ~ ID, data=dataall, FUN=mean, na.rm=T)
-  DVtest <- DVtest[is.na(DVtest$DV.mean)==T,]
+  DVtest <- summaryBy(DXCATNUM ~ ID, data=dfnew, FUN=mean, na.rm=T)
+  DVtest <- DVtest[is.na(DVtest$DXCATNUM.mean)==T,]
   DVtestID <- DVtest$ID
   DVtestID
   #All patients have PK data
@@ -684,3 +684,24 @@ plotByFactor <- function(factorColname,factorText)
 	
 	filename.out <- paste(output.dir,"05115_finaldata.csv",sep="/")
   write.csv(dataFIX, file=filename.out, row.names=FALSE)
+	
+#------------------
+#Covariate data
+	# [1] "UID"      "ID"       "STUDY"    "GRP"      "DOSELVL"  "DOSEMG"   "AGE"      "GEND"    
+	# [8] "WEIGHTLB" "HEIGHTFT" "DXCATNUM" "RACE"     "SECRMGDL"
+	
+	dataCOV <- data.frame("UID" = (dataallone$ID+75), "ID" = dataallone$ID, "STUDY" = dataallone$STUDY)
+  
+  dataCOV$GRP <- 4
+  dataCOV$DOSELVL <- dataallone$DOSELVL
+  dataCOV$DOSEMG <- dataallone$DOSEMG
+  dataCOV$AGE <- dataallone$AGE
+  dataCOV$GEND <- dataallone$GEND
+  dataCOV$WEIGHTLB <- dataallone$WT*2.2
+  dataCOV$HEIGHTFT <- NA
+  dataCOV$DXCATNUM <- dataallone$DXCATNUM
+  dataCOV$RACE <- NA
+  dataCOV$SECRMGDL <- dataallone$SECR/88.4
+
+	filename.out <- paste(output.dir,"05115_covdata.csv",sep="/")
+  write.csv(dataCOV, file=filename.out, row.names=FALSE)

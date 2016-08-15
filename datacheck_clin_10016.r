@@ -769,3 +769,25 @@ plotByFactor <- function(factorColname,factorText)
 	
 	filename.out <- paste(output.dir,"10016_finaldata.csv",sep="/")
   write.csv(dataFIX[1:(dim(dataFIX)[1]-25),], file=filename.out, row.names=FALSE)
+	
+		
+#------------------
+#Covariate data
+	# [1] "UID"      "ID"       "STUDY"    "GRP"      "DOSELVL"  "DOSEMG"   "AGE"      "GEND"    
+	# [8] "WEIGHTLB" "HEIGHTFT" "DXCATNUM" "RACE"     "SECRMGDL"
+	
+	dataCOV <- data.frame("UID" = (dataallone$ID+121), "ID" = dataallone$ID, "STUDY" = dataallone$STUDY)
+  
+  dataCOV$GRP <- dataallone$GRP+6
+  dataCOV$DOSELVL <- dataallone$DOSELVL
+  dataCOV$DOSEMG <- dataallone$DOSEMG
+  dataCOV$AGE <- dataallone$AGE
+  dataCOV$GEND <- dataallone$GEND
+  dataCOV$WEIGHTLB <- NA
+  dataCOV$HEIGHTFT <- NA
+  dataCOV$DXCATNUM <- dataallone$DXCATNUM
+  dataCOV$RACE <- NA
+  dataCOV$SECRMGDL <- NA
+
+	filename.out <- paste(output.dir,"10016_covdata.csv",sep="/")
+  write.csv(dataCOV, file=filename.out, row.names=FALSE)

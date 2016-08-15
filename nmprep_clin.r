@@ -171,7 +171,27 @@
 #Create full nmprep data file
 	filename.out <- paste(output.dir,"fulldata.csv",sep="/")
   write.csv(datanew, file=filename.out, row.names=FALSE)
-
+	
+### ------------------------------------- Covariate Data ------------------------------------- ###
+###  			#reproducible
+  file06003 <- "RAW_Clinical/datacheck_clin_06003_Output/06003_covdata.csv"
+	file05115 <- "RAW_Clinical/datacheck_clin_05115_Output/05115_covdata.csv"
+	file08056 <- "RAW_Clinical/datacheck_clin_08056_Output/08056_covdata.csv"
+	file10016 <- "RAW_Clinical/datacheck_clin_10016_Output/10016_covdata.csv"
+  data06003 <- read.csv(file06003, stringsAsFactors=F)
+	data05115 <- read.csv(file05115, stringsAsFactors=F)
+	data08056 <- read.csv(file08056, stringsAsFactors=F)
+	data10016 <- read.csv(file10016, stringsAsFactors=F)
+  
+#FINAL datacheck and process for covspreadsheet
+  datacov <- rbind(data06003,data05115,data08056,data10016)
+	names(datacov)
+  str(datacov)
+  datacov <- orderBy(~UID+GRP, data=datacov)
+	
+	filename.out <- paste(output.dir,"datacov_allstudies.csv",sep="/")
+  write.csv(datacov, file=filename.out, quote=FALSE,row.names=FALSE)
+	
 #Prepare nm file
 #ID TIME TAD AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
   nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,23,21)]

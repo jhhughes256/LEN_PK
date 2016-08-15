@@ -449,8 +449,10 @@
 #Subset covariates
 
  ##Keeps missing as -1 - use for categorical summary
- #dataallone <- lapplyBy(~ID, data=dataall,  oneperID)
- #dataallone <- bind.list(dataallone)
+ dataallone <- lapplyBy(~ID, data=subset(dataall,TRT==1),oneperID)
+ dataallone <- bind.list(dataallone)
+ dataalltwo <- lapplyBy(~ID, data=subset(dataall,TRT==2),oneperID)
+ dataalltwo <- bind.list(dataalltwo)
  #dim(dataallone)
    
  #with(dataallone,table(RATE,useNA="always"))View
@@ -943,3 +945,29 @@ plotByFactor <- function(factorColname,factorText)
 	
 	filename.out <- paste(output.dir,"08056_finaldata.csv",sep="/")
   write.csv(dataFIX[1:(dim(dataFIX)[1]-4),], file=filename.out, row.names=FALSE)
+		
+#------------------
+#Covariate data
+	# [1] "UID"      "ID"       "STUDY"    "GRP"      "DOSELVL"  "DOSEMG"   "AGE"      "GEND"    
+	# [8] "WEIGHTLB" "HEIGHTFT" "DXCATNUM" "RACE"     "SECRMGDL"
+	
+	dataCOV <- data.frame("UID" = c(dataallone$ID+96,dataalltwo$ID+96), "ID" = c(dataallone$ID,dataalltwo$ID), "STUDY" = c(dataallone$STUDY,dataalltwo$STUDY))
+  
+  dataCOV$GRP <- c(dataallone$TRT+4,dataalltwo$TRT+4)
+  dataCOV$DOSELVL <- 1
+  dataCOV$DOSEMG <- c(dataallone$AMT,dataalltwo$AMT)
+	dataCOV$DOSELVL[dataCOV$DOSEMG==5] <- 2
+  dataCOV$AGE <- NA
+  dataCOV$GEND <- NA
+  dataCOV$WEIGHTLB <- NA
+  dataCOV$HEIGHTFT <- NA
+  dataCOV$DXCATNUM <- c(dataallone$DXCATNUM,dataalltwo$DXCATNUM)
+  dataCOV$RACE <- NA
+  dataCOV$SECRMGDL <- NA
+	dataCOV$MDV <- c(dataallone$MDV,dataalltwo$MDV)
+	dataCOV$DOSEMG[dataCOV$MDV==0&is.na(dataCOV$DOSEMG)] <- "Missing"
+	
+	dataCOV <- dataCOV[!is.na(dataCOV$DOSEMG),]
+
+	filename.out <- paste(output.dir,"08056_covdata.csv",sep="/")
+  write.csv(dataCOV[-dim(dataCOV)[2]], file=filename.out, row.names=FALSE)
