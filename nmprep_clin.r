@@ -188,6 +188,13 @@
 	names(datacov)
   str(datacov)
   datacov <- orderBy(~UID+GRP, data=datacov)
+	datacov$RACE[is.na(datacov$RACE)] <- 4
+	datacov$RACE <- as.factor(datacov$RACE)
+  levels(datacov$RACE) <- c("Caucasian","06003 Race 2","06003 Race 3","Unknown")
+	datacov$DXCATNUM <- as.factor(datacov$DXCATNUM)
+  levels(datacov$DXCATNUM) <- c("CLL","AML","ALL","MM")
+	datacov$GEND <- as.factor(datacov$GEND)
+  levels(datacov$GEND) <- c("F","M")
 	
 	filename.out <- paste(output.dir,"datacov_allstudies.csv",sep="/")
   write.csv(datacov, file=filename.out, quote=FALSE,row.names=FALSE)
@@ -197,14 +204,16 @@
   nmprep <- subset(datanew,X.ID!=delID)[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,23,21)]
 
 	nmprep$WT[is.na(nmprep$WT)] <- 70
+	nmprep$HT[is.na(nmprep$HT)] <- 1.75
+	nmprep$HT[nmprep$HT==1.75&nmprep$GEND==0] <- 1.6
 	nmprep[is.na(nmprep)] <- "."
 	colnames(nmprep)[c(1,20)] <- c("#ID","RACE")
 	 
   filename.out <- "E:/Hughes/Data/PK/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
 	
-	filename.out <- "E:/Hughes/Data/PK/nmprep_06003.csv"
-	write.csv(nmprep[nmprep$STUDY==06003,], file=filename.out, quote=FALSE,row.names=FALSE)
+	filename.out <- "E:/Hughes/Data/PK/nmprep_allcov.csv"
+	write.csv(nmprep[nmprep$STUDY==06003|nmprep$STUDY==05115,], file=filename.out, quote=FALSE,row.names=FALSE)
 	
 	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,9,10,11,12,13)]
 	simdata[6] <- "."

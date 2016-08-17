@@ -83,6 +83,8 @@
 
 #Remove dose events & missing values
   fitdata <- subset(fitdata, MDV==0)
+	fitdata$HT[fitdata$HT==0&fitdata$GEND==1] <- 1.75
+	fitdata$HT[fitdata$HT==0&fitdata$GEND==0] <- 1.6
 
 #Set factors and levels (not all categorical covariates have been included!)
 	fitdata$IDf <- as.factor(fitdata$ID)
@@ -375,6 +377,7 @@ ETACovariatePlotCAT <- function(ETAname,covname)
   #plotobj  <- plotobj + ggtitle("Final PK model\n")  #legend.position="none", 
   #plotobj <- plotobj + ggtitle("Base PK model\n")  #legend.position="none",
   plotobj <- plotobj + ggtitle("ETA PLOT\n")
+	plotobj <- plotobj + theme(axis.text.x = element_text(angle=45, hjust = 1))
   #plotobj
   
   png.file.name <- paste(ETAname,"_vs_",covname,sep="")
@@ -509,7 +512,7 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	
 #Calculate and sort by SSE (sum of PE's squared)
 	fitdata$SE <-  fitdata$PE*fitdata$PE
-	fitdata
+	#fitdata
 	sum.abs <- function(x) sum(abs(x), na.rm=T)
   sumSE.df <- summaryBy(SE ~ ID, data=fitdata, FUN=c(sum.abs,length))
 
