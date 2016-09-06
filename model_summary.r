@@ -7,7 +7,7 @@
    graphics.off()
    
 # Set the working directory
-   work.dir <- "E:/Hughes/Data/PK"
+   work.dir <- "E:/Hughes/Data/PK/ALL_COV"
    scriptname <- "model_summary"
    setwd(work.dir)
    

@@ -92,6 +92,9 @@
 	fitdata$STUDYf <- factor(fitdata$STUDY)
 	levels(fitdata$STUDYf) <- paste("Study",levels(fitdata$STUDYf))
 	
+	fitdata$OCCf <- factor(fitdata$OCC)
+	levels(fitdata$OCCf) <- paste("Occasion",levels(fitdata$OCCf))
+	
 	fitdata$GRPf <- factor(fitdata$GRP)
 	levels(fitdata$GRPf) <- paste("Group",levels(fitdata$GRPf))
 	
@@ -126,10 +129,10 @@ pushViewport(viewport(layout = grid.layout(4,4)))
   plotobj1 <- plotobj1 + geom_abline(aes(x=PRED, y=DV), intercept=0, slope=1, colour="black") #Add line of identity
   plotobj1 <- plotobj1 + geom_smooth(aes(x=PRED, y=DV), method=loess, se=T, colour="red")        #Add loess smoothing line
 	plotobj1 <- plotobj1 + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-  plotobj1 <- plotobj1+ scale_x_continuous(name="Population Predicted conc (ug/mL)", limits=c(-0.1,max.OBS1))
-  plotobj1 <- plotobj1+ scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-0.1,max.OBS1))
-  plotobj1  <-  plotobj1 + scale_colour_brewer(name="Dose Level", palette="Set1")
-  plotobj1  <-  plotobj1 + theme(legend.position="none")
+  plotobj1 <- plotobj1 + scale_x_continuous(name="Population Predicted conc (ug/mL)", limits=c(-0.1,max.OBS1))
+  plotobj1 <- plotobj1 + scale_y_continuous(name="Observed conc (ug/mL)", limits=c(-0.1,max.OBS1))
+  plotobj1 <- plotobj1 + scale_colour_brewer(name="Dose Level", palette="Set1")
+  plotobj1 <- plotobj1 + theme(legend.position="none")
   print(plotobj1, vp=vplayout(1:2,1:2))
 
   
@@ -311,9 +314,9 @@ fitdataone <- ddply(fitdata, .(ID), oneperID)
 #Can't use this as there are several dose levels per patient
 
 eta.cols <-  grep(glob2rx("ETA*"), names(fitdataone))
-#etabov.cols <- c("ETA1","ETA2","ETA3")  #this is hard-coded for BOV
+etabov.cols <- c("ETA4","ETA5","ETA6","ETA7")  #this is hard-coded for BOV
 #eta.cols <- c("ETA4","ETA5")  #hard-coded#
-#eta.cols <- eta.cols[eta.cols %in% etabov.cols==F]
+eta.cols <- eta.cols[eta.cols %in% etabov.cols==F]
 eta.cols <- names(fitdataone)[eta.cols]
 etadata <- subset(fitdataone, select=eta.cols)
 
@@ -344,7 +347,7 @@ if (ncol(etadata)>1)  #more than 1 ETA is scatterplot matrix
 #eta.cols <- eta.cols[eta.cols %in% etabov.cols==F]
 
 #Get the columns with categorical covariates
-covcat.cols <- c("DOSELVLf","GENDf","RACEf","DXCATf")
+covcat.cols <- c("STUDYf","DOSELVLf","GENDf","RACEf","DXCATf","OCCf")
 
 #Get the columns with continuous covariates
 covcont.cols <- c("AGE","WT","HT","SECR")
@@ -574,8 +577,8 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	plotobjbottom <- plotobjbottom + geom_line(aes(x=TIME, y=IPRED), colour = "red")
   plotobjbottom <- plotobjbottom + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
 	plotobjbottom <- plotobjbottom + scale_x_continuous(name="Time after dose (h)",lim=(0,24))
-  plotobjbottom <- plotobjbottom+ scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
-	plotobjbottom <- plotobjbottom +  facet_grid( ~ ID)
+  plotobjbottom <- plotobjbottom + scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
+	plotobjbottom <- plotobjbottom + facet_grid( ~ ID)
 	#plotobjbottom
     
   to.png(plotobjbottom,"CONC_vs_TAD_by_ID_worst_medianPE")
@@ -626,7 +629,7 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	plotobjbottom <- plotobjbottom + geom_line(aes(x=TAD, y=IPRED), colour = "red")
   plotobjbottom <- plotobjbottom + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
   plotobjbottom <- plotobjbottom + scale_x_continuous(name="Time after dose (h)")
-  plotobjbottom <- plotobjbottom+ scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
+  plotobjbottom <- plotobjbottom + scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
 	plotobjbottom <- plotobjbottom + facet_wrap(~ID)
 	#plotobjbottom
     
@@ -635,5 +638,3 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 	plotobjbottom <- plotobjbottom+ scale_y_log10(name="Lenalidomide Conc (ug/mL)")
 	
 	to.png(plotobjbottom,"LOG_CONC_vs_TAD_by_ID_worst_MSE")	
-	
-	

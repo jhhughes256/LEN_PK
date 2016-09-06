@@ -368,7 +368,7 @@ end.splitter <- function(x){
    testfunc("LUN",ivdfall)
    testfunc("KID",ivdfall)
    # Do all subjects have dose data
-   testfunc("AMT",ivdfall)
+   testfunc("AMT",ivdfall)	#repeat samples
    
    # DV count by Dosegroup
    # Calculates data for Report Table 1
@@ -452,11 +452,39 @@ end.splitter <- function(x){
    plotobj <- plotobj + scale_x_continuous("Time (minutes)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
    plotobj <- plotobj + scale_colour_discrete("DoseGroup")
    plotobj <- plotobj + facet_wrap(~TISSUE,ncol=4)
+	 plotobj <- plotobj + theme(axis.text.x = element_text(angle=45, hjust = 1))
    plotobj
 
    filename.out <- paste(output.dir,"Overview_ConcObs_vs_TIME_by_TISSUE",sep="/")
    to.png(plotobj,filename.out) 
+	 
+#-------------------------------------------------------------------------------------
+   # Basic PK plot
 
+	 dosefacetplot <- function(dfall,dose)
+{
+	 dfsub <- dfall[dfall$DOSEMGKG==dose,]
+   # Conc vs TAFD
+   plotobj <- NULL
+   titletext <- paste("Observed Concentrations\n")
+   plotobj <- ggplot(dfsub,aes(colour=DOSEMGKGf))  
+   plotobj <- plotobj + geom_point(aes(TIME,DV),size=3, alpha=0.5)
+   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")                   
+   plotobj <- plotobj + scale_y_log10("Concentration (ng/ml)")
+   plotobj <- plotobj + scale_x_continuous("Time (minutes)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
+   plotobj <- plotobj + scale_colour_discrete("DoseGroup")
+   plotobj <- plotobj + facet_wrap(~TISSUE,ncol=4)
+	 plotobj <- plotobj + theme(axis.text.x = element_text(angle=45, hjust = 1))
+   plotobj
+
+   filename.out <- paste(output.dir,paste0("Overview_ConcObs_vs_TIME_by_TISSUE_",dose),sep="/")
+   to.png(plotobj,filename.out) 
+
+	 }
+	 dosefacetplot(ivdfall3,0.5)
+	 dosefacetplot(ivdfall3,1.5)
+	 dosefacetplot(ivdfall3,5)
+	 dosefacetplot(ivdfall3,10)
 #-------------------------------------------------------------------------------------
    # Influence of Covariates
 
@@ -697,6 +725,7 @@ end.splitter <- function(x){
    plotobj <- plotobj + scale_y_log10("Concentration (ng/ml)")
    plotobj <- plotobj + scale_x_continuous("Time (minutes)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
    plotobj <- plotobj + scale_colour_discrete("DoseGroup")
+	 plotobj <- plotobj + theme(axis.text.x = element_text(angle=45, hjust = 1))
    plotobj
 
    filename.out <- paste(output.dir,"Overview_ConcObs_vs_TIME",sep="/")
@@ -904,9 +933,10 @@ end.splitter <- function(x){
    plotobj <- plotobj + scale_y_log10("Concentration (ng/ml)")
    plotobj <- plotobj + scale_x_continuous("Time (minutes)")  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
    plotobj <- plotobj + scale_colour_discrete("DoseGroup")
+	 plotobj <- plotobj + theme(axis.text.x = element_text(angle=45, hjust = 1))
    plotobj
 
-   filename.out <- paste(output.dir,"Overview_ConcObs_vs_TIME_by_TISSUE",sep="/")
+   filename.out <- paste(output.dir,"Overview_ConcObs_vs_TIME",sep="/")
    to.png(plotobj,filename.out) 
 
 #-------------------------------------------------------------------------------------

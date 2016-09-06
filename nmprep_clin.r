@@ -96,8 +96,9 @@
 	
 	#Add OCC column
 	datanew$OCC <- 1
-	datanew$OCC[datanew$DAY>=8] <- 2
-	datanew$OCC[datanew$DAY>=15] <- 3
+	datanew$OCC[datanew$DAY>=4] <- 2
+	datanew$OCC[datanew$DAY>=8] <- 3
+	datanew$OCC[datanew$DAY>=15] <- 4
 	
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
