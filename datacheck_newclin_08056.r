@@ -1061,8 +1061,8 @@ plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 	dataCOV$DOSELVL[dataCOV$DOSEMG==5] <- 2
   dataCOV$AGE <- dataallone$AGE
   dataCOV$GEND <- dataallone$GEND
-  dataCOV$WEIGHTLB <- dataallone$WT
-  dataCOV$HEIGHTFT <- dataallone$HT
+  dataCOV$WEIGHTLB <- as.numeric(dataallone$WT)*2.2
+  dataCOV$HEIGHTFT <- as.numeric(dataallone$HT)*3.28
   dataCOV$DXCATNUM <- dataallone$DXCATNUM
   dataCOV$RACE <- dataallone$RACE2
   dataCOV$SECRMGDL <- dataallone$SECR

@@ -209,10 +209,10 @@
 	nmprep[is.na(nmprep)] <- "."
 	colnames(nmprep)[c(1,20)] <- c("#ID","RACE")
 
-  filename.out <- "E:/Hughes/Data/PK/COV/nmprep_allstudies.csv"
+  filename.out <- "E:/Hughes/Data/PK/REDO/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
 
-	filename.out <- "E:/Hughes/Data/PK/COV/nmprep_allcov.csv"
+	filename.out <- "E:/Hughes/Data/PK/REDO/nmprep_allcov.csv"
 	write.csv(nmprep[nmprep$STUDY==06003|nmprep$STUDY==05115,], file=filename.out, quote=FALSE,row.names=FALSE)
 
 	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,9,10,11,12,13)]

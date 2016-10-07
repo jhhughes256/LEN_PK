@@ -8,7 +8,7 @@
 
 # Set the working directory
   master.dir <- "E:/Hughes/Data"
-  scriptname <- "datacheck_clin_10016"
+  scriptname <- "datacheck_clin_10156"
   setwd(master.dir)
 
 # Load libraries
@@ -38,92 +38,67 @@
 
 ### ------------------------------------- Clinical Data ------------------------------------- ###
 ### Updated from datacheck_front.r 			#reproducible
-  file.name.in <- "RAW_Clinical/rawdata-lena_10016_allinfo.csv"
-  datanew <- read.csv(file.name.in, stringsAsFactors=F, na.strings=c("."))
+  file.name.in1 <- "RAW_Clinical/rawdata-lena_10156_datanew_excel.xlsx"
+  datanew.pkd <- read_excel(file.name.in1, sheet=1)  #pk data
+  #datanew.avg <- read_excel(file.name.in1, sheet=2)  #average cp
+  #datanew.plot <- read_excel(file.name.in1, sheet=3)  #plots
+  #datanew.relt <- read_excel(file.name.in1, sheet=4)  #pk data relative time
+  #datanew.avre <- read_excel(file.name.in1, sheet=5)  #pk data relative time (looks like this contains errors)
+  datanew.act <- read_excel(file.name.in1, sheet=6)  #actual dose time
 
-  file.name.in3 <- "RAW_Clinical/rawdata-lena_10016_demog_excel.xls"
-  demog.cat <- read_excel(file.name.in3, sheet=1)  #categorical
-  demog.cont <- read_excel(file.name.in3, sheet=2)[-c(2,3,9,10)]  #continuous
-  demog.tox <- read_excel(file.name.in3, sheet=3)  #toxicity
-  demog.secr <- read_excel(file.name.in3, sheet=4)  #serum creatinine
-  demog.pk <- read_excel(file.name.in3, sheet=5)  #pk times
+  file.name.in2 <- "RAW_Clinical/rawdata-lena_10156_datapk_excel.xlsx"
+  datapk.demog <- read_excel(file.name.in2, sheet=1)  #demographic data
+  #datapk.ig <- read_excel(file.name.in2, sheet=2)  #PD data - Ig
+  #datapk.tox <- read_excel(file.name.in2, sheet=3)  #toxicities
+  #datapk.clin <- read_excel(file.name.in2, sheet=4)  #response
+  #datapk.sero <- read_excel(file.name.in2, sheet=5)  #serotypes
+  datapk.dose <- read_excel(file.name.in2, sheet=6)  #actual dose times
 
-#------------------------------------------------------------------------------------
-#Column names
-  #As presented
-  names(datanew)
+#-------------------------------------------------------------------------------
+### Column names
+##datanew
+#pkd
+  names(datanew.pkd) <- print(str_replace_all(names(datanew.pkd),"[ ()#]","."))
+  str(datanew.pkd)
+#act
+  names(datanew.act) <- print(str_replace_all(names(datanew.act)," ","."))
+  sort(names(datanew.act))  #two copies of each
+  str(datanew.act)
 
-  #Sorted
-  sort(names(datanew))
+##datapk
+#demog
+  names(datapk.demog) <- print(str_replace_all(names(datapk.demog)," ","."))
+  str(datapk.demog)
+#dose
+  names(datapk.dose)
+  str(datapk.dose)
 
-  #Structure
-  str(datanew)
-
-#------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Plot PK data
+#8 data points per ID, with 1 NA
+  with(datanew.pkd, table(Patient.Number, useNA = "always"))
 
-#13-27 data points per ID
-  with(datanew, table(ID, useNA = "always"))
+#2 lena dose levels, with 2 odd values
+  with(datapk.dose, table(DOSE_LEVEL, useNA = "always"))
+  with(datapk.dose, table(DRUG,DOSE_LEVEL))
+  with(datapk.dose, table(SEQUENCE_NO_,DOSE_LEVEL))
 
-#2 dose levels
-  with(datanew, table(dose..mg., useNA = "always"))
-  with(datanew, table(dose..mg.,ID))
+#Number of patients (-1 for NAs)
+  npat <- length(unique(datanew.pkd$Patient.Number))-1
+  npat
+  length(unique(datapk.dose$SEQUENCE_NO_))  #more patients in dose dataset than concentration dataset
 
-  #not correlated with days, however higher drop-off for day 5 with 30mg dose?
-  with(datanew, table(dose..mg.,Day))
-
-#range of amt value counts
-  print(temp <- with(datanew, table(amt, ID)))
-  #one amt value
-  length(print(dose1 <- c(names(temp[1,])[temp[1,]==1], names(temp[2,])[temp[2,]==1])))
-  #two amt values
-  length(print(c(names(temp[1,])[temp[1,]==2], names(temp[2,])[temp[2,]==2])))
-  #three amt values
-  length(print(dose3 <- c(names(temp[1,])[temp[1,]==3], names(temp[2,])[temp[2,]==3])))
-
-  #all amt values are at time==0
-  print(temp <- with(datanew, table(amt, time..hr.)))
-  unique(c(names(temp[1,])[temp[1,]!=0], names(temp[2,])[temp[2,]!=0]))
-
-  #have 2 time==0 concentrations where amt is defined, perhaps an error encountered by placing all amt values at time==0
-  temp <- with(datanew, table(amt, dv..ug.ml.))
-  c(names(temp[1,])[temp[1,]!=0], names(temp[2,])[temp[2,]!=0])
-
-#more time==0 values than others, >= 57 time values for all time slots
-  with(datanew, table(time..hr., useNA = "always"))
-  #21 concentrations at time==0, 57 single times + 21 extra time==0
-  #will need to check patients with 3 amt values against others for signs of additional dose
-  temp <- with(datanew, table(time..hr., dv..ug.ml.))
-  length(print(names(temp[1,])[temp[1,]!=0]))
+#1 patient with concentrations that does not exist in dosage data
+  unique(datanew.pkd$Patient.Number)[!unique(datanew.pkd$Patient.Number) %in% unique(datapk.dose$SEQUENCE_NO_)]
 
 #60 mdv values
-  with(datanew, table(mdv, useNA = "always"))
+  with(datanew.pkd, table(Lenalidomide.Conc..nM., useNA = "always"))
   #all mdv values are on NA DV values
-  temp <- with(datanew, table(mdv, dv..ug.ml., useNA = "always"))
+  temp <- with(datanew.pkd, table(Lenalidomide.Conc..nM., useNA = "always"))
   temp[2,dim(temp)[2]]
 
-#2 cohorts, differ in how cytarabine was given
-  with(datanew, table(Cohort, useNA = "always"))
-  temp <- with(datanew, table(Cohort, ID))
-  #first cohort patients and pop size
-  length(print(names(temp[1,])[temp[1,]!=0]))
-  #second cohort patients and pop size
-  length(print(names(temp[2,])[temp[2,]!=0]))
 
-#Dose levels in each cohort
-  temp <- with(datanew, table(dose..mg.,ID,Cohort))
-  #Cohort 1 - 25mg
-  length(print(names(temp[1,,1])[temp[1,,1]!=0]))
-  #Cohort 1 - 30mg
-  length(print(names(temp[2,,1])[temp[2,,1]!=0]))
-  #Cohort 2 - 25mg
-  length(print(names(temp[1,,2])[temp[1,,2]!=0]))
-  #Cohort 2 - 30mg
-  length(print(names(temp[2,,2])[temp[2,,2]!=0]))
 
-#Number of patients
-  npat <- length(unique(datanew$ID))
-  npat
 
 #-------------------------------------------------------------------------------
 #Prepare continuous covariates
@@ -234,7 +209,7 @@
   with(dataall, table(DOSEMG))
   with(dataall, table(DOSEMG,DOSELVL))	#dose by dose group
 
-#----------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Calculate dose normalized concentrations
 
   #Check distribution of DV
@@ -259,7 +234,7 @@
 
   dataall$DVNORM <- dataall$DV/dataall$DOSEMG
 
-#----------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Count missing covariate data
 #Missing by Study
 
@@ -314,7 +289,7 @@
 
   #DXCAT2 "Acute Myeloid Leukaemia" <- 2
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Summary of study characteristics
 
  #Do all subjects have PK data
@@ -413,7 +388,7 @@
   filename.out <- paste(output.dir,"DVwith_group_week.csv",sep="/")
   write.csv(withDVbyGRPWEEK, file=filename.out)
 
-#----------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Subset some plot data
 
   plotdata <- subset(dataall)
@@ -457,7 +432,7 @@
   filename.out <- paste(output.dir,"plotdata.csv",sep="/")
   write.csv(plotdata, file=filename.out, row.names=FALSE)
 
-#----------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Basic PK plots
 
  #Conc vs Time
@@ -520,7 +495,7 @@
   to.png(plotobj,filename.out)
 
 
-#----------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Influence of Covariates
 
 #Function to plot by factor
@@ -577,7 +552,7 @@ plotByFactor <- function(factorColname,factorText)
   #plotByFactor("DXCAT2f","Disease category")
 
 
-#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Summarize Categorical covariates
 
   dataallone$SUMCOL <- "All Groups"
@@ -625,7 +600,7 @@ plotByFactor <- function(factorColname,factorText)
   #filename.out <- paste(output.dir,"CatCovSummary",sep="/")
   #write.csv(covCatTable, file=filename.out)
 
-#-----------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
   #Pairs-plot of continuous covariates
   plotobj <- NULL
   covdataonecont <- subset(covdataone, select=c("AGE","WT","BSA","BMI","SECR"))
@@ -635,7 +610,7 @@ plotByFactor <- function(factorColname,factorText)
   to.png(plotobj,filename.out)
 
 
-#-----------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
  #Pairs-plot of categorical covariates
 
   covcatdataonecat <- subset(dataallone, select=c("SEXf","RACEf","DXCAT2f"))
@@ -647,7 +622,7 @@ plotByFactor <- function(factorColname,factorText)
   to.png(plotobj,filename.out)
 
 
-#-----------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Demographic Summary
 #AGE, SEX, WT, BSA
 
@@ -683,7 +658,7 @@ plotByFactor <- function(factorColname,factorText)
   #write.csv(RACEtable, file=filename.out, row.names=T)
 
 
-#-----------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #Index plots of covariates
 
 #Customize ggplot2 theme - R 2.15.3
