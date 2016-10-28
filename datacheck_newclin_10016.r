@@ -172,8 +172,10 @@
   datanew2$DAY <- datanew$Day
 
   datanew2$DV <- datanew$dv..ug.ml.    			 #ug/ml
+  datanew2$DV[datanew2$DV <= 0] <- NA
 
   datanew2$MDV <- datanew$mdv
+  datanew2$MDV[datanew2$DV<0.00025926] <- 1
 
   #datanew2$BLQ <- 0
   #datanew2$BLQ[datanew$NOTE == "DV_BLQ"] <- 1

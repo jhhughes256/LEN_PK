@@ -80,6 +80,13 @@
   #dataflav.sum <- read_excel(file.name.in4, sheet=9)
   #datapk.sum <- read_excel(file.name.in4, sheet=10)
 
+  file.name.in5 <- "RAW_Clinical/rawdata-lena_08056_sigmaplot.xlsx"
+  sigma.conc <- read_excel(file.name.in5, sheet=1,
+    col_names = c("ID","time","conc","","ID","time","conc"),
+    col_type = c(rep("numeric",7)))
+  sigma.lena <- na.omit(sigma.conc[-(1:2),1:3])
+  sigma.comb <- sigma.conc[-(1:2),5:7]
+
   #------------------------------------------------------------------------------------
 #Column names ..._allinfo.csv
  #As presented
@@ -410,6 +417,10 @@
   datafla1 <- merge(IDcor,datafla)
   datafla2 <- merge(datafla1,demogcat2)
 
+  sigma.id <- unique(sigma.lena$ID)[!unique(sigma.lena$ID) %in% unique(as.numeric(datalen2$ID))]
+  #sigma.lena1 <-
+  #sigma.comb1 <-
+
 #------------------------------------------------------------------------------
   #Convert datanew2 to old format
   #Additionally stack flav and lena AMT, TIME, DV
@@ -439,6 +450,7 @@
 	dataint$DV <- dataint$DV/(1000*1000)																																		#conversion from ng/L to ug/mL
 
   dataint$MDV <- c(datafla2$MDV,datalen2$MDV)
+  dataint$MDV[dataint$DV<0.00025926] <- 1
 
   dataint$LNDV <- log(dataint$DV)
 

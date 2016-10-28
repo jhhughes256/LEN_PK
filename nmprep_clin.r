@@ -101,6 +101,29 @@
 	datanew$OCC[datanew$DAY>=8] <- 3
 	datanew$OCC[datanew$DAY>=15] <- 4
 
+  fsex <- ifelse(datanew$GEND==1,1.23,1.04)
+  datanew$CRCL <- (140-datanew$AGE)*datanew$WT*fsex/datanew$SECR  #CG w/ WT=ABW
+
+  datanew$IBW <- ifelse(datanew$GEND==1,50+0.9*(datanew$HT-152),45.5+0.9*(datanew$HT-152))
+  datanew$CRCL2 <- (140-datanew$AGE)*datanew$IBW*fsex/datanew$SECR  #CG w/ WT=IBW
+
+  AorIBW <- with(datanew, ifelse(WT<IBW, WT, IBW))
+  datanew$CRCL3 <- (140-datanew$AGE)*AorIBW*fsex/datanew$SECR  #CG w/ WT=IBW if IBW<ABW
+
+  adjBW <- with(datanew, IBW+0.4**(WT-IBW))
+  AoradjBW <- with(datanew, ifelse(WT<IBW, WT, adjBW))
+  datanew$CRCL4 <- (140-datanew$AGE)*AoradjBW*fsex/datanew$SECR  #adjBW - Sawyer et. al, Leader et. al
+
+  datanew$BMI <- datanew$WT/datanew$HT**2
+  AorIoradjBW <- datanew$IBW
+  AorIoradjBW[datanew$BMI < 18.5] <- datanew$WT
+  AorIoradjBW[datanew$BMI < 25] <- adjBW
+  datanew$CRCL5 <- (140-datanew$AGE)*AorIoradjBW*fsex/datanew$SECR  #adjBW - Winter et. al
+
+  datanew$BLQ <- 0
+  datanew$BLQ[datanew$MDV == 1 & round(datanew$TAD) == 0] <- 1
+  datanew$BLQ[datanew$MDV == 1 & round(datanew$TAD) >= 20] <- 1
+
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
 
@@ -200,20 +223,17 @@
   write.csv(datacov, file=filename.out, quote=FALSE,row.names=FALSE)
 
 #Prepare nm file
-#ID TIME TAD AMT EVID DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR RACE DXCAT
-  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,23,21)]
+#ID TIME TAD AMT EVID OCC DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR IBW CRCL CRCL2 CRCL3 CRCL4 CRCL5 RACE DXCAT LOQ
+  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,31,30,32,33,34,35,23,21,36)]
 
 	nmprep$WT[is.na(nmprep$WT)] <- 70
 	nmprep$HT[is.na(nmprep$HT)] <- 1.75
 	nmprep$HT[nmprep$HT==1.75&nmprep$GEND==0] <- 1.6
 	nmprep[is.na(nmprep)] <- "."
-	colnames(nmprep)[c(1,20)] <- c("#ID","RACE")
+	colnames(nmprep)[c(1,21)] <- c("#ID","RACE")
 
   filename.out <- "E:/Hughes/Data/PK/REDO/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
-
-	filename.out <- "E:/Hughes/Data/PK/REDO/nmprep_allcov.csv"
-	write.csv(nmprep[nmprep$STUDY==06003|nmprep$STUDY==05115,], file=filename.out, quote=FALSE,row.names=FALSE)
 
 	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,9,10,11,12,13)]
 	simdata[6] <- "."

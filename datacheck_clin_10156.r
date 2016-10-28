@@ -91,11 +91,8 @@
 #1 patient with concentrations that does not exist in dosage data
   unique(datanew.pkd$Patient.Number)[!unique(datanew.pkd$Patient.Number) %in% unique(datapk.dose$SEQUENCE_NO_)]
 
-#60 mdv values
-  with(datanew.pkd, table(Lenalidomide.Conc..nM., useNA = "always"))
-  #all mdv values are on NA DV values
-  temp <- with(datanew.pkd, table(Lenalidomide.Conc..nM., useNA = "always"))
-  temp[2,dim(temp)[2]]
+  with(datanew.pkd,which(is.na(Lenalidomide.Conc..nM.)))
+  with(datanew.pkd,which(Lenalidomide.Conc..nM. == "ND"))
 
 
 

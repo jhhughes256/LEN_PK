@@ -123,8 +123,10 @@
   datanew2$WEEK <- ceiling(floor(datanew2$TIME/84)/2)+1
 
   datanew2$DV <- datanew$dv..ug.ml.    			 #ug/ml
+  datanew2$DV[datanew2$DV <= 0] <- NA
 
   datanew2$MDV <- datanew$mdv
+  datanew2$MDV[datanew2$DV<0.005] <- 1
 
   #datanew2$BLQ <- 0
   #datanew2$BLQ[datanew$NOTE == "DV_BLQ"] <- 1

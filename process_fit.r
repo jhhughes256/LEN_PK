@@ -81,6 +81,8 @@
 #Write to file
   write.csv(fitdata, file=file.name.out)
 
+	nmprep <- read.csv("E:/Hughes/Data/PK/REDO/COV24/nmprep_allstudies.csv")
+
 #Remove dose events & missing values
   fitdata <- subset(fitdata, MDV==0)
 	fitdata$HT[fitdata$HT==0&fitdata$GEND==1] <- 1.75
@@ -92,7 +94,7 @@
 	fitdata$STUDYf <- factor(fitdata$STUDY)
 	levels(fitdata$STUDYf) <- paste("Study",levels(fitdata$STUDYf))
 
-	fitdata$OCCf <- factor(fitdata$OCC)
+	fitdata$OCCf <- factor(nmprep$OCC[nmprep$MDV == 0])
 	levels(fitdata$OCCf) <- paste("Occasion",levels(fitdata$OCCf))
 
 	fitdata$GRPf <- factor(fitdata$GRP)
@@ -302,7 +304,6 @@ dev.off()
 
   to.png.sqr(plotobj,"residual_density_group")
 
-
 #--------------------------------------------------------------------------------------------------
 #Correlation matrix between eta's
 #Subset the eta's from file - make sure they have been tabled in the *.fit file
@@ -389,11 +390,9 @@ ETACovariatePlotCAT <- function(ETAname,covname)
 
 }
 
-
 #Apply the plotting function - stand back and watch the magic!
 #This runs the ETACovariatePlotCAT plotting function, taking each row of covcatdf as the input to the function
 mdply(covcatdf, ETACovariatePlotCAT)
-
 
 #-------------------------------------------------------------------------------------------------------
 #Continuous covariates
@@ -427,11 +426,19 @@ ETACovariatePlotCONT <- function(ETAname,covname)
 
 }
 
-
 #Apply the plotting function - stand back and watch the magic!
 #This runs the ETACovariatePlotCAT plotting function, taking each row of covcontdf as the input to the function
 	mdply(covcontdf, ETACovariatePlotCONT)
 
+  param.cols <- c("CL", "V2", "KTR")
+
+  covcatpf <- expand.grid(param.cols,covcat.cols,stringsAsFactors = F)
+  names(covcatpf) <- c("ETAname","covname")
+	mdply(covcatpf, ETACovariatePlotCAT)
+
+  covcontpf <- expand.grid(param.cols,covcont.cols,stringsAsFactors = F)
+  names(covcontpf) <- c("ETAname","covname")
+	mdply(covcontpf, ETACovariatePlotCONT)
 
 #--------------------------------------------------------------------------------------------------
 #Complex ETA grids

@@ -20,6 +20,7 @@
   library(reshape)
   library(stringr)
   library(GGally)
+  library(readxl)
 
 # Source utility functions file
   source("E:/Hughes/functions_utility.r")
@@ -40,6 +41,10 @@
 ### Updated from datacheck_front.r 			#reproducible
   file.name.in <- "RAW_Clinical/rawdata-lena_05115_allinfo_creatinine.csv"
   datanew <- read.csv(file.name.in, stringsAsFactors=F, na.strings=c("."))
+
+  ## Wt_Ht_BMI.xlsx - 13 sheets of data
+  file.name.in3 <- "RAW_Clinical/rawdata-lena_05115_06003_Wt_Ht_BMI.xlsx"
+  demog.ht <- read_excel(file.name.in3, sheet=1)  #demographics
 
 #------------------------------------------------------------------------------------
 #Column names
@@ -73,6 +78,19 @@
   npat
 
 #-------------------------------------------------------------------------------
+#Get heights from demog.ht
+#Column names
+  #As presented
+  names(demog.ht)
+
+  data.ht <- demog.ht[1:21,c(1,3,11)]
+  names(data.ht) <- c("ID","RACE","HT")
+  data.ht$ID <- 1:21
+  data.ht <- data.ht[!is.na(data.ht$HT),]
+  data.ht$RACE <- ifelse(data.ht$RACE=="W", 1, 2)
+  datanew <- merge(datanew,data.ht)
+
+#-------------------------------------------------------------------------------
 #Convert datanew to old format
 
   datanew2 <- data.frame("ID" = datanew$ID, "STUDY" = 5115)
@@ -97,8 +115,10 @@
   datanew2$EVID <- datanew$dvid
 
   datanew2$DV <- datanew$dv..ug.mL.    			 #ug/ml
+  datanew2$DV[datanew2$DV <= 0] <- NA
 
   datanew2$MDV <- datanew$mdv
+  datanew2$MDV[datanew2$DV<0.00025926] <- 1
 
   #datanew2$BLQ <- 0
   #datanew2$BLQ[datanew$NOTE == "DV_BLQ"] <- 1
@@ -119,7 +139,7 @@
 
   datanew2$WT <- datanew$wt..lbs./2.2		#conversion to kgs
 
-  #datanew2$HT <- datanew$Height/3.28			#conversion to m
+  datanew2$HT <- as.numeric(datanew$HT)*100
 
   #datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
 
@@ -183,7 +203,7 @@
 #Missing by Study
 
   covnames <- as.formula("~AGE+GEND+WT+DXCATNUM+SECR")
-  covdata <- subset(dataall, select=c("ID","DOSELVL","AGE","GEND","WT","DXCATNUM","SECR"))
+  covdata <- subset(dataall, select=c("ID","DOSELVL","AGE","GEND","WT","HT","DXCATNUM","SECR"))
 
   #Reassign missing
   covdata[covdata==-1] <- NA
@@ -361,7 +381,7 @@
 
   plotdata$WT_bin <- cut2(plotdata$WT, g=BINnumber)
 
-  #plotdata$HT_bin <- cut2(plotdata$HT, g=BINnumber)
+  plotdata$HT_bin <- cut2(plotdata$HT, g=BINnumber)
 
   #plotdata$BSA_bin <- cut2(plotdata$BSA, g=BINnumber)
 
@@ -471,7 +491,7 @@ plotByFactor <- function(factorColname,factorText)
   #plotByFactor("DOSE_bin","Binned Dose (mg)")
   plotByFactor("AGE_bin","Binned Age (years)")
   plotByFactor("WT_bin","Binned Weight (kg)")
-  #plotByFactor("HT_bin","Binned Height (kg)")
+  plotByFactor("HT_bin","Binned Height (kg)")
   #plotByFactor("BSA_bin","Binned BSA (m2)")
   #plotByFactor("BMI_bin","Binned BMI (kg per m2)")
   #plotByFactor("DXCAT2f","Disease category")
@@ -665,7 +685,7 @@ plotByFactor <- function(factorColname,factorText)
   dataFIX$GEND <- dataall$GEND
   dataFIX$WT <- dataall$WT
 
-  dataFIX$HT <- NA
+  dataFIX$HT <- dataall$HT
   dataFIX$BSA <- NA
   dataFIX$BMI <- NA
   dataFIX$DXCATNUM <- dataall$DXCATNUM
