@@ -7,7 +7,7 @@
 	graphics.off()
 
 # Set the working directory
-   master.dir <- "E:/Hughes/Data/PK/REDO"
+   master.dir <- "E:/Hughes/Data/PK/OSU_SUB/COV_04"
    scriptname <- "process_fit"
    setwd(master.dir)
 
@@ -101,16 +101,18 @@
 	levels(fitdata$GRPf) <- paste("Group",levels(fitdata$GRPf))
 
 	fitdata$DOSELVLf <- factor(fitdata$DOSELVL)
-	levels(fitdata$DOSELVLf) <- paste(c(2.5,2.5,2.5,5,15,20,25,30,35,50,75),
-																		c("mg QD","mg-5mg QD","mg-7.5mg QD",rep("mg QD",8)),sep="")
+	levels(fitdata$DOSELVLf) <- paste(c(2.5,2.5,2.5,5,7.5,15,20,25,30,35,50,75),
+																		c("mg QD","mg-5mg QD","mg-7.5mg QD",rep("mg QD",9)),sep="")
 	fitdata$GENDf <- factor(fitdata$GEND)
 	levels(fitdata$GENDf) <- c("F","M")
 
-	fitdata$RACEf <- factor(fitdata$RACE)
-	levels(fitdata$RACEf) <- c("Unknown","Caucasian","Non-Caucasian")
+	fitdata$RACEf <- factor(nmprep$RACE[nmprep$MDV == 0])
+	levels(fitdata$RACEf) <- c("Caucasian","Non-Caucasian")
 
 	fitdata$DXCATf <- factor(fitdata$DXCAT)
 	levels(fitdata$DXCATf) <- c("CLL","AML","ALL","MM")
+
+	fitdata$CRCL <- nmprep$CRCL2[nmprep$MDV == 0]
 
 #--------------------------------------------------------------------------------------------------
 #Diagnostic plots
@@ -269,20 +271,29 @@ dev.off()
 #Examine Residual distribution
  #QQ plot
   plotobj <- NULL
+	plotobj1 <- NULL
   plotobj <-  ggplot(fitdata)
   plotobj <- plotobj + ggtitle("QQ normal plot of residuals\n")
-  plotobj <- plotobj + stat_qq(aes(sample=CWRES),geom="point")
   plotobj <- plotobj + scale_x_continuous(name="Theoretical", limits=c(-3,3)) + scale_y_continuous(name="Observed", limits=c(-3,3))
   plotobj <- plotobj + geom_abline(aes(sample=CWRES), intercept=0, slope=1, colour="black") #Add line of identity
+	plotobj1 <- plotobj + stat_qq(aes(sample=CWRES),geom="point")
   #plotobj
 
-  to.png.sqr(plotobj,"residual_qq")
+  to.png.sqr(plotobj1,"residual_qq")
 
  #Condition qq plot on group
-  plotobj <- plotobj + stat_qq(aes(sample=CWRES, colour=GRPf, alpha=0.5),geom="point")
-  plotobj  <-  plotobj + scale_colour_brewer(name="Group", palette="Set1")
-  #plotobj
-  to.png.sqr(plotobj,"residual_qq_group")
+  plotobj2 <- NULL
+  plotobj2 <- plotobj + stat_qq(aes(sample=CWRES, colour=GRPf),geom="point", alpha=0.5)
+  plotobj2  <-  plotobj2 + scale_colour_brewer(name="Group", palette="Set1")
+  #plotobj1
+  to.png.sqr(plotobj2,"residual_qq_group")
+
+#Condition qq plot on group
+  plotobj3 <- NULL
+  plotobj3 <- plotobj + stat_qq(aes(sample=CWRES, colour=STUDYf),geom="point", alpha=0.5)
+	plotobj3  <-  plotobj3 + scale_colour_brewer(name="Study", palette="Set1")
+	#plotobj2
+	to.png.sqr(plotobj3,"residual_qq_study")
 
 
  #Residual density plot (replaces histogram)
@@ -351,7 +362,7 @@ if (ncol(etadata)>1)  #more than 1 ETA is scatterplot matrix
 covcat.cols <- c("STUDYf","DOSELVLf","GENDf","RACEf","DXCATf","OCCf")
 
 #Get the columns with continuous covariates
-covcont.cols <- c("AGE","WT","HT","SECR")
+covcont.cols <- c("AGE","WT","HT","SECR","CRCL","IBW")
 
 #-------------------------------------------------------------------------------------------------------
 #Categorical covariates
@@ -439,6 +450,16 @@ ETACovariatePlotCONT <- function(ETAname,covname)
   covcontpf <- expand.grid(param.cols,covcont.cols,stringsAsFactors = F)
   names(covcontpf) <- c("ETAname","covname")
 	mdply(covcontpf, ETACovariatePlotCONT)
+
+#Covariate correlation----------------------------------------------------------
+
+	cov.cols <- c(covcat.cols,covcont.cols)
+	cov.cols <- c(cov.cols,"CRCL")
+	covsubdata <- subset(fitdataone, select=cov.cols)
+	plotobj <- NULL
+  plotobj <- ggpairs(covsubdata, title ="Correlation between covariates")
+
+	#ggsave("covscatter.png", width=5, height=5, units=c("cm"))
 
 #--------------------------------------------------------------------------------------------------
 #Complex ETA grids
@@ -557,7 +578,7 @@ ETACovariatePlotCONT <- function(ETAname,covname)
   plotobjtop <- plotobjtop + geom_line(aes(x=TIME, y=PRED), colour = "blue")
 	plotobjtop <- plotobjtop + geom_line(aes(x=TIME, y=IPRED), colour = "red")
 	plotobjtop <- plotobjtop + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-	plotobjtop <- plotobjtop + scale_x_continuous(name="Time after dose (h)",lim=(0,24))
+	plotobjtop <- plotobjtop + scale_x_continuous(name="Time after dose (h)",lim=c(0,24))
   plotobjtop <- plotobjtop + scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
 	plotobjtop <- plotobjtop + facet_grid(~ ID)
 	#plotobjtop
@@ -583,7 +604,7 @@ ETACovariatePlotCONT <- function(ETAname,covname)
   plotobjbottom <- plotobjbottom + geom_line(aes(x=TIME, y=PRED), colour = "blue")
 	plotobjbottom <- plotobjbottom + geom_line(aes(x=TIME, y=IPRED), colour = "red")
   plotobjbottom <- plotobjbottom + geom_hline(yintercept=0.5, linetype = 2, colour = "darkgreen")
-	plotobjbottom <- plotobjbottom + scale_x_continuous(name="Time after dose (h)",lim=(0,24))
+	plotobjbottom <- plotobjbottom + scale_x_continuous(name="Time after dose (h)",lim=c(0,24))
   plotobjbottom <- plotobjbottom + scale_y_continuous(name="Lenalidomide Conc (ug/mL)")
 	plotobjbottom <- plotobjbottom + facet_grid( ~ ID)
 	#plotobjbottom

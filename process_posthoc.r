@@ -21,6 +21,7 @@
   library(grid)
   library(reshape2)
   library(GGally)
+	library(readxl)
 
 # Source utility functions file
   source("E:/Hughes/functions_utility.r")
@@ -118,16 +119,65 @@
 	datapk <- fitdataone[fitdataone$STUDY == 10016, ]
 	datapk$ID <- datapk$ID - 121
 	dataplot <- merge(datapd, datapk[-(2:11)])
-	sub <- dataplot[dataplot$TRT == "UT" & dataplot$Day == 5,]
+	sub <- dataplot[dataplot$Day == 5,]
 
-	titletext <- "Previously Treated Bone Marrow"
+	titletext <- "10016 Plots"
 	plotobj1 <- NULL
-	plotobj1 <- ggplot(sub)
+	plotobj1 <- ggplot(dataplot)
 	plotobj1 <- plotobj1 + ggtitle(titletext)
-	plotobj1 <- plotobj1 + geom_point(aes(ddCt, CL), na.rm=TRUE)
+	plotobj1 <- plotobj1 + geom_point(aes(dCt, CL), na.rm=TRUE)
 	plotobj1 <- plotobj1 + scale_x_continuous(name="ddCt")
 	plotobj1 <- plotobj1 + scale_y_continuous(name="CL")
 	#plotobj1 <- plotobj1 +
 	#plotobj1 <- plotobj1 +
 	plotobj1 <- plotobj1 + facet_wrap(~Gene)
 	plotobj1
+
+	# 8056 Haematocrit comparisons
+	#Read in pd data from 8056
+	datapd <- read.csv("E:/Hughes/Data/RAW_Clinical/datacheck_pd_08056_Output/HCTmean.csv")
+	datapk <- fitdataone[fitdataone$STUDY == 8056, ]
+	datapk$ID <- datapk$ID - 96
+  plotdata <- merge(datapd, datapk[-(2:11)])
+
+	titletext <- "8056 Plots"
+	plotobj2 <- NULL
+	plotobj2 <- ggplot(plotdata)
+	plotobj2 <- plotobj2 + ggtitle(titletext)
+	plotobj2 <- plotobj2 + geom_point(aes(MEAN, CL), na.rm=TRUE)
+	plotobj2 <- plotobj2 + scale_x_continuous(name="MEAN")
+	plotobj2 <- plotobj2 + scale_y_continuous(name="CL")
+	plotobj2 <- plotobj2 + geom_smooth(aes(MEAN, CL), method = "loess", se=F)
+	#plotobj2 <- plotobj2 +
+	#plotobj2 <- plotobj2 +
+	plotobj2
+	#Stupid plot, this is the wrong subset of patients
+	#These are CLL patients not MM patients
+
+	summary(lm(MEAN~CL,plotdata))$r.squared
+
+	# 5115 Total Protein comparisons
+	#Read in pd data from 5115
+	file.name <- "E:/Hughes/Data/RAW_Clinical/rawdata-lena_05115_corr_analysis.xls"
+	datapd.in <- read_excel(file.name, sheet=9)[-1,-(2:24)]  #rawdata
+	names(datapd.in) <- datapd.in[1,]
+	datapd <- colwise(as.numeric)(datapd.in[2:21,c(1,15:31)])
+	names(datapd) <- c("ID","CALC","ALB","TPR","AST","ALT","BILI","BUN",
+		"ALKPH","INORGPH","WBC","PLT","RBC","LYMPH","MONO","EOSIN","BASO","ANC")
+	datapk <- fitdataone[fitdataone$STUDY == 5115,]
+	datapk$ID <- datapk$ID - 75
+	plotdata <- merge(datapk[-(2:11)], datapd)
+
+	titletext <- "5115 Plots"
+	plotobj3 <- NULL
+	plotobj3 <- ggplot(plotdata)
+	plotobj3 <- plotobj3 + ggtitle(titletext)
+	plotobj3 <- plotobj3 + geom_point(aes(BILI, CL), na.rm=TRUE)
+	plotobj3 <- plotobj3 + scale_x_continuous(name="Bilirubin")
+	plotobj3 <- plotobj3 + scale_y_continuous(name="CL")
+	#plotobj3 <- plotobj3 + geom_smooth(aes(TPR, CL), method = "loess", se=F)
+	#plotobj3 <- plotobj3 +
+	#plotobj3 <- plotobj3 +
+	plotobj3
+
+		summary(lm(TPR~CL,plotdata))$r.squared

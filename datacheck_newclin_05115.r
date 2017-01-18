@@ -46,6 +46,14 @@
   file.name.in3 <- "RAW_Clinical/rawdata-lena_05115_06003_Wt_Ht_BMI.xlsx"
   demog.ht <- read_excel(file.name.in3, sheet=1)  #demographics
 
+  ##corr_analysis.xls - 9 sheets of data
+  file.name.in2 <- "RAW_Clinical/rawdata-lena_05115_corr_analysis.xls"
+  datapd.in <- read_excel(file.name.in2, sheet=9)[-1,-(2:24)]  #rawdata
+  names(datapd.in) <- datapd.in[1,]
+  dataraceone <- data.frame(
+    "ID" = as.numeric(datapd.in[2:21,1]),
+    "RACE" = ifelse(datapd.in[2:21,6] == "B", 2, 1))
+
 #------------------------------------------------------------------------------------
 #Column names
   #As presented
@@ -148,15 +156,12 @@
   #DXCATNUM == 4 -> Relapsed Multiple Myeloma - Hofmeister et. al 2011
   datanew2$DXCATNUM <- 4
 
-  #Caucasian 	1
-  #??			2
-  #??			3
-  #with(datanew, table(Race, useNA = "always"))
-  #datanew2$RACE <- datanew$Race
 
-  #datanew2$RACE2 <- 2
-  #datanew2$RACE2[datanew$Race == 1] <- 1
-  #with(datanew2, table(RACE2, useNA = "always"))
+  #Caucasian     	1
+  #Non-Caucasian 	2
+  datarace <- merge(datanew2, dataraceone)
+  datanew2$RACE <- datarace$RACE
+  datanew2$RACE2 <- datarace$RACE
 
   datanew2$SECR <- datanew$Cr..mg.dL.*88.4	#convert from mg/dL to umol/L
 
@@ -526,13 +531,13 @@ plotByFactor <- function(factorColname,factorText)
 
   #Define reassignment of column names (if any) rtf allowed
   #colNames <- c(
-                "COV","Covariate Code",
-                "CATEGORY","Category",
-                "RACE","Race",
-                "SEX","Gender",
-                "Freq","Count",
-				"DXCAT","Disease"
-                )
+  #              "COV","Covariate Code",
+#                "CATEGORY","Category",
+#                "RACE","Race",
+#                "SEX","Gender",
+#                "Freq","Count",
+#				"DXCAT","Disease"
+#                )
 
   #colData <- data.frame(matrix(colNames, byrow=T, ncol=2),stringsAsFactors=F)
   #names(colData) <- c("ColNameOld","ColNameNew")
@@ -689,8 +694,8 @@ plotByFactor <- function(factorColname,factorText)
   dataFIX$BSA <- NA
   dataFIX$BMI <- NA
   dataFIX$DXCATNUM <- dataall$DXCATNUM
-  dataFIX$RACE <- NA
-  dataFIX$RACE2 <- NA
+  dataFIX$RACE <- dataall$RACE
+  dataFIX$RACE2 <- dataall$RACE
   dataFIX$SECR <- dataall$SECR
   dataFIX$DVNORM <- dataall$DVNORM
 
@@ -720,7 +725,7 @@ plotByFactor <- function(factorColname,factorText)
   dataCOV$WEIGHTLB <- dataallone$WT*2.2
   dataCOV$HEIGHTFT <- NA
   dataCOV$DXCATNUM <- dataallone$DXCATNUM
-  dataCOV$RACE <- NA
+  dataCOV$RACE <- dataallone$RACE
   dataCOV$SECRMGDL <- dataallone$SECR/88.4
 
 	filename.out <- paste(output.dir,"05115_covdata.csv",sep="/")

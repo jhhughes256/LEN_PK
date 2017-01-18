@@ -16,7 +16,7 @@
 	graphics.off()
 
 #Set the working directory - to the parent directory where you do the modelling/VPC
-	master.dir<-"E:/Hughes/Data/PK/REDO/"
+	master.dir<-"E:/Hughes/Data/PK/NO_ALLOM/"
 	setwd(master.dir)
 
 #Load libraries
@@ -51,10 +51,10 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 #-------------------------------------------------------------------------------
 #Process the simulated *.fit file.
 #Run name - Change this to the RUN you want to process
-	runname <- "RUN024_DES_1C8TAwAP_PPV_CORCLVKA_VPC"
+	runname <- "RUN010_DES_1C8TAP2_PPV_CORCLVKA_VPC"
 
 #Process the fit file - Comment this out if you have already generated the csv; this will save time!
-	processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
+	#processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
 
 #Read the simulated data
   SIM.data <- read.csv(paste(runname,".nm7/",runname,".fit.csv",sep=""), stringsAsFactors=F, na.strings=".")
@@ -66,21 +66,21 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 
 #-------------------------------------------------------------------------------
 #Read the original data
-  LOQ.data <- read.csv("nmprep_allstudies.csv", stringsAsFactors=F, na.strings=".")
 	ORG.data <- read.csv("nmprep_allstudies.csv", stringsAsFactors=F, na.strings=".")
   ORG.data <- rename(ORG.data, c("X.ID"="ID"))
   #ORG.data <- rename(ORG.data, c("TAFDE"="TIME"))  # rename time
   ORG.data <- subset (ORG.data, MDV==0 & EVID<=1) #removes data not used in the analysis commented out in the original CTL
+	if(str_detect(master.dir, "OSU_SUB")) ORG.data <- subset (ORG.data, STUDY<=6003) # only include if OSU_SUB
 
  #------------------------------------------------------------------------------
 #Assign some factors - ORG.data
 
 	#Bin time
-	ORG.data$TIMEBIN <- cut2(ORG.data$TIME, g=7, levels.mean=T)
+	ORG.data$TIMEBIN <- cut2(ORG.data$TIME, cuts=c(1.02,2.02,4.02,8.02,49,97.5), levels.mean=T)
 	ORG.data$TIMEBIN <- as.numeric(paste(ORG.data$TIMEBIN))
 
 	#Bin time after first dose
-	ORG.data$TADBIN <- cut2(ORG.data$TAD, g=7, levels.mean=T)
+	ORG.data$TADBIN <- cut2(ORG.data$TAD, cuts=c(0.517,1.017,2.017,3.017,4.25,8.017), levels.mean=T)
 	ORG.data$TADBIN <- as.numeric(paste(ORG.data$TADBIN))
 
   # Assign some factors
@@ -98,11 +98,11 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 #Assign some factors - SIM.data
 
 	#Bin time
-	SIM.data$TIMEBIN <- cut2(SIM.data$TIME, g=7, levels.mean=T)
+	SIM.data$TIMEBIN <- cut2(SIM.data$TIME, cuts=c(1.02,2.02,4.02,8.02,49,97.5), levels.mean=T)
 	SIM.data$TIMEBIN <- as.numeric(paste(SIM.data$TIMEBIN))
 
 	#Bin time after first dose
-	SIM.data$TADBIN <- cut2(SIM.data$TAD, g=7, levels.mean=T)
+	SIM.data$TADBIN <- cut2(SIM.data$TAD, cuts=c(0.517,1.017,2.017,3.017,4.25,8.017), levels.mean=T)
 	SIM.data$TADBIN <- as.numeric(paste(SIM.data$TADBIN))
 
   # Assign some factors
@@ -112,6 +112,36 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
    SIM.data$DXCATf <- factor(SIM.data$DXCAT, labels=c("CLL","AML","ALL","MM"))
    SIM.data$STUDYf <- factor(SIM.data$STUDY)
 	 SIM.data$DOSEf <- factor(ifelse(SIM.data$DOSELVL<=5,1,2), labels=c("Dose <10mg","Dose >10mg"))
+
+	 # Assign LLOQ
+	 SIM.data$LOQ <- ifelse(SIM.data$STUDY == 6003, 0.005, 0.00025926)
+	 SIM.data$BLQ <- ifelse(SIM.data$DV < SIM.data$LOQ, 1, 0)
+
+#------------------------------------------------------------------------------
+	 #Assign some factors - LOQ.data
+		LOQ.data <- read.csv("nmprep_allstudies.csv", stringsAsFactors=F, na.strings=".")
+		names(LOQ.data)[1] <- "ID"
+
+	  #Bin time
+		LOQ.data <- LOQ.data[LOQ.data$TIME != 0, ]
+		LOQ.data$DV[is.na(LOQ.data$DV)] <- 0
+	  LOQ.data$TIMEBIN <- cut2(LOQ.data$TIME, cuts=c(1.02,2.02,4.02,8.02,49,97.5), levels.mean=T)
+	  LOQ.data$TIMEBIN <- as.numeric(paste(LOQ.data$TIMEBIN))
+
+	  #Bin time after first dose
+	  LOQ.data$TADBIN <- cut2(LOQ.data$TAD, cuts=c(0.517,1.017,2.017,3.017,4.25,8.017), levels.mean=T)
+	  LOQ.data$TADBIN <- as.numeric(paste(LOQ.data$TADBIN))
+
+	  # Assign some factors
+	 	LOQ.data$IDf <- as.factor(LOQ.data$ID)
+	 	LOQ.data$RACEf <- factor(LOQ.data$RACE2, labels=c("White", "Other"))
+	 	LOQ.data$GENDf <- factor(LOQ.data$GEND, labels=c("F", "M"))
+	 	LOQ.data$DXCATf <- factor(LOQ.data$DXCATNUM, labels=c("CLL","AML","ALL","MM"))
+	 	LOQ.data$STUDYf <- factor(LOQ.data$STUDY)
+	 	LOQ.data$DOSEf <- factor(ifelse(LOQ.data$DOSELVL<=5,1,2), labels=c("Dose <10mg","Dose >10mg"))
+
+		LOQ.data$LOQ <- ifelse(LOQ.data$STUDY == 6003, 0.005, 0.00025926)
+		LOQ.data$BLQ <- ifelse(LOQ.data$DV < LOQ.data$LOQ, 1, 0)
 
 #-------------------------------------------------------------------------------
 #Confidence intervals - from function utility
@@ -163,15 +193,15 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 	plotobj <- ggplot(data=ORG.data)
 
 	#Median simulated with confidence band
-	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="red")
+	#plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="red")
   #plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
 
 	#Lower 90% CI simulated with confidence band
-	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
+	#plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
 	#plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
 	#Upper 90% CI simulated with confidence band
-	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
+	#plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
 	#plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
 
@@ -185,22 +215,20 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=DV), data=SIM.data, fun.y=CI90hi, geom="line", colour="black", size=1)
 
 	plotobj <- plotobj +  theme(plot.title = element_text(size = rel(1)))
-    plotobj <- plotobj + ggtitle(titletext)
-    plotobj <- plotobj + scale_y_continuous("Concentration (ug/L)\n")
-    plotobj <- plotobj + scale_x_log10("\nTime after dose (hours)")
+  plotobj <- plotobj + ggtitle(titletext)
+  plotobj <- plotobj + scale_y_continuous("Concentration (ug/L)\n")
+  plotobj <- plotobj + scale_x_log10("\nTime after dose (hours)")
 	#plotobj <- plotobj + facet_wrap(~DVIDf)
 	plotobj <- plotobj + theme(strip.background = element_rect(fill = "grey95", colour = "grey50"))
-    plotobj
+  plotobj
 
 	#normal scale- non-facetted
-    ggsave("Uppsala_VPC.png", width=20, height=16, units=c("cm"))
+  ggsave("Uppsala_VPC.png", width=20, height=16, units=c("cm"))
 
 	# log Y-scale-non- facetted
-	plotobj2 <- NULL
 	plotobj2 <- plotobj + scale_y_log10("Concentration (ug/L)\n")
 	plotobj2
 	ggsave("Uppsala_VPC_log.png", width=20, height=16, units=c("cm"))
-
 
 	#facet on study---------------------------------------------------------------
 
@@ -351,15 +379,15 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 	plotobj <- ggplot(data=ORG.data)
 
 	#Median simulated with confidence band
-	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="red")
+	#plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="red")
   #plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
 
 	#Lower 90% CI simulated with confidence band
-	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
+	#plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
 	#plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
 	#Upper 90% CI simulated with confidence band
-	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
+	#plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
 	#plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
 
@@ -388,6 +416,13 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 	plotobj2 <- plotobj + scale_y_log10("Concentration (ug/L)\n")
 	plotobj2
 	ggsave("Uppsala_VPC_TADlog.png", width=20, height=16, units=c("cm"))
+	plotobj_VPC <- NULL
+	plotobj_VPC <- plotobj2 + scale_x_log10("\nTime after dose (hours)", lim=c(0.3,24))
+
+	plotobj3 <- NULL
+	plotobj3 <- plotobj2 + scale_x_continuous("\nTime after dose (hours)")
+	plotobj3
+	ggsave("Uppsala_VPC_TADlog_nologx.png", width=20, height=16, units=c("cm"))
 
 	#facet on study---------------------------------------------------------------
 
@@ -510,6 +545,123 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 	plotobj2
 	ggsave("Uppsala_VPC_TADbydoselog.png", width=20, height=16, units=c("cm"))
 
+	#-------------------------------------------------------------------------------
+	#TIMEBIN LOQ VPC
+	#Set up data for LOQ plots
+		LOQ.BLQ.summary <- cbind(
+			summaryBy(BLQ~TIMEBIN, data=LOQ.data, FUN=sum),
+			summaryBy(DV~TIMEBIN, data=LOQ.data, FUN=length)[-1])
+		LOQ.BLQ.summary$LOQPerBLQ <- 100*(LOQ.BLQ.summary$BLQ.sum)/(LOQ.BLQ.summary$DV.length)
+
+	#Simulations calculate mean % BLQ and CI's
+		SIM.BLQ.summary <- cbind(
+			summaryBy(BLQ~TIMEBIN+SIM, data=SIM.data, FUN=sum),
+			summaryBy(DV~TIMEBIN+SIM, data=SIM.data, FUN=length)[-(1:2)])
+		SIM.BLQ.summary$PerBLQ <- 100*(SIM.BLQ.summary$BLQ.sum)/(SIM.BLQ.summary$DV.length)
+
+	#Calculated for a table
+		SIM.PerBLQ.median <- summaryBy(PerBLQ~TIMEBIN, data=SIM.BLQ.summary, FUN=median)
+		SIM.PerBLQ.ci90lo <- summaryBy(PerBLQ~TIMEBIN, data=SIM.BLQ.summary, FUN=CI90lo)
+		SIM.PerBLQ.ci90hi <- summaryBy(PerBLQ~TIMEBIN, data=SIM.BLQ.summary, FUN=CI90hi)
+		SIM.PerBLQ.summary <- cbind(SIM.PerBLQ.median, SIM.PerBLQ.ci90lo[-1], SIM.PerBLQ.ci90hi[-1])
+
+		ALL.BLQ.summary <- cbind(LOQ.BLQ.summary, SIM.PerBLQ.summary[-1])
+
+#-------------------------------------------------------------------------------
+	#Median simulated BLQ with confidence intervals
+	#Calculate 5, 50 and 95 percentiles for each simulated study (S)
+		SIM.BLQ.summary.bystudy <- ddply(SIM.BLQ.summary, .(SIM,TIMEBIN), function(x) median(x$PerBLQ))
+		names(SIM.BLQ.summary.bystudy)[3] <- "medianS"
+
+		plotobj_BLQ <- NULL
+		plotobj_BLQ <- ggplot(data=LOQ.BLQ.summary)
+
+	#Median simulated with confidence band
+		plotobj_BLQ <- plotobj_BLQ + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.BLQ.summary.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="red")
+		plotobj_BLQ <- plotobj_BLQ + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.BLQ.summary.bystudy, geom="line", size = 2, fun.y=median)
+		plotobj_BLQ
+
+	#ORG DATA
+		plotobj_BLQ <- plotobj_BLQ + geom_point(aes(x=TIMEBIN, y=LOQPerBLQ), shape = 1, colour = "blue", size=2)
+		plotobj_BLQ
+
+	#plotobj_BLQ <- plotobj_BLQ + ggtitle(titletext)
+    plotobj_BLQ <- plotobj_BLQ + scale_y_continuous("% <LLOQ")
+    plotobj_BLQ <- plotobj_BLQ + scale_x_continuous("Time (h)", lim=c(0,160))
+	#plotobj_BLQ <- plotobj_BLQ + facet_wrap(~DVIDf)
+		plotobj_BLQ <- plotobj_BLQ + theme(strip.background = element_rect(fill = "grey95", colour = "grey50"))
+    plotobj_BLQ
+
+#-------------------------------------------------------------------------------
+	#TADBIN LOQ VPC
+	#Set up data for LOQ plots
+		LOQ.BLQ.summary <- cbind(
+			summaryBy(BLQ~TADBIN, data=LOQ.data, FUN=sum),
+			summaryBy(DV~TADBIN, data=LOQ.data, FUN=length)[-1])
+		LOQ.BLQ.summary$LOQPerBLQ <- 100*(LOQ.BLQ.summary$BLQ.sum)/(LOQ.BLQ.summary$DV.length)
+
+	#Simulations calculate mean % BLQ and CI's
+		SIM.BLQ.summary <- cbind(
+			summaryBy(BLQ~TADBIN+SIM, data=SIM.data, FUN=sum),
+			summaryBy(DV~TADBIN+SIM, data=SIM.data, FUN=length)[-(1:2)])
+		SIM.BLQ.summary$PerBLQ <- 100*(SIM.BLQ.summary$BLQ.sum)/(SIM.BLQ.summary$DV.length)
+
+	#Calculated for a table
+		SIM.PerBLQ.median <- summaryBy(PerBLQ~TADBIN, data=SIM.BLQ.summary, FUN=median)
+		SIM.PerBLQ.ci90lo <- summaryBy(PerBLQ~TADBIN, data=SIM.BLQ.summary, FUN=CI90lo)
+		SIM.PerBLQ.ci90hi <- summaryBy(PerBLQ~TADBIN, data=SIM.BLQ.summary, FUN=CI90hi)
+		SIM.PerBLQ.summary <- cbind(SIM.PerBLQ.median, SIM.PerBLQ.ci90lo[-1], SIM.PerBLQ.ci90hi[-1])
+
+		ALL.BLQ.summary <- cbind(LOQ.BLQ.summary, SIM.PerBLQ.summary[-1])
+
+#-------------------------------------------------------------------------------
+	#TADBIN
+		SIM.BLQ.summary.bystudy <- ddply(SIM.BLQ.summary, .(SIM,TADBIN), function(x) median(x$PerBLQ))
+		names(SIM.BLQ.summary.bystudy)[3] <- "medianS"
+
+		plotobj_BLQ <- NULL
+		plotobj_BLQ <- ggplot(data=LOQ.BLQ.summary)
+
+	#Median simulated with confidence band
+		plotobj_BLQ <- plotobj_BLQ + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.BLQ.summary.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="red")
+		plotobj_BLQ <- plotobj_BLQ + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.BLQ.summary.bystudy, geom="line", size = 2, fun.y=median)
+		plotobj_BLQ
+
+	#ORG DATA
+		plotobj_BLQ <- plotobj_BLQ + geom_point(aes(x=TADBIN, y=LOQPerBLQ), shape = 1, colour = "blue", size=2)
+		plotobj_BLQ
+
+	#plotobj_BLQ <- plotobj_BLQ + ggtitle(titletext)
+    plotobj_BLQ <- plotobj_BLQ + scale_y_continuous("% <LLOQ\n\n")
+    plotobj_BLQ <- plotobj_BLQ + scale_x_log10("\nTime (h)", lim=c(0.3,24))
+	#plotobj_BLQ <- plotobj_BLQ + facet_wrap(~DVIDf)
+		plotobj_BLQ <- plotobj_BLQ + theme(strip.background = element_rect(fill = "grey95", colour = "grey50"))
+    plotobj_BLQ
+
+		ggsave("Percent_BLOQ_Plot.png", width=10, height=5, units=c("cm"))
+
+#-------------------------------------------------------------------------------
+	#Stack the BLQ plot and VCP plots
+	filename <- "VPC_BLQ_Stack_study.png"
+	png(filename, width = 720, height = 920)
+
+	# 2 ggplot2 graphs in a grid layout
+	vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+	grid.newpage()
+	pushViewport(viewport(layout = grid.layout(3,1)))
+
+  #Plot 1
+  plotobj_stack1 <- NULL
+  plotobj_stack2 <- NULL
+  plotobj_stack1 <- plotobj_BLQ
+  print(plotobj_stack1, vp=vplayout(3,1))
+
+  #Plot 2
+  plotobj_stack2 <- plotobj_VPC
+  print(plotobj_stack2, vp=vplayout(1:2,1))
+
+	dev.off()
+
 #-------------------------------------------------------------------------------
 ###GENERATE A pcVPC
 ###Bergstrand et al 2011 - Prediction-Corrected Visual Predictive Checks for Diagnosing Nonlinear Mixed-Effects Models
@@ -593,6 +745,89 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 		plotobj2
 
 		ggsave("Uppsala_PCVPC_adjlog.png", width=20, height=16, units=c("cm"))
+
+		#-------------------------------------------------------------------------------
+		###GENERATE A pcVPC
+		###Bergstrand et al 2011 - Prediction-Corrected Visual Predictive Checks for Diagnosing Nonlinear Mixed-Effects Models
+
+		#Calculate the median PRED for each TADBIN
+			SIM.dataBIN <- summaryBy(PRED~TADBIN, data=SIM.data, FUN=median, na.rm=T)
+			SIM.dataBIN
+
+		#Merge median PREDs into simulated dataset matching for their TADBIN
+			SIM.data <- merge(SIM.data,SIM.dataBIN, by=c("TADBIN"),all=T)
+
+			SIM.data <- SIM.data[with(SIM.data, order(SIM.data$SIM, SIM.data$ID, SIM.data$TIME, SIM.data$TADBIN)), ]
+
+			ORG.data <- ORG.data[with(ORG.data, order(ORG.data$ID, ORG.data$TIME, ORG.data$TADBIN)), ]
+
+			ORG.dataBIN <- summaryBy(DV~TADBIN, data=ORG.data, FUN=median, na.rm=T)
+
+		#Subset for one simulation of the same length of the original dataset
+			SIM.dataONE <- subset(SIM.data, SIM.data$SIM == 1)
+
+		#Add median PRED for each TADBIN to the orignal dataset
+			ORG.data$PREDMED <- SIM.dataONE$PREDMED
+			ORG.data$PRED <- SIM.dataONE$PRED
+
+		#-------------------------------------------------------------------------------
+		#PRED Correction
+		#Calculate the prediction corrected observed and simulated DVs
+			ORG.data$pcY <- (ORG.data$DV)*(ORG.data$PREDMED)/(ORG.data$PRED)
+			SIM.data$pcY <- (SIM.data$DV)*(SIM.data$PREDMED)/(SIM.data$PRED)
+
+			#Uppsala Style
+			#Xpose method - http://www.inside-r.org/packages/cran/xpose4specific/docs/xpose.VPC
+			#Plot the confidence interval for the simulated data's percentiles for each bin
+			#(for each simulated data set compute the percentiles for each bin, then, from all of the percentiles
+			# from all of the simulated datasets compute the 95% CI of these percentiles).
+
+				#Calculate 5, 50 and 95 percentiles for each simulated study (S)
+				SIM.data.bystudy.median <- ddply(SIM.data, .(SIM,TADBIN), function(df) median(df$pcY))
+				SIM.data.bystudy.median <- rename(SIM.data.bystudy.median, c("V1"="medianS"))
+
+				SIM.data.bystudy.loCI <- ddply(SIM.data, .(SIM,TADBIN), function(df) CI90lo(df$pcY))
+				SIM.data.bystudy.loCI <- rename(SIM.data.bystudy.loCI, c("5%"="loCI90S"))
+
+				SIM.data.bystudy.hiCI <- ddply(SIM.data, .(SIM,TADBIN), function(df) CI90hi(df$pcY))
+				SIM.data.bystudy.hiCI <- rename(SIM.data.bystudy.hiCI, c("95%"="hiCI90S"))
+
+				SIM.data.bystudy <- data.frame(SIM.data.bystudy.median, "loCI90S"=SIM.data.bystudy.loCI$loCI90S, "hiCI90S"=SIM.data.bystudy.hiCI$hiCI90S)
+
+		 		titletext <- "PCVPC - Uppsala Style\n"
+
+				plotobj <- NULL
+				#titletext <- "VPC - Uppsala Style\n"
+				plotobj <- ggplot(data=ORG.data)
+				plotobj <- plotobj + ggtitle(titletext)
+
+				#Median simulated with confidence band
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="lightpink")
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
+
+				#Lower 90% CI simulated with confidence band
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
+
+				#Upper 90% CI simulated with confidence band
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
+
+				plotobj <- plotobj + geom_point(aes(x=TADBIN, y=pcY), colour="blue", shape = 1)
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=median, geom="line", colour="red", size=1)
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
+				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
+				plotobj <- plotobj + scale_y_log10("Prediction Corrected (%) \n")
+				plotobj <- plotobj + scale_x_log10("\nTime")
+				plotobj <- plotobj + opts(strip.background = theme_rect(fill = "grey95", colour = "grey50"))
+				plotobj
+
+				ggsave("Uppsala_PCVPC_TADlog.png", width=20, height=16, units=c("cm"))
+
+				plotobj2 <- plotobj + scale_y_log10("Prediction Corrected (%) \n", limits = c(0.0001,10))
+				plotobj2
+
+				ggsave("Uppsala_PCVPC_TADadjlog.png", width=20, height=16, units=c("cm"))
 
 #-------------------------------------------------------------------------------
 ### NPDE - Normalised Prediction Distribution Errors

@@ -7,7 +7,7 @@
    graphics.off()
 
 # Set the working directory
-   work.dir <- "E:/Hughes/Data/PK/REDO/COV24"
+   work.dir <- "E:/Hughes/Data/PK/NO_ALLOM/COV10"
    scriptname <- "model_summary"
    setwd(work.dir)
 
@@ -254,29 +254,26 @@ collate_SHK_AIC <- function(dir.name)
 
 
 #Scrape data from the *.shk file
-  if (file.exists(shk.file.path)==T)  #to screen for missing file
-  {
-      shk.data <- read.table(shk.file.path, skip=1, header=T)           #read all the lines of the shk file
+  if (file.exists(shk.file.path)==T) {  #to screen for missing file
+    shk.data <- read.table(shk.file.path, skip=1, header=T)           #read all the lines of the shk file
 	  shk.data <- subset(shk.data, SUBPOP==1) #Only take SUBPOP 1 for mixture models
 
 	  shrink.vals <- subset(shk.data, TYPE==4) #ETA shrinkage
 	  lowestSHK <- min(shrink.vals[-c(1,2)])  #remove first 2 columns
-      highestSHK <- max(shrink.vals[-c(1,2)])
-      print(highestSHK)
+    highestSHK <- max(shrink.vals[-c(1,2)])
+    print(highestSHK)
 
 	  pvalue.vals <- subset(shk.data, TYPE==3) #P values
 	  lowestPVAL <- min(pvalue.vals[-c(1,2)])  #remove first 2 columns
-      highestPVAL <- max(pvalue.vals[-c(1,2)])
-      print(lowestPVAL)
+    highestPVAL <- max(pvalue.vals[-c(1,2)])
+    print(lowestPVAL)
 
-      #result2 <- data.frame(ctl.file.name,lowestSHK,highestSHK,lowestPVAL,highestPVAL)  #turn into dataframe
-      result2 <- data.frame(ctl.file.name,highestSHK,lowestPVAL)  #turn into dataframe
-      result2
-    }
-
+    #result2 <- data.frame(ctl.file.name,lowestSHK,highestSHK,lowestPVAL,highestPVAL)  #turn into dataframe
+    result2 <- data.frame(ctl.file.name,highestSHK,lowestPVAL)  #turn into dataframe
+    result2
+  }
   result <- cbind(result1,result2)
-
- }
+  }
 
 
 #Run the function for every directory
@@ -284,10 +281,10 @@ collate_SHK_AIC <- function(dir.name)
  #test <- mlply(dir.names, collate_SHK_AIC)
 
  #Run without errors to return as dataframe rather than list
- allrundata  <- mdply(dir.names, collate_SHK_AIC, .inform = TRUE)
+  allrundata  <- mdply(dir.names, collate_SHK_AIC, .inform = TRUE)
 
 #Order by AIC
- allrundata <- orderBy(~AIC, allrundata)
+  allrundata <- orderBy(~AIC, allrundata)
 
 #Paste the name of the model in allAIC
   allrundata$ctl.file.name <- gsub(".ctl","",allrundata$ctl.file.name)

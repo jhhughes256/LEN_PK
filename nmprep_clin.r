@@ -230,9 +230,9 @@
 	nmprep$HT[is.na(nmprep$HT)] <- 1.75
 	nmprep$HT[nmprep$HT==1.75&nmprep$GEND==0] <- 1.6
 	nmprep[is.na(nmprep)] <- "."
-	colnames(nmprep)[c(1,21)] <- c("#ID","RACE")
+	colnames(nmprep)[c(1,26)] <- c("#ID","RACE")
 
-  filename.out <- "E:/Hughes/Data/PK/REDO/nmprep_allstudies.csv"
+  filename.out <- "E:/Hughes/Data/PK/REDO/COV24/nmprep_allstudies.csv"
   write.csv(nmprep, file=filename.out, quote=FALSE,row.names=FALSE)
 
 	simdata <- nmprep[!is.na(nmprep$AMT),c(1,2,3,4,5,7,9,10,11,12,13)]
