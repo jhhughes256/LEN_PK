@@ -1073,8 +1073,8 @@ plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 	dataCOV$DOSELVL[dataCOV$DOSEMG==5] <- 2
   dataCOV$AGE <- dataallone$AGE
   dataCOV$GEND <- dataallone$GEND
-  dataCOV$WEIGHTLB <- as.numeric(dataallone$WT)*2.2
-  dataCOV$HEIGHTFT <- as.numeric(dataallone$HT)*3.28
+  dataCOV$WT <- as.numeric(dataallone$WT)
+  dataCOV$HT <- as.numeric(dataallone$HT)
   dataCOV$DXCATNUM <- dataallone$DXCATNUM
   dataCOV$RACE <- dataallone$RACE2
   dataCOV$SECRMGDL <- dataallone$SECR
@@ -1085,3 +1085,31 @@ plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
 	filename.out <- paste(output.dir,"08056_covdata.csv",sep="/")
   write.csv(dataCOV[-dim(dataCOV)[2]], file=filename.out, row.names=FALSE)
+
+
+# ------------------------------------------------------------------------------
+# Clean Data (non-nmprep)
+  library(dplyr)
+  clean.data <- dataFIX
+  names(clean.data)[1] <- "ID"
+  clean.data <- clean.data %>%
+    select(c(ID, STUDY, DOSEMG, TIME, TAD, DAY, DV, MDV,
+      AGE, GEND, WT, HT, DXCATNUM, RACE2, SECR)) %>%
+    rename(DXCAT = DXCATNUM, SEX = GEND, DVMGL = DV, WTKG = WT, HTCM = HT, SECRUMOLL = SECR, RACE = RACE2)
+
+  clean.data$ID <- clean.data$ID - 96
+
+  dxcat.l <- c("CLL", "AML", "ALL")
+  clean.data$DXCAT <- factor(clean.data$DXCAT, levels = c(1, 2, 3))
+  levels(clean.data$DXCAT) <- dxcat.l
+
+  sex.l <- c("F", "M")
+  clean.data$SEX <- factor(clean.data$SEX, levels = c(0, 1))
+  levels(clean.data$SEX) <- sex.l
+
+  race.l <- c("W", "B")
+  clean.data$RACE <- factor(clean.data$RACE, levels = c(1, 2))
+  levels(clean.data$RACE) <- race.l
+
+  filename.out <- paste(output.dir,"08056_cleandata.csv",sep="/")
+  write.csv(clean.data, file=filename.out, row.names=FALSE)

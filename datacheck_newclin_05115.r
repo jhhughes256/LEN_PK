@@ -48,7 +48,7 @@
 
   ##corr_analysis.xls - 9 sheets of data
   file.name.in2 <- "RAW_Clinical/rawdata-lena_05115_corr_analysis.xls"
-  datapd.in <- read_excel(file.name.in2, sheet=9)[-1,-(2:24)]  #rawdata
+  datapd.in <- data.frame(read_excel(file.name.in2, sheet=9)[-1,-(2:24)])  #rawdata
   names(datapd.in) <- datapd.in[1,]
   dataraceone <- data.frame(
     "ID" = as.numeric(datapd.in[2:21,1]),
@@ -722,11 +722,37 @@ plotByFactor <- function(factorColname,factorText)
   dataCOV$DOSEMG <- dataallone$DOSEMG
   dataCOV$AGE <- dataallone$AGE
   dataCOV$GEND <- dataallone$GEND
-  dataCOV$WEIGHTLB <- dataallone$WT*2.2
-  dataCOV$HEIGHTFT <- NA
+  dataCOV$WT <- dataallone$WT
+  dataCOV$HT <- dataallone$HT
   dataCOV$DXCATNUM <- dataallone$DXCATNUM
   dataCOV$RACE <- dataallone$RACE
   dataCOV$SECRMGDL <- dataallone$SECR/88.4
 
 	filename.out <- paste(output.dir,"05115_covdata.csv",sep="/")
+  write.csv(dataCOV, file=filename.out, row.names=FALSE)
+
+# ------------------------------------------------------------------------------
+# Clean Data (non-nmprep)
+  library(dplyr)
+  clean.data <- dataFIX
+  names(clean.data)[1] <- "ID"
+  clean.data <- clean.data %>%
+    select(c(ID, STUDY, DOSEMG, TIME, TAD, DAY, DV, MDV,
+      AGE, GEND, WT, HT, DXCATNUM, RACE, SECR)) %>%
+    rename(DXCAT = DXCATNUM, SEX = GEND, DVMGL = DV, WTKG = WT, HTCM = HT, SECRUMOLL = SECR)
+  clean.data$ID <- clean.data$ID - 75
+
+  dxcat.l <- "MM"
+  clean.data$DXCAT <- factor(clean.data$DXCAT, levels = c(4))
+  levels(clean.data$DXCAT) <- dxcat.l
+
+  sex.l <- c("F", "M")
+  clean.data$SEX <- factor(clean.data$SEX, levels = c(0, 1))
+  levels(clean.data$SEX) <- sex.l
+
+  race.l <- c("W", "B")
+  clean.data$RACE <- factor(clean.data$RACE, levels = c(1, 2))
+  levels(clean.data$RACE) <- race.l
+
+  filename.out <- paste(output.dir,"05115_cleandata.csv",sep="/")
   write.csv(dataCOV, file=filename.out, row.names=FALSE)

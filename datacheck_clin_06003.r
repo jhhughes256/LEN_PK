@@ -764,11 +764,33 @@ plotIndexCat <- function(CovColname,CovText)
   dataCOV$DOSEMG <- dataallone$DOSEMG
   dataCOV$AGE <- dataallone$AGE
   dataCOV$GEND <- dataallone$GEND
-  dataCOV$WEIGHTLB <- dataallone$WT*2.2
-  dataCOV$HEIGHTFT <- dataallone$HT*3.28
+  dataCOV$WT <- dataallone$WT
+  dataCOV$HT <- dataallone$HT
   dataCOV$DXCATNUM <- dataallone$DXCATNUM
   dataCOV$RACE <- dataallone$RACE
   dataCOV$SECRMGDL <- dataallone$SECR/88.4
 
 	filename.out <- paste(output.dir,"06003_covdata.csv",sep="/")
   write.csv(dataCOV, file=filename.out, row.names=FALSE)
+
+
+# ------------------------------------------------------------------------------
+# Clean Data (non-nmprep)
+  library(dplyr)
+  clean.data <- dataFIX
+  names(clean.data)[1] <- "ID"
+  clean.data <- clean.data %>%
+    select(c(ID, STUDY, DOSEMG, TIME, TAD, DAY, DV, MDV,
+      AGE, GEND, WT, HT, DXCATNUM, RACE, RACE2, SECR)) %>%
+    rename(DXCAT = DXCATNUM, SEX = GEND, DVMGL = DV, WTKG = WT, HTCM = HT, SECRUMOLL = SECR)
+
+  dxcat.l <- c("CLL", "AML", "ALL")
+  clean.data$DXCAT <- factor(clean.data$DXCAT, levels = c(1, 2, 3))
+  levels(clean.data$DXCAT) <- dxcat.l
+
+  sex.l <- c("F", "M")
+  clean.data$SEX <- factor(clean.data$SEX, levels = c(0, 1))
+  levels(clean.data$SEX) <- sex.l
+
+  filename.out <- paste(output.dir,"06003_cleandata.csv",sep="/")
+  write.csv(clean.data, file=filename.out, row.names=FALSE)

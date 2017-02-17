@@ -114,7 +114,7 @@
   AoradjBW <- with(datanew, ifelse(WT<IBW, WT, adjBW))
   datanew$CRCL4 <- (140-datanew$AGE)*AoradjBW*fsex/datanew$SECR  #adjBW - Sawyer et. al, Leader et. al
 
-  datanew$BMI <- datanew$WT/datanew$HT**2
+  datanew$BMI <- datanew$WT/(datanew$HT/100)**2
   AorIoradjBW <- datanew$IBW
   AorIoradjBW[datanew$BMI < 18.5] <- datanew$WT
   AorIoradjBW[datanew$BMI < 25] <- adjBW
@@ -223,12 +223,17 @@
   write.csv(datacov, file=filename.out, quote=FALSE,row.names=FALSE)
 
 #Prepare nm file
-#ID TIME TAD AMT EVID OCC DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR IBW CRCL CRCL2 CRCL3 CRCL4 CRCL5 RACE DXCAT LOQ
-  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,31,30,32,33,34,35,23,21,36)]
+#ID TIME TAD AMT EVID OCC DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR IBW CRCL CRCL2 CRCL3 CRCL4 CRCL5 RACE DXCAT LOQ BSA BMI
+  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,31,30,32,33,34,35,23,21,36,19,20)]
+  nmprep <- rename(nmprep, c(GEND = "SEX"))
 
 	nmprep$WT[is.na(nmprep$WT)] <- 70
 	nmprep$HT[is.na(nmprep$HT)] <- 1.75
 	nmprep$HT[nmprep$HT==1.75&nmprep$GEND==0] <- 1.6
+
+  ffm.var1 <- ifelse(nmprep$SEX == 1, 6.68, 8.78)
+  ffm.var2 <- ifelse(nmprep$SEX == 1, 216, 244)
+  nmprep$FFM <- 9.27 * 10^3 * nmprep$WT / (ffm.var1 * 10^3 + ffm.var2 * nmprep$BMI)
 	nmprep[is.na(nmprep)] <- "."
 	colnames(nmprep)[c(1,26)] <- c("#ID","RACE")
 

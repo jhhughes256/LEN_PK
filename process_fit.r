@@ -7,7 +7,7 @@
 	graphics.off()
 
 # Set the working directory
-   master.dir <- "E:/Hughes/Data/PK/OSU_SUB/COV_04"
+   master.dir <- "E:/Hughes/Data/PK/NO_ALLOM"
    scriptname <- "process_fit"
    setwd(master.dir)
 
