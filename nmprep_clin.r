@@ -191,6 +191,9 @@
 	filename.out <- paste(output.dir,"group_table.csv",sep="/")
   write.csv(grp.table, file=filename.out, row.names=F)
 
+  dv.data <- datanew[is.na(datanew$AMT),]
+  percent.na <- length(which(is.na(dv.data$DV)))/length(dv.data$DV)
+
 #Create full nmprep data file
 	filename.out <- paste(output.dir,"fulldata.csv",sep="/")
   write.csv(datanew, file=filename.out, row.names=FALSE)

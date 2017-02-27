@@ -64,3 +64,15 @@
       mindose = min(x$DOSEMG), meddose = median(x$DOSEMG), maxdose = max(x$DOSEMG)
     )
   })
+
+## -----------------------------------------------------------------------------
+  all.studies <- rbind(data[[1]], data[[2]], data[[3]], data[[4]])
+  sum.fun.all <- function(x) {
+    c(no = length(x$ID), nsex = length(x$GEND[x$GEND == 0]), msex = 1 - mean(x$GEND),
+      minage = min(x$AGE), medage = median(x$AGE), maxage = max(x$AGE),
+      minwt = min(x$WT), medwt = median(x$WT), maxwt = max(x$WT),
+      mincrcl = min(x$CRCL), medcrcl = median(x$CRCL), maxcrcl = max(x$CRCL),
+      mindose = min(x$DOSEMG), meddose = median(x$DOSEMG), maxdose = max(x$DOSEMG)
+    )
+  }
+  sum.fun.all(all.studies)

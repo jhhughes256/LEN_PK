@@ -7,7 +7,7 @@
    graphics.off()
 
 # Set the working directory
-   work.dir <- "E:/Hughes/Data/PK/REDO/COV48b"
+   work.dir <- "E:/Hughes/Data/PK/REDO"
    scriptname <- "model_summary"
    setwd(work.dir)
 
@@ -31,8 +31,8 @@
 #If you don't, then the code will crash.
 
 #Find the ones with VPC in the name indicating VPC run
- #indexoutVPC <- which(grepl(dir.names, pattern=glob2rx("*VPC*")))
- #dir.names <- dir.names[-indexoutVPC]
+ indexoutVPC <- which(grepl(dir.names, pattern=glob2rx("*VPC*")))
+ dir.names <- dir.names[-indexoutVPC]
 
 #Find the ones with VPC in the name indicating VPC run
  #indexoutBS <- which(grepl(dir.names, pattern=glob2rx("*.bs.*")))

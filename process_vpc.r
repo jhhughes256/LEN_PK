@@ -15,8 +15,9 @@
 	rm(list=ls(all=TRUE))
 	graphics.off()
 
+
 #Set the working directory - to the parent directory where you do the modelling/VPC
-	master.dir<-"E:/Hughes/Data/PK/NO_ALLOM/"
+	master.dir<-"E:/Hughes/Data/PK/REDO/"
 	setwd(master.dir)
 
 #Load libraries
@@ -51,10 +52,10 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 #-------------------------------------------------------------------------------
 #Process the simulated *.fit file.
 #Run name - Change this to the RUN you want to process
-	runname <- "RUN025_EXTVAL10_RUV1_ALLOM_VPC"
+	runname <- "RUN058_DES_1C8TAwAP2_PPV_CORCLVKA_FFM_VPC"
 
 #Process the fit file - Comment this out if you have already generated the csv; this will save time!
-  #processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
+  processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
 
 #Read the simulated data
   SIM.data <- read.csv(paste(runname,".nm7/",runname,".fit.csv",sep=""), stringsAsFactors=F, na.strings=".")
@@ -66,7 +67,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 
 #-------------------------------------------------------------------------------
 #Read the original data
-	ORG.data <- read.csv("extval_10156.csv", stringsAsFactors=F, na.strings=".")
+	ORG.data <- read.csv("nmprep_allstudies.csv", stringsAsFactors=F, na.strings=".")
   ORG.data <- rename(ORG.data, c("X.ID"="ID"))
   #ORG.data <- rename(ORG.data, c("TAFDE"="TIME"))  # rename time
   ORG.data <- subset (ORG.data, MDV==0 & EVID<=1) #removes data not used in the analysis commented out in the original CTL
