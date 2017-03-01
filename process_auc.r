@@ -80,3 +80,64 @@
   fitdata <- read.table(file=file.name.in, sep="", skip=1, header=T, na.strings=c("NA","***********","1.#INFE+00"))
 #Write to file
   write.csv(fitdata, file=file.name.out)
+
+# Extract AUC data
+	aucdata <- ddply(fitdata[fitdata$OCC == 12,], .(STUDY, DOSELVL, ID), function(x) {
+		if (unique(x$STUDY) %in% c(5115, 6003)) {
+			out <- ddply(x[x$TIME == 24, ], .(TIME), function(y) {
+		    head(y, n = 1)
+		  })
+			out$AUC <- out$AUC1
+		} else if (unique(x$STUDY) == 8056) {
+			out <- ddply(x[x$TIME %in% c(48,72), ], .(TIME), function(y) {
+				head(y, n = 2)
+			})
+			half.nobs <- length(out$AUC2)/2
+			out$AUC <- c(out$AUC2[1:half.nobs*2 - 1], out$AUC3[1:half.nobs*2])
+		} else {
+			out <- ddply(x[x$TIME %in% c(24, 120), ], .(TIME), function(y) {
+				head(y, n = 2)
+			})
+			half.nobs <- length(out$AUC1)/2
+			out$AUC <- c(out$AUC1[1:half.nobs*2 - 1], out$AUC5[1:half.nobs*2])
+		}
+		out
+	})
+
+	auc.each <- ddply(aucdata, .(ID), function(x) {
+		dose <- if (unique(x$DOSELVL) %in% 1:3) {
+			2.5
+		} else if (unique(x$DOSELVL) == 4) {
+			5
+		} else if (unique(x$DOSELVL) == 5) {
+			7.5
+		} else if (unique(x$DOSELVL) == 6) {
+			15
+		} else if (unique(x$DOSELVL) == 7) {
+			20
+		} else if (unique(x$DOSELVL) == 8) {
+			25
+		} else if (unique(x$DOSELVL) == 9) {
+			30
+		} else if (unique(x$DOSELVL) == 10) {
+			35
+		} else if (unique(x$DOSELVL) == 11) {
+			50
+		} else if (unique(x$DOSELVL) == 12) {
+			75
+		}
+		data.frame(
+			ID = unique(x$ID),
+			DOSELVL = unique(x$DOSELVL),
+			AUC = mean(x$AUC),
+			DOSE = dose,
+			NORMAUC = mean(x$AUC)/dose
+		)
+	})
+
+	auc.table <- ddply(auc.each, .(DOSELVL), function(x) {
+		data.frame(
+			NID = length(x$ID),
+			AUC = mean(x$NORMAUC)
+		)
+	})

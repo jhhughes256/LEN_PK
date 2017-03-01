@@ -247,3 +247,25 @@
 	simdata[6] <- "."
 	filename.out <- paste(output.dir,"simprep_allstudies.csv",sep="/")
   write.csv(simdata, file=filename.out, quote=FALSE,row.names=FALSE)
+
+# Create dataset for process_auc
+# Requires a dataset with times 24, 48, 72, 96 and 120 for each patient
+  names(nmprep)[1] <- "ID"
+  auc.capture <- ddply(nmprep, .(ID), function(x) {
+    head(x, n = 5)
+  })
+  auc.capture$TIME <- 1:5*24
+  auc.capture$TAD <- 24
+  auc.capture$AMT <- "."
+  auc.capture$EVID <- 0
+  auc.capture$OCC <- 12
+  auc.capture$DV <- "."
+  auc.capture$CMT <- 2
+  auc.capture$MDV <- 1
+  auc.capture$ADDL <- "."
+  auc.capture$II <- "."
+  
+  aucprep <- arrange(rbind(nmprep, auc.capture), ID, TIME)
+  names(aucprep)[1] <- "#ID"
+  filename.out <- "E:/Hughes/Data/PK/REDO/aucprep_allstudies.csv"
+  write.csv(aucprep, file=filename.out, quote=FALSE,row.names=FALSE)

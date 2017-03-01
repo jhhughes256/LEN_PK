@@ -76,3 +76,4 @@
     )
   }
   sum.fun.all(all.studies)
+  with(all.studies, table(DXCATNUM))
