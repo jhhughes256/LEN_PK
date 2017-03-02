@@ -654,6 +654,10 @@ nmprep[is.na(nmprep)] <- "."
 names(nmprep)[1] <- "#ID"
 nmprep$GEND[nmprep$GEND == "M"] <- 1
 nmprep$GEND[nmprep$GEND == "F"] <- 0
+ffm.var1 <- ifelse(nmprep$GEND == 1, 6.68, 8.78)
+ffm.var2 <- ifelse(nmprep$GEND == 1, 216, 244)
+nmprep$BMI <- nmprep$WT/(nmprep$HT/100)**2
+nmprep$FFM <- 9.27 * 10^3 * nmprep$WT / (ffm.var1 * 10^3 + ffm.var2 * nmprep$BMI)
 filename.out <- paste(data.dir,"extval_10156.csv",sep="/")
 write.csv(nmprep, file = filename.out, quote=FALSE, row.names = FALSE)
 nmprep.one$GEND[nmprep.one$GEND == "M"] <- 1
