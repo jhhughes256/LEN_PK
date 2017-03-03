@@ -40,7 +40,7 @@
   simprep <- data.frame(
     ID = 1,
     TIME = times,
-    AMT = c(25, rep(".", nobs - 1)),
+    AMT = c(7.5, rep(".", nobs - 1)),
     EVID = c(1, rep(0, nobs - 1)),
     DV = c(".", rep(1, nobs - 1)),
     CMT = c(1, rep(2, nobs - 1)),
@@ -49,7 +49,7 @@
   )
 
   names(simprep)[1] <- "#ID"
-  filename.out <- paste(output.dir,"simdata.csv",sep="/")
+  filename.out <- paste(output.dir,"simdata_7.csv",sep="/")
   write.csv(simprep, file = filename.out, quote = F, row.names = F)
 
 # ------------------------------------------------------------------------------
@@ -97,10 +97,10 @@
 #-------------------------------------------------------------------------------
 #Process the simulated *.fit file.
 #Run name - Change this to the RUN you want to process
-	runname <- "sims_1000"
+	runname <- "sims_1000_7"
 
 #Process the fit file - Comment this out if you have already generated the csv; this will save time!
-  processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
+  #processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
 
 #Read the simulated data
   SIM.data <- read.csv(paste(runname,".nm7/",runname,".fit.csv",sep=""), stringsAsFactors=F, na.strings=".")
@@ -112,10 +112,31 @@
   plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
   plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
 
-  plotobj <- plotobj + theme(plot.title = element_text(size = rel(1)))
-  plotobj <- plotobj + ggtitle(titletext)
-  plotobj <- plotobj + scale_y_continuous("Concentration (ug/L)\n")
-  plotobj <- plotobj + scale_x_log10("\nTime after dose (hours)")
-  #plotobj <- plotobj + facet_wrap(~DVIDf)
+  plotobj <- plotobj + scale_y_continuous("Concentration (ug/mL)\n")
+  plotobj <- plotobj + scale_x_continuous("\nTime after dose (hours)")
   plotobj <- plotobj + theme(strip.background = element_rect(fill = "grey95", colour = "grey50"))
   plotobj
+  ggsave("sim_CI90_7.png")
+
+# ------------------------------------------------------------------------------
+  runname <- c("sims_1000_2", "sims_1000_5", "sims_1000_7")
+  simdata2 <- read.csv(paste0(runname[1], ".nm7/", runname[1], ".fit.csv"), stringsAsFactors=F, na.strings=".")
+  simdata5 <- read.csv(paste0(runname[2], ".nm7/", runname[2], ".fit.csv"), stringsAsFactors=F, na.strings=".")
+  simdata7 <- read.csv(paste0(runname[3], ".nm7/", runname[3], ".fit.csv"), stringsAsFactors=F, na.strings=".")
+
+  plotobj <- ggplot()
+
+  plotobj <- plotobj + stat_summary(data = simdata2, aes(x=TIME, y=IPRED), fun.ymin=CI90lo, fun.ymax=CI90hi, geom="ribbon", fill="blue", alpha = 0.1)
+  plotobj <- plotobj + stat_summary(data = simdata2, aes(x=TIME, y=IPRED), fun.y=median, geom="line", colour="blue", size=1)
+  #plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
+  #plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
+
+  plotobj <- plotobj + stat_summary(data = simdata5, aes(x=TIME, y=IPRED), fun.ymin=CI90lo, fun.ymax=CI90hi, geom="ribbon", fill="blue", alpha = 0.1)
+  plotobj <- plotobj + stat_summary(data = simdata5, aes(x=TIME, y=IPRED), fun.y=median, geom="line", colour="red", size=1)
+  #plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
+  #plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
+
+  plotobj <- plotobj + stat_summary(data = simdata7, aes(x=TIME, y=IPRED), fun.ymin=CI90lo, fun.ymax=CI90hi, geom="ribbon", fill="blue", alpha = 0.1)
+  plotobj <- plotobj + stat_summary(data = simdata7, aes(x=TIME, y=IPRED), fun.y=median, geom="line", colour="black", size=1)
+  #plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
+  #plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
