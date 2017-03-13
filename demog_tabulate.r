@@ -60,6 +60,7 @@
     c(no = length(x$ID), nsex = length(x$GEND[x$GEND == 0]), msex = 1 - mean(x$GEND),
       minage = min(x$AGE), medage = median(x$AGE), maxage = max(x$AGE),
       minwt = min(x$WT), medwt = median(x$WT), maxwt = max(x$WT),
+      minht = min(x$HT), medht = median(x$HT), maxht = max(x$HT),
       mincrcl = min(x$CRCL), medcrcl = median(x$CRCL), maxcrcl = max(x$CRCL),
       mindose = min(x$DOSEMG), meddose = median(x$DOSEMG), maxdose = max(x$DOSEMG)
     )
@@ -71,6 +72,8 @@
     c(no = length(x$ID), nsex = length(x$GEND[x$GEND == 0]), msex = 1 - mean(x$GEND),
       minage = min(x$AGE), medage = median(x$AGE), maxage = max(x$AGE),
       minwt = min(x$WT), medwt = median(x$WT), maxwt = max(x$WT),
+      minht = min(x$HT), medht = median(x$HT), maxht = max(x$HT),
+      minsecr = min(x$SECR*88.4), medsecr = median(x$SECR*88.4), maxsecr = max(x$SECR*88.4),
       mincrcl = min(x$CRCL), medcrcl = median(x$CRCL), maxcrcl = max(x$CRCL),
       mindose = min(x$DOSEMG), meddose = median(x$DOSEMG), maxdose = max(x$DOSEMG)
     )

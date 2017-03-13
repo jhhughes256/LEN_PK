@@ -20,14 +20,7 @@
 # Set seed for reproducible numbers
 	set.seed(123456)
 
-# Time
-	time.function <- function(i) {
-		TIME <- c(seq(from = 0,to = 3,by = 0.25),seq(from = 4,to = 24,by = 1))+i*24
-	}
-	TIME <- lapply(0:4, function(i) time.function(i))
-	TIME <- unique(unlist(TIME))
-
-	TIME <- seq(from = 0,to = 144,by = 0.25)
+	TIME <- seq(from = 0,to = 24,by = 0.25)
 
 # ------------------------------------------------------------------------------
 # Define the model parameters and equations
@@ -35,67 +28,84 @@
 	# This compiled model is used for simulating n individuals and their concentration-time profiles
 	code <- '
   	$INIT // Initial conditions for compartments
-  		DEPOT = 0,	// Depot - dose enters the system here
-  		CENT = 0,	// Central
-  		PERI = 0,	// Peripheral
-  		AUC = 0	// Area under the curve compartment
+  		DEPOT = 0,  // Depot - dose enters the system here
+			TRAN1 = 0,  // Transit compartment 1
+			TRAN2 = 0,  // Transit compartment 2
+			TRAN3 = 0,  // Transit compartment 3
+			TRAN4 = 0,  // Transit compartment 4
+			TRAN5 = 0,  // Transit compartment 5
+			TRAN6 = 0,  // Transit compartment 6
+			TRAN7 = 0,  // Transit compartment 7
+  		CENT = 0,  // Central
+  		AUC = 0  // Area under the curve compartment
 
-  	$PARAM // Population parameters
-  		POPCL = 10,	// Clearance, L/h
-  		POPV1 = 50,	// Volume of central compartment, L
-  		POPQ = 10,	// Inter-compartmental clearance, L/h
-  		POPV2 = 100,	// Volume of peripheral compartment, L
-  		POPKA = 0.5,	// Absorption rate constant, h^-1
+  	$PARAM  // Population parameters
+  		POPCL = 11.1,  // Clearance, L/h
+  		POPV1 = 71.7,  // Volume of central compartment, L
+  		POPKTR = 13.3,  // Absorption rate constant, h^-1
 
   		// Covariate effects
-  		COV1 = 0.5,	// Effect of current smoking on clearance
-  		COV2 = 1.15,	// Effect of creatinine clearance on clearance
+  		COV1 = 0.443,	// Effect of current smoking on clearance
 
-  		// Default covariate values for simulation
-  		WT = 70,	// Total body weight (kg)
-  		SEX = 0,	// Gender - Male (0), Female (1)
-  		AGE = 60,	// Age (years)
-  		SECR = 100, // Serum creatinine, micromol/L
-  		SMOK = 0	// Smoking status - Not current (0), Current (1)
+		  // Default covariate values for simulation
+			STUDY = 0,  // Patient study
+			WT = 70,  // Total body weight (kg)
+			HT = 170,  // Patient height (cm)
+			SEX = 1,  // Patient sex (male = 1, female = 0)
+			AGE = 60,  // Patient age
+			SECR = 80 // Serum creatinine (umol/L)
 
-  	$OMEGA // Omege block
+  	$OMEGA  // Omega covariance block
       block = TRUE
-  		labels = s(BSV_CL,BSV_V1,BSV_KA)
-  		0.0256	// BSV for CL
-  		0.0128 0.0256	// BSV for V1
-  		0.0179 0.0128 0.0256	// BSV for KA
+  		labels = s(BSV_CL,BSV_V1)
+  		0.4733  // BSV for CL
+  		0.2227 0.2926  // BSV for V1
 
-  	$SIGMA // Sigma
+		$OMEGA  // Omega variance
+			labels = s(BSV_KTR)
+  		0.3696  // BSV for KTR
+
+  	$SIGMA  // Sigma
       block = FALSE
-  		labels = s(ERR_PRO)
-  		0.09	// Proportional error
+  		labels = s(ERR_ME,ERR_LO,ERR_HI)
+			0.2510  // Proportional error combined
+			0.1142  // Proportional error 5115 6003
+  		0.3831  // Proportional error 8156 10016
 
-  	$MAIN // Covariate effects
-  		double SMOKCOV = 1;	// Not current smoker
-  		if (SMOK == 1) SMOKCOV = 1 + COV1;	// Current smoker
+  	$MAIN  // Determine covariate values
+			double BMI = WT/pow(HT*0.01,2);
+		  double FFM = 9270*WT/(6680+216*BMI);
+			if(SEX == 0) FFM = 9270*WT/(8780+244*BMI);
+			double FSEX = 1.23;
+			if(SEX == 0) FSEX = 1.04;
+			double CRCL = (140-AGE)*WT*FSEX/(SECR);
+			// Individual parameter values
+  		double CL = POPCL*pow(FFM/55,0.75)*pow(CRCL/90,COV1)*exp(BSV_CL);
+  		double V1 = POPV1*(FFM/55)*exp(BSV_V1);
+  		double KTR = POPKTR*exp(BSV_KTR);
+			// Proportional residual unexplained variability
+			double ERR_PRO = ERR_ME;
+			if(STUDY >= 5115) ERR_PRO = ERR_LO;
+			if(STUDY >= 8156) ERR_PRO = ERR_HI;
 
-  		double CRCL = ((140-AGE)*WT)/(SECR*0.815);	// Male creatinine clearance
-  		if (SEX == 1) CRCL = ((140-AGE)*WT)/(SECR*0.815)*0.85;	// Female creatinine clearance
-
-  		// Individual parameter values
-  		double CL = POPCL*pow(WT/70,0.75)*pow(CRCL/90,COV2)*SMOKCOV*exp(BSV_CL);
-  		double V1 = POPV1*(WT/70)*exp(BSV_V1);
-  		double Q = POPQ*pow(WT/70,0.75);
-  		double V2 = POPV2*(WT/70);
-  		double KA = POPKA*exp(BSV_KA);
-
-  	$ODE // Differential equations
-  		dxdt_DEPOT = -KA*DEPOT;
-  		dxdt_CENT = KA*DEPOT -Q/V1*CENT +Q/V2*PERI -CL/V1*CENT;
-  		dxdt_PERI = Q/V1*CENT -Q/V2*PERI;
+  	$ODE  // Differential equations
+  		dxdt_DEPOT = -KTR*DEPOT;
+			dxdt_TRAN1 = KTR*DEPOT -KTR*TRAN1;
+			dxdt_TRAN2 = KTR*TRAN1 -KTR*TRAN2;
+			dxdt_TRAN3 = KTR*TRAN2 -KTR*TRAN3;
+			dxdt_TRAN4 = KTR*TRAN3 -KTR*TRAN4;
+			dxdt_TRAN5 = KTR*TRAN4 -KTR*TRAN5;
+			dxdt_TRAN6 = KTR*TRAN5 -KTR*TRAN6;
+			dxdt_TRAN7 = KTR*TRAN6 -KTR*TRAN7;
+  		dxdt_CENT = KTR*TRAN7 -CL/V1*CENT;
   		dxdt_AUC = CENT/V1;
 
-  	$TABLE // Determine individual predictions
+  	$TABLE  // Determine individual predictions
       double IPRE = CENT/V1;
   		double DV = IPRE*(1+ERR_PRO);
 
-  	$CAPTURE // Capture output
-      IPRE DV CL V1 Q V2 KA CRCL
+  	$CAPTURE  // Capture output
+      IPRE DV CL V1 KTR
 	'
 	# Compile the model code
 	mod <- mcode("popDEMO",code)
@@ -115,28 +125,14 @@
 		cmt = 1
 	)
 
-	oral.dose.times <- c(1,seq(from = 12,to = 120,by = 12))
+	oral.dose.times <- 0
 	oral.dose.data <- input.conc.data[input.conc.data$time %in% oral.dose.times,]
-	oral.dose.data$amt <- 500
+	oral.dose.data$amt <- 25
 	oral.dose.data$evid <- 1
 	oral.dose.data$rate <- 0
 	oral.dose.data$cmt <- 1
 
-	iv.dose.times <- 0
-	iv.dose.data <- input.conc.data[input.conc.data$time %in% iv.dose.times,]
-	iv.dose.data$amt <- 500
-	iv.dose.data$evid <- 1
-	iv.dose.data$rate <- 0
-	iv.dose.data$cmt <- 2
-
-	inf.dose.times <- 72
-	inf.dose.data <- input.conc.data[input.conc.data$time %in% inf.dose.times,]
-	inf.dose.data$amt <- 2000
-	inf.dose.data$evid <- 1
-	inf.dose.data$rate <- 200
-	inf.dose.data$cmt <- 2
-
-	input.conc.data <- rbind(input.conc.data,oral.dose.data,iv.dose.data,inf.dose.data)
+	input.conc.data <- rbind(input.conc.data,oral.dose.data)
 	input.conc.data <- input.conc.data[with(input.conc.data, order(input.conc.data$ID,input.conc.data$time)),]
 
 	conc.data <- mod %>% data_set(input.conc.data) %>% mrgsim()
@@ -148,7 +144,7 @@
 	plotobj1 <- ggplot(conc.data)
 	plotobj1 <- plotobj1 + stat_summary(aes(x = time,y = IPRE),geom = "line",fun.y = median,colour = "red",size = 1)
 	plotobj1 <- plotobj1 + stat_summary(aes(x = time,y = IPRE),geom = "ribbon",fun.ymin = "CI90lo",fun.ymax = "CI90hi",fill = "red",alpha = 0.3)
-	plotobj1 <- plotobj1 + scale_x_continuous("\nTime (hours)",lim = c(0,120))
+	plotobj1 <- plotobj1 + scale_x_continuous("\nTime (hours)",lim = c(0,24))
 	# plotobj1 <- plotobj1 + scale_y_log10("Concentration (mg/L)\n")
-	plotobj1 <- plotobj1 + scale_y_continuous("Concentration (mg/L)\n",breaks = seq(from = 0,to = 30,by = 5),lim = c(0,25))
+	plotobj1 <- plotobj1 + scale_y_continuous("Concentration (mg/L)\n")
 	print(plotobj1)

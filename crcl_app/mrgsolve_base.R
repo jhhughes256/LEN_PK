@@ -20,14 +20,7 @@
 # Set seed for reproducible numbers
 	set.seed(123456)
 
-# Time
-	time.function <- function(i) {
-		TIME <- c(seq(from = 0,to = 3,by = 0.25),seq(from = 4,to = 24,by = 1))+i*24
-	}
-	TIME <- lapply(0:4, function(i) time.function(i))
-	TIME <- unique(unlist(TIME))
-
-	TIME <- seq(from = 0,to = 144,by = 0.25)
+	TIME <- seq(from = 0,to = 24,by = 0.25)
 
 # ------------------------------------------------------------------------------
 # Define the model parameters and equations
@@ -48,28 +41,44 @@
 
   	$PARAM  // Population parameters
   		POPCL = 10,  // Clearance, L/h
-  		POPV1 = 50,  // Volume of central compartment, L
-  		POPKTR = 13,  // Absorption rate constant, h^-1
+  		POPV1 = 72.1,  // Volume of central compartment, L
+  		POPKTR = 13.3,  // Absorption rate constant, h^-1
 
 		  // Default covariate values for simulation
+			STUDY = 0,  // Patient study
 			WT = 70,  // Total body weight (kg)
+			HT = 170,  // Patient height (cm)
+			SEX = 1  // Patient sex
 
-  	$OMEGA  // Omege block
+  	$OMEGA  // Omega covariance block
       block = TRUE
-  		labels = s(BSV_CL,BSV_V1,BSV_KTR)
-  		0.0256  // BSV for CL
-  		0.0128 0.0256  // BSV for V1
-  		0.0000 0.0000 0.0256  // BSV for KTR
+  		labels = s(BSV_CL,BSV_V1)
+  		0.4651  // BSV for CL
+  		0.2480 0.2970  // BSV for V1
+
+		$OMEGA  // Omega variance
+			labels = s(BSV_KTR)
+  		0.3684  // BSV for KTR
 
   	$SIGMA  // Sigma
       block = FALSE
-  		labels = s(ERR_PRO)
-  		0.09  // Proportional error
+  		labels = s(ERR_ME,ERR_LO,ERR_HI)
+			0.2510  // Proportional error combined
+			0.1163  // Proportional error 5115 6003
+  		0.3831  // Proportional error 8156 10016
 
-  	$MAIN  // Individual parameter values
-  		double CL = POPCL*pow(WT/70,0.75)*exp(BSV_CL);
-  		double V1 = POPV1*(WT/70)*exp(BSV_V1);
+  	$MAIN  // Determine covariate values
+			double BMI = WT/pow(HT*0.01,2);
+		  double FFM = 9270*WT/(6680+216*BMI);
+			if(SEX == 0) FFM = 9270*WT/(8780+244*BMI);
+			// Individual parameter values
+  		double CL = POPCL*pow(FFM/55,0.75)*exp(BSV_CL);
+  		double V1 = POPV1*(FFM/55)*exp(BSV_V1);
   		double KTR = POPKTR*exp(BSV_KTR);
+			// Proportional residual unexplained variability
+			double ERR_PRO = ERR_ME;
+			if(STUDY >= 5115) ERR_PRO = ERR_LO;
+			if(STUDY >= 8156) ERR_PRO = ERR_HI;
 
   	$ODE  // Differential equations
   		dxdt_DEPOT = -KTR*DEPOT;
@@ -108,28 +117,14 @@
 		cmt = 1
 	)
 
-	oral.dose.times <- c(1,seq(from = 12,to = 120,by = 12))
+	oral.dose.times <- 0
 	oral.dose.data <- input.conc.data[input.conc.data$time %in% oral.dose.times,]
-	oral.dose.data$amt <- 500
+	oral.dose.data$amt <- 25
 	oral.dose.data$evid <- 1
 	oral.dose.data$rate <- 0
 	oral.dose.data$cmt <- 1
 
-	iv.dose.times <- 0
-	iv.dose.data <- input.conc.data[input.conc.data$time %in% iv.dose.times,]
-	iv.dose.data$amt <- 500
-	iv.dose.data$evid <- 1
-	iv.dose.data$rate <- 0
-	iv.dose.data$cmt <- 2
-
-	inf.dose.times <- 72
-	inf.dose.data <- input.conc.data[input.conc.data$time %in% inf.dose.times,]
-	inf.dose.data$amt <- 2000
-	inf.dose.data$evid <- 1
-	inf.dose.data$rate <- 200
-	inf.dose.data$cmt <- 2
-
-	input.conc.data <- rbind(input.conc.data,oral.dose.data,iv.dose.data,inf.dose.data)
+	input.conc.data <- rbind(input.conc.data,oral.dose.data)
 	input.conc.data <- input.conc.data[with(input.conc.data, order(input.conc.data$ID,input.conc.data$time)),]
 
 	conc.data <- mod %>% data_set(input.conc.data) %>% mrgsim()
@@ -141,7 +136,7 @@
 	plotobj1 <- ggplot(conc.data)
 	plotobj1 <- plotobj1 + stat_summary(aes(x = time,y = IPRE),geom = "line",fun.y = median,colour = "red",size = 1)
 	plotobj1 <- plotobj1 + stat_summary(aes(x = time,y = IPRE),geom = "ribbon",fun.ymin = "CI90lo",fun.ymax = "CI90hi",fill = "red",alpha = 0.3)
-	plotobj1 <- plotobj1 + scale_x_continuous("\nTime (hours)",lim = c(0,120))
+	plotobj1 <- plotobj1 + scale_x_continuous("\nTime (hours)",lim = c(0,24))
 	# plotobj1 <- plotobj1 + scale_y_log10("Concentration (mg/L)\n")
-	plotobj1 <- plotobj1 + scale_y_continuous("Concentration (mg/L)\n",breaks = seq(from = 0,to = 30,by = 5),lim = c(0,25))
+	plotobj1 <- plotobj1 + scale_y_continuous("Concentration (mg/L)\n")
 	print(plotobj1)
