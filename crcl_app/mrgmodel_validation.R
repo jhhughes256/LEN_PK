@@ -126,12 +126,18 @@ $CAPTURE  // Capture output
 	conc.data <- as.data.frame(conc.data)	# Convert to a data frame so that it is more useful for me!
 
 # ------------------------------------------------------------------------------
-# Plot results
-	plotobj1 <- NULL
-	plotobj1 <- ggplot(conc.data)
-	plotobj1 <- plotobj1 + stat_summary(aes(x = time,y = IPRE),geom = "line",fun.y = median,colour = "red",size = 1)
-	plotobj1 <- plotobj1 + stat_summary(aes(x = time,y = IPRE),geom = "ribbon",fun.ymin = "CI90lo",fun.ymax = "CI90hi",fill = "red",alpha = 0.3)
-	plotobj1 <- plotobj1 + scale_x_continuous("\nTime (hours)",lim = c(0,24))
-	# plotobj1 <- plotobj1 + scale_y_log10("Concentration (mg/L)\n")
-	plotobj1 <- plotobj1 + scale_y_continuous("Concentration (mg/L)\n")
-	print(plotobj1)
+# load NONMEM file from data
+  nm.data <- read.csv("C:/Users/hugjh001/Documents/LEN_PopPK/Data/mrgmod_nm_sim.csv")
+
+  plotobj <- ggplot()
+
+  plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), data = nm.data, fun.ymin=CI90lo, fun.ymax=CI90hi, geom="ribbon", fill="red", alpha = 0.3)
+  plotobj <- plotobj + stat_summary(aes(x=TIME, y=IPRED), data = nm.data, fun.y=median, geom="line", colour="red", size=1)
+  plotobj <- plotobj + stat_summary(aes(x=time, y=IPRE), data = conc.data, fun.ymin=CI90lo, fun.ymax=CI90hi, geom="ribbon", fill="red", alpha = 0.3)
+  plotobj <- plotobj + stat_summary(aes(x=time, y=IPRE), data = conc.data, fun.y=median, geom="line", colour="red", size=1)
+
+  plotobj <- plotobj + scale_y_continuous("Concentration (ug/mL)\n")
+  plotobj <- plotobj + scale_x_continuous("\nTime after dose (hours)")
+  plotobj <- plotobj + theme(strip.background = element_rect(fill = "grey95", colour = "grey50"))
+  plotobj
+  ggsave("sim_CI90_FFM.png")

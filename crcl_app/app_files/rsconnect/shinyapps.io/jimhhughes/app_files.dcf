@@ -1,0 +1,11 @@
+name: app_files
+title: app_files
+account: jimhhughes
+server: shinyapps.io
+appId: 163596
+bundleId: 746082
+url: https://jimhhughes.shinyapps.io/app_files/
+when: 1489466494.44901
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: runApp.R

@@ -40,7 +40,7 @@
   simprep <- data.frame(
     ID = 1,
     TIME = times,
-    AMT = c(7.5, rep(".", nobs - 1)),
+    AMT = c(25, rep(".", nobs - 1)),
     EVID = c(1, rep(0, nobs - 1)),
     DV = c(".", rep(1, nobs - 1)),
     CMT = c(1, rep(2, nobs - 1)),
@@ -49,7 +49,7 @@
   )
 
   names(simprep)[1] <- "#ID"
-  filename.out <- paste(output.dir,"simdata_7.csv",sep="/")
+  filename.out <- paste(output.dir,"simdata_25.csv",sep="/")
   write.csv(simprep, file = filename.out, quote = F, row.names = F)
 
 # ------------------------------------------------------------------------------
@@ -97,10 +97,10 @@
 #-------------------------------------------------------------------------------
 #Process the simulated *.fit file.
 #Run name - Change this to the RUN you want to process
-	runname <- "sims_1000_7"
+	runname <- "RUN063_DES_1C8TAwAP_PPV_CORCLVKA_FFM_SIM"
 
 #Process the fit file - Comment this out if you have already generated the csv; this will save time!
-  #processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
+  processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
 
 #Read the simulated data
   SIM.data <- read.csv(paste(runname,".nm7/",runname,".fit.csv",sep=""), stringsAsFactors=F, na.strings=".")
@@ -116,7 +116,7 @@
   plotobj <- plotobj + scale_x_continuous("\nTime after dose (hours)")
   plotobj <- plotobj + theme(strip.background = element_rect(fill = "grey95", colour = "grey50"))
   plotobj
-  ggsave("sim_CI90_7.png")
+  ggsave("sim_CI90_FFM.png")
 
 # ------------------------------------------------------------------------------
   runname <- c("sims_1000_2", "sims_1000_5", "sims_1000_7")

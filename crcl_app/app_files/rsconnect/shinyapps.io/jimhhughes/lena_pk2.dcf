@@ -1,0 +1,11 @@
+name: lena_pk2
+title: lena_pk
+account: jimhhughes
+server: shinyapps.io
+appId: 163597
+bundleId: 746084
+url: https://jimhhughes.shinyapps.io/lena_pk2/
+when: 1489466624.46902
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: runApp.R
