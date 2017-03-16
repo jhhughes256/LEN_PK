@@ -73,8 +73,33 @@
   file.name.out <- paste(file.name.in,".csv", sep="")
 
   fitdata <- read.csv(file.name.out)
-  nmprep <- read.csv("E:/Hughes/Data/PK/REDO/COV24/nmprep_allstudies.csv")
+  old.nmprep <- read.csv("E:/Hughes/Data/PK/REDO/COV24/nmprep_allstudies.csv")
 
-  new.nmprep <- nmprep[-which(fitdata$CWRES > 3.5), ]
+	nmprep <- ddply(old.nmprep, .(X.ID), function(x) {
+		x$AMT <- as.numeric(as.character(x$AMT[1]))
+		x
+	})
+
+	fitdata$TADBIN <- cut2(fitdata$TAD, cuts=c(0.52,1.02,2.02,4.02,8.02,22.02), levels.mean=T)
+	fitdata$TADBIN <- as.numeric(paste(fitdata$TADBIN))
+
+	fitdata$PREDNORM <- fitdata$PRED/nmprep$AMT
+
+	fitdataBIN <- summaryBy(PREDNORM~TADBIN, data=fitdata, FUN=median, na.rm=T)
+	fitdataBIN
+
+#Merge median PREDs into simulated dataset matching for their TADBIN
+	fitdata <- merge(fitdata,fitdataBIN, by=c("TADBIN"),all=T)
+	fitdata <- rename(fitdata, c("PREDNORM.median" = "PREDNORMMED"))
+
+	fitdata$RATIO <- fitdata$DV/fitdata$PRED
+
+	fitdata$DVNORM <- fitdata$DV/nmprep$AMT
+	fitdata$NORMRATIO <- fitdata$DVNORM/fitdata$PREDNORMMED
+
+	fitdata[which(fitdata$RATIO > 50 & fitdata$TADBIN > 20), ]
+	fitdata[which(fitdata$CWRES > 3.5), ]
+
+  new.nmprep <- old.nmprep[-which(fitdata$CWRES > 3.5), ]
   names(new.nmprep)[1] <- "#ID"
   write.csv(new.nmprep, "nmprep_cwresrun058.csv", quote = F, row.names = F)
