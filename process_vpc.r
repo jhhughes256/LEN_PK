@@ -17,7 +17,7 @@
 
 
 #Set the working directory - to the parent directory where you do the modelling/VPC
-	master.dir<-"E:/Hughes/Data/PK/REDO/"
+	master.dir<-"E:/Hughes/Data/PK/REDO/COV58"
 	setwd(master.dir)
 
 #Load libraries
@@ -52,7 +52,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 #-------------------------------------------------------------------------------
 #Process the simulated *.fit file.
 #Run name - Change this to the RUN you want to process
-	runname <- "RUN058_DES_1C8TAwAP2_PPV_CORCLVKA_FFM_VPC"
+	runname <- "RUN003_CL_CRCL2_VPC"
 
 #Process the fit file - Comment this out if you have already generated the csv; this will save time!
   processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
@@ -67,7 +67,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 
 #-------------------------------------------------------------------------------
 #Read the original data
-	ORG.data <- read.csv("nmprep_allstudies.csv", stringsAsFactors=F, na.strings=".")
+	ORG.data <- read.csv("nmprep_cwresrun058.csv", stringsAsFactors=F, na.strings=".")
   ORG.data <- rename(ORG.data, c("X.ID"="ID"))
   #ORG.data <- rename(ORG.data, c("TAFDE"="TIME"))  # rename time
   ORG.data <- subset (ORG.data, MDV==0 & EVID<=1) #removes data not used in the analysis commented out in the original CTL
@@ -814,154 +814,154 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 	ORG.data$pcY <- (ORG.data$DV)*(ORG.data$PREDMED)/(ORG.data$PRED)
 	SIM.data$pcY <- (SIM.data$DV)*(SIM.data$PREDMED)/(SIM.data$PRED)
 
-	#Uppsala Style
-	#Xpose method - http://www.inside-r.org/packages/cran/xpose4specific/docs/xpose.VPC
-	#Plot the confidence interval for the simulated data's percentiles for each bin
-	#(for each simulated data set compute the percentiles for each bin, then, from all of the percentiles
-	# from all of the simulated datasets compute the 95% CI of these percentiles).
+#Uppsala Style
+#Xpose method - http://www.inside-r.org/packages/cran/xpose4specific/docs/xpose.VPC
+#Plot the confidence interval for the simulated data's percentiles for each bin
+#(for each simulated data set compute the percentiles for each bin, then, from all of the percentiles
+# from all of the simulated datasets compute the 95% CI of these percentiles).
 
-		#Calculate 5, 50 and 95 percentiles for each simulated study (S)
-		SIM.data.bystudy.median <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) median(df$pcY))
-		SIM.data.bystudy.median <- rename(SIM.data.bystudy.median, c("V1"="medianS"))
+	#Calculate 5, 50 and 95 percentiles for each simulated study (S)
+	SIM.data.bystudy.median <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) median(df$pcY))
+	SIM.data.bystudy.median <- rename(SIM.data.bystudy.median, c("V1"="medianS"))
 
-		SIM.data.bystudy.loCI <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) CI90lo(df$pcY))
-		SIM.data.bystudy.loCI <- rename(SIM.data.bystudy.loCI, c("5%"="loCI90S"))
+	SIM.data.bystudy.loCI <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) CI90lo(df$pcY))
+	SIM.data.bystudy.loCI <- rename(SIM.data.bystudy.loCI, c("5%"="loCI90S"))
 
-		SIM.data.bystudy.hiCI <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) CI90hi(df$pcY))
-		SIM.data.bystudy.hiCI <- rename(SIM.data.bystudy.hiCI, c("95%"="hiCI90S"))
+	SIM.data.bystudy.hiCI <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) CI90hi(df$pcY))
+	SIM.data.bystudy.hiCI <- rename(SIM.data.bystudy.hiCI, c("95%"="hiCI90S"))
 
-		SIM.data.bystudy <- data.frame(SIM.data.bystudy.median, "loCI90S"=SIM.data.bystudy.loCI$loCI90S, "hiCI90S"=SIM.data.bystudy.hiCI$hiCI90S)
+	SIM.data.bystudy <- data.frame(SIM.data.bystudy.median, "loCI90S"=SIM.data.bystudy.loCI$loCI90S, "hiCI90S"=SIM.data.bystudy.hiCI$hiCI90S)
 
- 		titletext <- "PCVPC - Uppsala Style\n"
+		titletext <- "PCVPC - Uppsala Style\n"
 
-		plotobj <- NULL
-		#titletext <- "VPC - Uppsala Style\n"
-		plotobj <- ggplot(data=ORG.data)
-		plotobj <- plotobj + ggtitle(titletext)
+	plotobj <- NULL
+	#titletext <- "VPC - Uppsala Style\n"
+	plotobj <- ggplot(data=ORG.data)
+	plotobj <- plotobj + ggtitle(titletext)
 
-		#Median simulated with confidence band
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="lightpink")
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
+	#Median simulated with confidence band
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="lightpink")
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
 
-		#Lower 90% CI simulated with confidence band
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
+	#Lower 90% CI simulated with confidence band
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
-		#Upper 90% CI simulated with confidence band
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
+	#Upper 90% CI simulated with confidence band
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
-		plotobj <- plotobj + geom_point(aes(x=TIMEBIN, y=pcY), colour="blue", shape = 1)
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=pcY), fun.y=median, geom="line", colour="red", size=1)
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=pcY), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
-		plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=pcY), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
-		plotobj <- plotobj + scale_y_log10("Prediction Corrected (%) \n")
-		plotobj <- plotobj + scale_x_log10("\nTime")
-		plotobj <- plotobj + opts(strip.background = theme_rect(fill = "grey95", colour = "grey50"))
-		plotobj
+	plotobj <- plotobj + geom_point(aes(x=TIMEBIN, y=pcY), colour="blue", shape = 1)
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=pcY), fun.y=median, geom="line", colour="red", size=1)
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=pcY), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
+	plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=pcY), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
+	plotobj <- plotobj + scale_y_log10("Prediction Corrected (%) \n")
+	plotobj <- plotobj + scale_x_log10("\nTime")
+	plotobj <- plotobj + opts(strip.background = theme_rect(fill = "grey95", colour = "grey50"))
+	plotobj
 
-		ggsave("Uppsala_PCVPC_log.png", width=20, height=16, units=c("cm"))
+	ggsave("Uppsala_PCVPC_log.png", width=20, height=16, units=c("cm"))
 
-		plotobj2 <- plotobj + scale_y_log10("Prediction Corrected (%) \n", limits = c(0.0001,10))
-		plotobj2
+	plotobj2 <- plotobj + scale_y_log10("Prediction Corrected (%) \n", limits = c(0.0001,10))
+	plotobj2
 
-		ggsave("Uppsala_PCVPC_adjlog.png", width=20, height=16, units=c("cm"))
+	ggsave("Uppsala_PCVPC_adjlog.png", width=20, height=16, units=c("cm"))
 
-		plotobj3 <- plotobj2 + scale_x_continuous("\nTime")
-		plotobj3
+	plotobj3 <- plotobj2 + scale_x_continuous("\nTime")
+	plotobj3
 
-		ggsave("Uppsala_PCVPC_adjlog_contx.png", width=20, height=16, units=c("cm"))
+	ggsave("Uppsala_PCVPC_adjlog_contx.png", width=20, height=16, units=c("cm"))
 
-		#-------------------------------------------------------------------------------
-		###GENERATE A pcVPC
-		###Bergstrand et al 2011 - Prediction-Corrected Visual Predictive Checks for Diagnosing Nonlinear Mixed-Effects Models
+#-------------------------------------------------------------------------------
+###GENERATE A pcVPC
+###Bergstrand et al 2011 - Prediction-Corrected Visual Predictive Checks for Diagnosing Nonlinear Mixed-Effects Models
 
-		#Calculate the median PRED for each TADBIN
-			SIM.dataBIN <- summaryBy(PRED~TADBIN, data=SIM.data, FUN=median, na.rm=T)
-			SIM.dataBIN
+#Calculate the median PRED for each TADBIN
+	SIM.dataBIN <- summaryBy(PRED~TADBIN, data=SIM.data, FUN=median, na.rm=T)
+	SIM.dataBIN
 
-			SIM.data <- SIM.data[-c(38:39)]
+	SIM.data <- SIM.data[-c(38:39)]
 
-		#Merge median PREDs into simulated dataset matching for their TADBIN
-			SIM.data <- merge(SIM.data,SIM.dataBIN, by=c("TADBIN"),all=T)
-			SIM.data <- rename(SIM.data, c("PRED.median" = "PREDMED"))
+#Merge median PREDs into simulated dataset matching for their TADBIN
+	SIM.data <- merge(SIM.data,SIM.dataBIN, by=c("TADBIN"),all=T)
+	SIM.data <- rename(SIM.data, c("PRED.median" = "PREDMED"))
 
-			SIM.data <- SIM.data[with(SIM.data, order(SIM.data$SIM, SIM.data$ID, SIM.data$TIME, SIM.data$TADBIN)), ]
+	SIM.data <- SIM.data[with(SIM.data, order(SIM.data$SIM, SIM.data$ID, SIM.data$TIME, SIM.data$TADBIN)), ]
 
-			ORG.data <- ORG.data[with(ORG.data, order(ORG.data$ID, ORG.data$TIME, ORG.data$TADBIN)), ]
+	ORG.data <- ORG.data[with(ORG.data, order(ORG.data$ID, ORG.data$TIME, ORG.data$TADBIN)), ]
 
-			ORG.dataBIN <- summaryBy(DV~TADBIN, data=ORG.data, FUN=median, na.rm=T)
+	ORG.dataBIN <- summaryBy(DV~TADBIN, data=ORG.data, FUN=median, na.rm=T)
 
-		#Subset for one simulation of the same length of the original dataset
-			SIM.dataONE <- subset(SIM.data, SIM.data$SIM == 1)
+#Subset for one simulation of the same length of the original dataset
+	SIM.dataONE <- subset(SIM.data, SIM.data$SIM == 1)
 
-		#Add median PRED for each TADBIN to the orignal dataset
-			ORG.data$PREDMED <- SIM.dataONE$PREDMED
-			ORG.data$PRED <- SIM.dataONE$PRED
+#Add median PRED for each TADBIN to the orignal dataset
+	ORG.data$PREDMED <- SIM.dataONE$PREDMED
+	ORG.data$PRED <- SIM.dataONE$PRED
 
-		#-------------------------------------------------------------------------------
-		#PRED Correction
-		#Calculate the prediction corrected observed and simulated DVs
-			ORG.data$pcY <- (ORG.data$DV)*(ORG.data$PREDMED)/(ORG.data$PRED)
-			SIM.data$pcY <- (SIM.data$DV)*(SIM.data$PREDMED)/(SIM.data$PRED)
+#-------------------------------------------------------------------------------
+#PRED Correction
+#Calculate the prediction corrected observed and simulated DVs
+	ORG.data$pcY <- (ORG.data$DV)*(ORG.data$PREDMED)/(ORG.data$PRED)
+	SIM.data$pcY <- (SIM.data$DV)*(SIM.data$PREDMED)/(SIM.data$PRED)
 
-			#Uppsala Style
-			#Xpose method - http://www.inside-r.org/packages/cran/xpose4specific/docs/xpose.VPC
-			#Plot the confidence interval for the simulated data's percentiles for each bin
-			#(for each simulated data set compute the percentiles for each bin, then, from all of the percentiles
-			# from all of the simulated datasets compute the 95% CI of these percentiles).
+#Uppsala Style
+#Xpose method - http://www.inside-r.org/packages/cran/xpose4specific/docs/xpose.VPC
+#Plot the confidence interval for the simulated data's percentiles for each bin
+#(for each simulated data set compute the percentiles for each bin, then, from all of the percentiles
+# from all of the simulated datasets compute the 95% CI of these percentiles).
 
-				#Calculate 5, 50 and 95 percentiles for each simulated study (S)
-				SIM.data.bystudy.median <- ddply(SIM.data, .(SIM,TADBIN), function(df) median(df$pcY))
-				SIM.data.bystudy.median <- rename(SIM.data.bystudy.median, c("V1"="medianS"))
+	#Calculate 5, 50 and 95 percentiles for each simulated study (S)
+	SIM.data.bystudy.median <- ddply(SIM.data, .(SIM,TADBIN), function(df) median(df$pcY))
+	SIM.data.bystudy.median <- rename(SIM.data.bystudy.median, c("V1"="medianS"))
 
-				SIM.data.bystudy.loCI <- ddply(SIM.data, .(SIM,TADBIN), function(df) CI90lo(df$pcY))
-				SIM.data.bystudy.loCI <- rename(SIM.data.bystudy.loCI, c("5%"="loCI90S"))
+	SIM.data.bystudy.loCI <- ddply(SIM.data, .(SIM,TADBIN), function(df) CI90lo(df$pcY))
+	SIM.data.bystudy.loCI <- rename(SIM.data.bystudy.loCI, c("5%"="loCI90S"))
 
-				SIM.data.bystudy.hiCI <- ddply(SIM.data, .(SIM,TADBIN), function(df) CI90hi(df$pcY))
-				SIM.data.bystudy.hiCI <- rename(SIM.data.bystudy.hiCI, c("95%"="hiCI90S"))
+	SIM.data.bystudy.hiCI <- ddply(SIM.data, .(SIM,TADBIN), function(df) CI90hi(df$pcY))
+	SIM.data.bystudy.hiCI <- rename(SIM.data.bystudy.hiCI, c("95%"="hiCI90S"))
 
-				SIM.data.bystudy <- data.frame(SIM.data.bystudy.median, "loCI90S"=SIM.data.bystudy.loCI$loCI90S, "hiCI90S"=SIM.data.bystudy.hiCI$hiCI90S)
+	SIM.data.bystudy <- data.frame(SIM.data.bystudy.median, "loCI90S"=SIM.data.bystudy.loCI$loCI90S, "hiCI90S"=SIM.data.bystudy.hiCI$hiCI90S)
 
-		 		titletext <- "PCVPC - Uppsala Style\n"
+		titletext <- "PCVPC - Uppsala Style\n"
 
-				plotobj <- NULL
-				#titletext <- "VPC - Uppsala Style\n"
-				plotobj <- ggplot(data=ORG.data)
-				plotobj <- plotobj + ggtitle(titletext)
+	plotobj <- NULL
+	#titletext <- "VPC - Uppsala Style\n"
+	plotobj <- ggplot(data=ORG.data)
+	plotobj <- plotobj + ggtitle(titletext)
 
-				#Median simulated with confidence band
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="lightpink")
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
+	#Median simulated with confidence band
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="lightpink")
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
 
-				#Lower 90% CI simulated with confidence band
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
+	#Lower 90% CI simulated with confidence band
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
-				#Upper 90% CI simulated with confidence band
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
+	#Upper 90% CI simulated with confidence band
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", fill="skyblue1")
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
 
-				plotobj <- plotobj + geom_point(aes(x=TADBIN, y=pcY), colour="blue", shape = 1)
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=median, geom="line", colour="red", size=1)
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
-				plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
-				plotobj <- plotobj + scale_y_log10("Prediction Corrected (%) \n")
-				plotobj <- plotobj + scale_x_log10("\nTime")
-				plotobj <- plotobj + opts(strip.background = theme_rect(fill = "grey95", colour = "grey50"))
-				plotobj
+	plotobj <- plotobj + geom_point(aes(x=TADBIN, y=pcY), colour="blue", shape = 1)
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=median, geom="line", colour="red", size=1)
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
+	plotobj <- plotobj + stat_summary(aes(x=TADBIN, y=pcY), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
+	plotobj <- plotobj + scale_y_log10("Prediction Corrected (%) \n")
+	plotobj <- plotobj + scale_x_log10("\nTime")
+	plotobj <- plotobj + opts(strip.background = theme_rect(fill = "grey95", colour = "grey50"))
+	plotobj
 
-				ggsave("Uppsala_PCVPC_TADlog.png", width=20, height=16, units=c("cm"))
+	ggsave("Uppsala_PCVPC_TADlog.png", width=20, height=16, units=c("cm"))
 
-				plotobj2 <- plotobj + scale_y_log10("Prediction Corrected (%) \n", limits = c(0.0001,10))
-				plotobj2
+	plotobj2 <- plotobj + scale_y_log10("Prediction Corrected (%) \n", limits = c(0.0001,10))
+	plotobj2
 
-				ggsave("Uppsala_PCVPC_TADadjlog.png", width=20, height=16, units=c("cm"))
+	ggsave("Uppsala_PCVPC_TADadjlog.png", width=20, height=16, units=c("cm"))
 
-				plotobj3 <- plotobj2 + scale_x_continuous("\nTime")
-				plotobj3
+	plotobj3 <- plotobj2 + scale_x_continuous("\nTime")
+	plotobj3
 
-				ggsave("Uppsala_PCVPC_TADadjlog_contx.png", width=20, height=16, units=c("cm"))
+	ggsave("Uppsala_PCVPC_TADadjlog_contx.png", width=20, height=16, units=c("cm"))
 
 #-------------------------------------------------------------------------------
 ### NPDE - Normalised Prediction Distribution Errors

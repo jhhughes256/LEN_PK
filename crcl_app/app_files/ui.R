@@ -25,7 +25,7 @@
           "Dose (mg):",
           value = 25,
           step = 5
-        )  # numericInput
+        )  # numericInput 
       ),  # column
       column(2,
         actionButton("save", "Save"),  # actionButton
