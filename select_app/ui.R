@@ -2,9 +2,10 @@
 # -----------------------------------------------------------------------------
 
 fluidPage(
-  h2("Plot Brush Example"),
+  textOutput("title", h2),
+  actionButton("console","Debug Console"),
   plotOutput("plot",
-    brush = "plot_brush",
+    brush = brushOpts("plot_brush", resetOnNew = T),
     height = 250, width = 600
   ),  # plotOutput
   fluidRow(
@@ -14,5 +15,19 @@ fluidPage(
   fluidRow(
     verbatimTextOutput("info")
   ),  # fluidRow
+  fluidRow(
+    actionButton("flag",
+      "Flag Row(s)"
+    )  # actionButton
+  ),  # fluidRow
+  hr(),
+  fluidRow(
+    verbatimTextOutput("flagged")
+  ),
+  fluidRow(
+    actionButton("save",
+      "Save"
+    )  # actionButton
+  ),
   align = "center"
 )
