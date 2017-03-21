@@ -81,7 +81,7 @@
 #Write to file
   write.csv(fitdata, file=file.name.out)
 
-	nmprep <- read.csv("E:/Hughes/Data/PK/REDO/COV24/nmprep_allstudies.csv")
+	nmprep <- read.csv("E:/Hughes/Data/PK/REDO/COV24/nmprep_flagged.csv")
 
 #Remove dose events & missing values
   fitdata <- subset(fitdata, MDV==0)

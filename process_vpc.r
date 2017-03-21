@@ -17,7 +17,7 @@
 
 
 #Set the working directory - to the parent directory where you do the modelling/VPC
-	master.dir<-"E:/Hughes/Data/PK/REDO/COV58"
+	master.dir<-"E:/Hughes/Data/PK/FLAG/COV15"
 	setwd(master.dir)
 
 #Load libraries
@@ -52,7 +52,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 #-------------------------------------------------------------------------------
 #Process the simulated *.fit file.
 #Run name - Change this to the RUN you want to process
-	runname <- "RUN003_CL_CRCL2_VPC"
+	runname <- "RUN022_EXTVAL_NOCOV_VPC"
 
 #Process the fit file - Comment this out if you have already generated the csv; this will save time!
   processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
@@ -67,7 +67,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 
 #-------------------------------------------------------------------------------
 #Read the original data
-	ORG.data <- read.csv("nmprep_cwresrun058.csv", stringsAsFactors=F, na.strings=".")
+	ORG.data <- read.csv("extval_10156_IBW.csv", stringsAsFactors=F, na.strings=".")
   ORG.data <- rename(ORG.data, c("X.ID"="ID"))
   #ORG.data <- rename(ORG.data, c("TAFDE"="TIME"))  # rename time
   ORG.data <- subset (ORG.data, MDV==0 & EVID<=1) #removes data not used in the analysis commented out in the original CTL
@@ -122,7 +122,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 
 #------------------------------------------------------------------------------
 	 #Assign some factors - LOQ.data
-		LOQ.data <- read.csv("nmprep_allstudies.csv", stringsAsFactors=F, na.strings=".")
+		LOQ.data <- read.csv("extval_10156_IBW.csv", stringsAsFactors=F, na.strings=".")
 		names(LOQ.data)[1] <- "ID"
 
 	  #Bin time
@@ -132,7 +132,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 	  LOQ.data$TIMEBIN <- as.numeric(paste(LOQ.data$TIMEBIN))
 
 	  #Bin time after first dose
-	  LOQ.data$TADBIN <- cut2(LOQ.data$TAD, cuts=c(0.517,1.017,2.017,3.017,4.25,8.017), levels.mean=T)
+	  LOQ.data$TADBIN <- cut2(LOQ.data$TAD, cuts=c(0.52,1.02,2.02,4.02,8.02,22.02), levels.mean=T)
 	  LOQ.data$TADBIN <- as.numeric(paste(LOQ.data$TADBIN))
 
 	  # Assign some factors

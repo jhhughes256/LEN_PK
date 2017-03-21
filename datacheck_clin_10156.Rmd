@@ -46,7 +46,7 @@ output:
   #datapk.clin <- read_excel(file.name.in2, sheet=4)  #response
   #datapk.sero <- read_excel(file.name.in2, sheet=5)  #serotypes
   datapk.dose <- read_excel(file.name.in2, sheet=6)  #actual dose times
-  
+
   theme_bw2 <- theme_set(theme_bw(base_size = 20))
   theme_bw2 <- theme_update(plot.margin = unit(c(0.1,0.1,0.1,0.1), "npc"),
   axis.title.x=element_text(size = 18, vjust = 0),
@@ -62,18 +62,18 @@ head(datanew.pkd)
 ***
 ##### __Checking for errors in data__
 __Patient.Number__
-```{r pkd.table.id} 
-with(datanew.pkd, table(Patient.Number, useNA = "always")) 
+```{r pkd.table.id}
+with(datanew.pkd, table(Patient.Number, useNA = "always"))
 ```
-Each ID has 8 concentration points, there appears to be one patient number 
-entered as NA. There is also a 8834-23 and 8834-23b, are these the same 
+Each ID has 8 concentration points, there appears to be one patient number
+entered as NA. There is also a 8834-23 and 8834-23b, are these the same
 patient?
 ```{r pkd.which.na.id}
 tmp <- with(datanew.pkd, which(is.na(Patient.Number)))
 datanew.pkd[(tmp-2):(tmp+2),]
 ```
-Location of NA Patient.Number is located in the final cell of the column. 
-Additionally it appears that the penultimate row is missing values for many 
+Location of NA Patient.Number is located in the final cell of the column.
+Additionally it appears that the penultimate row is missing values for many
 columns. Appears to have just not been entered.
 ```{r pkd.id.23b}
 with(datanew.pkd, data.frame(
@@ -93,8 +93,8 @@ tmp <- dlply(datanew.pkd, .(Patient.Number), function(data) {
 })
 hist(unlist(tmp), main = "Time difference between first and last samples", xlab = "Time Difference (hours)")
 ```
-Time difference between values given for first and final sample for each 
-individual is far less than 24 hours... 
+Time difference between values given for first and final sample for each
+individual is far less than 24 hours...
 
 Due to the fact that the date never changes from the 30th December 1899 despite a day having passed by the 24 hour sample taken.
 ```{r pkd.tdiff.res}
@@ -115,7 +115,7 @@ plotobj <- plotobj + geom_point(shape = 21)
 plotobj <- plotobj + geom_hline(yintercept = 0, linetype = "dashed")
 plotobj
 ```
-Difference between the two values are not larger than 5 for the most part.. 
+Difference between the two values are not larger than 5 for the most part..
 however there are 3-4 cases where the residuals are quite high...
 ```{r pkd.tdiff.highres}
 res.id <- unique(tmp[abs(tmp$residual)>=5,]$Patient.Number)
@@ -161,7 +161,7 @@ datanew.pkd[(tmp-2):(tmp+2),]
 ```
 Tail of table to search for NA values: seems there is one true NA (final row
 of the data), but also 7 ND and 1 BD.
-ND would be none detected. BD appears to be a typo, should be ND. These 
+ND would be none detected. BD appears to be a typo, should be ND. These
 characters should be set to NA.
 ```{r pkd.table.many}
 with(datanew.pkd, table(Type, useNA = "always"))
@@ -187,7 +187,7 @@ head(datapk.demog)
 ##### __Checking for errors in data__
 __Sequence.No__
 ```{r demog.table.id}
-with(datapk.demog, table(Sequence.No, useNA = "always")) 
+with(datapk.demog, table(Sequence.No, useNA = "always"))
 ```
 No NAs which is good, however 8834-23b is missing. What else is missing?
 ```{r demog.which.id}
@@ -198,7 +198,7 @@ tmp <- list(
 tmp1 <- which(tmp$demog.id %in% tmp$pkd.id)
 tmp2 <- which(!tmp$pkd.id %in% tmp$demog.id)
 id.length <- print(c(
-  pkd.length = length(tmp$pkd.id), 
+  pkd.length = length(tmp$pkd.id),
   demog.length = length(tmp$demog.id),
   pkd.in.demog.length = length(tmp1)
 ))
@@ -210,14 +210,14 @@ All of the datanew.pkd patients are accounted for excect for one, 8834-23b.
 Hypotheses:
 
 * The patient is in this new dataset, but with a different patient ID
-* The patient is not in the dataset, therefore there are 9 more patients than 
+* The patient is not in the dataset, therefore there are 9 more patients than
 in datanew.pkd
 
 __Demographic Data__
 ```{r demog.table.many}
-with(datapk.demog, table(ID, useNA = "always")) 
-with(datapk.demog, table(age, useNA = "always")) 
-with(datapk.demog, table(gender, useNA = "always")) 
+with(datapk.demog, table(ID, useNA = "always"))
+with(datapk.demog, table(age, useNA = "always"))
+with(datapk.demog, table(gender, useNA = "always"))
 with(datapk.demog, table(weight, useNA = "always"))
 with(datapk.demog, table(height, useNA = "always"))
 ```
@@ -248,7 +248,7 @@ __START_TIME__
 ```{r dose.table.time}
 datapk.dose$START_TIME %>% table(useNA = "always") %>% tail()
 ```
-The dose times at the start of each cycle are not numerous, with 1465 values 
+The dose times at the start of each cycle are not numerous, with 1465 values
 not entered. The majority don't matter, however the times that match up with
 the cycles in datanew.pkd do matter.
 
@@ -271,9 +271,9 @@ with(datapk.dose, table(DOSE_UNITS, useNA="always"))
 #### Collation of Data
 ##### __Matching up cycles to determine dose times__
 ```{r dose.strsplit.cycle}
-dose.cycles <- datapk.dose$COURSE_NUMBER %>% 
-  strsplit("[^0-9]+") %>% 
-  unlist() %>% 
+dose.cycles <- datapk.dose$COURSE_NUMBER %>%
+  strsplit("[^0-9]+") %>%
+  unlist() %>%
   as.numeric() %>%
   na.omit()
 length(dose.cycles) == dim(datapk.dose)[1]
@@ -293,14 +293,14 @@ pkd.day <- pkd.cd[1:tmp*2] + 28*(pkd.cycle-1)
 list(
   unique.cycles = unique(pkd.cycle),
   unique.days = unique(pkd.day),
-  equal.length = dim(datanew.pkd)[1] == length(pkd.day) & 
+  equal.length = dim(datanew.pkd)[1] == length(pkd.day) &
     dim(datanew.pkd)[1] == length(pkd.cycle)
 )
 ```
 Lengths not equal due to NA row at the bottom of datanew.pkd.
 
 Desire to match up cycles to dose times, however issue still remains with ID
-8834-23b. To find out which ID matches with 8834-23b the repeated information between 
+8834-23b. To find out which ID matches with 8834-23b the repeated information between
 data.frames must be used.
 
 * FIRST_DOSE_DATE & Sample.Date
@@ -312,13 +312,13 @@ data.frames must be used.
 tmp1 <- datanew.pkd[datanew.pkd$Patient.Number == "8834-23b",]
 tmp2 <- pkd.cycle[datanew.pkd$Patient.Number == "8834-23b"]
 tmp <- list(
-  tmp1$Sample.Date[1], 
+  tmp1$Sample.Date[1],
   paste("Arm", ifelse(tmp2[1] == 2, "A", "B"), "Treatment")
 )
 data.match <- datapk.dose[datapk.dose$FIRST_DOSE_DATE == tmp[1],]
 tmp <- print(list(
   matched.ids = data.match$SEQUENCE_NO_[data.match$SEGMENT == tmp[2]],
-  id.in.pkd = data.match$SEQUENCE_NO_[data.match$SEGMENT == tmp[2]] %in% 
+  id.in.pkd = data.match$SEQUENCE_NO_[data.match$SEGMENT == tmp[2]] %in%
     datanew.pkd$Patient.Number
 ))
 ```
@@ -331,7 +331,7 @@ datapk.dose$CYCLE <- dose.cycles
 datanew <- datanew.pkd[-dim(datanew.pkd)[1], ]
 datanew$Day <- pkd.day
 datanew$Cycle <- pkd.cycle
-datanew$Patient.Number[datanew$Patient.Number == "8834-23b"] <- 
+datanew$Patient.Number[datanew$Patient.Number == "8834-23b"] <-
   tmp$matched.ids[!tmp$id.in.pkd]
 
 datapk.sub <- ddply(datanew, .(Patient.Number), function(x) {
@@ -344,7 +344,7 @@ datapk.sub <- ddply(datanew, .(Patient.Number), function(x) {
 with(datapk.sub, table(START_TIME, useNA = "always"))
 ```
 Remove final row of datanew.pkd to start creating final data.frame "datanew".
-Then using the unique cycle numbers determine whether there are dose starting 
+Then using the unique cycle numbers determine whether there are dose starting
 times for those IDs.
 
 There are 8 IDs out of the 41 that have matched start times. There are a few
@@ -357,7 +357,7 @@ options to handle this.
     + While not exact, earlier sample times should have lower time error
 * Use a mixture of the two!
     + Exact start time when available, but time == 0.5 for the rest
-    
+
 ```{r start.tdiff.res}
 tmp1 <- datapk.sub$SEQUENCE_NO_[!is.na(datapk.sub$START_TIME)]
 tmp2 <- datanew[datanew$Patient.Number %in% tmp1, ]
@@ -393,15 +393,15 @@ excessive making the idea of using a mixed approach sound less ideal.
 
 It raises the question of datapk.dose's accuracy in dose start times. If that
 many times have not been entered, then how accurate are the ones that have
-been? 
+been?
 
-__Decision__: Will assume time == 0.5 is correct for now. This may change on 
+__Decision__: Will assume time == 0.5 is correct for now. This may change on
 observing the individual plots.
 
 Each patient requires times to be set so that dosing begins on the imputed dose
-time. This is calculated by subtracting 30 minutes from the sample time 
+time. This is calculated by subtracting 30 minutes from the sample time
 allocated to a Sample.Points value of 0.5. Using this time dosing will start 28
-days beforehand at that time. As a result the last dose given before 
+days beforehand at that time. As a result the last dose given before
 concentrations are taken will have been given at time == 672.
 
 ```{r dvprep.datetime}
@@ -440,7 +440,7 @@ tmp <- ddply(datanew, .(Patient.Number), function(x) {
 dim(tmp)[1]
 with(tmp, table(DOSE_LEVEL, useNA = "always"))
 ```
-Doses are not variable for the first two cycles of Len treatment (Arm A 
+Doses are not variable for the first two cycles of Len treatment (Arm A
 being 1 & 2, B being 4 & 5)
 
 
@@ -451,14 +451,14 @@ __Desired structure__: `r c("ID", "STUDY", "DOSEMG", "AMT", "EVID", "TIME",
 
 ```{r dvprep.collate}
 names(datapk.demog)[1] <- names(datanew)[3]
-data.arm <- datapk.dose[c(1,2)] %>% 
-  data.frame() %>% 
+data.arm <- datapk.dose[c(1,2)] %>%
+  data.frame() %>%
   rename(Patient.Number = SEQUENCE_NO_) %>%
-  group_by(Patient.Number) %>% 
+  group_by(Patient.Number) %>%
   do(.[1, ])
-datamerge <- datanew %>% 
-  merge(new.times) %>% 
-  merge(datapk.demog) %>% 
+datamerge <- datanew %>%
+  merge(new.times) %>%
+  merge(datapk.demog) %>%
   merge(data.arm)
 nrow <- dim(datamerge)[1]
 dvprep <- matrix(nrow = nrow, ncol = 23) %>% data.frame()
@@ -467,8 +467,8 @@ nmprep.names <- c("ID", "STUDY", "GRP", "DOSEMG", "AMT", "EVID", "TIME",
 "ADDL", "II", "CMT", "OCC")
 names(dvprep) <- nmprep.names
 dvprep.id <- datamerge$Patient.Number %>%
-  strsplit("[^0-9]+") %>% 
-  unlist() %>% 
+  strsplit("[^0-9]+") %>%
+  unlist() %>%
   as.numeric() %>%
   na.omit()
 dvprep.dv <- as.numeric(datamerge$Lenalidomide.Conc..nM.)
@@ -577,10 +577,10 @@ plotobj <- NULL
 titletext <- paste("Observed Concentrations\n")
 plotobj <- ggplot(data = nmprep)
 plotobj <- plotobj + ggtitle(titletext)
-plotobj <- plotobj + geom_point(aes(x = TAD, y = DV), 
+plotobj <- plotobj + geom_point(aes(x = TAD, y = DV),
   size = 1.5, alpha = 0.5, shape = 21)
 plotobj <- plotobj + scale_y_log10("Concentration (ng/ml)")
-plotobj <- plotobj + scale_x_continuous("Time after first dose (hours)") 
+plotobj <- plotobj + scale_x_continuous("Time after first dose (hours)")
 filename.out <- paste(data.dir,"ConcObs_vs_TAD",sep="/")
 to.png(plotobj,filename.out)
 plotobj
@@ -637,7 +637,7 @@ tmp1 <- nmprep$WT[nmprep$ID %in% tmp]
 nmprep$WT[nmprep$ID %in% tmp] <- nmprep$HT[nmprep$ID %in% tmp]
 nmprep$HT[nmprep$ID %in% tmp] <- tmp1
 ```
-It appears the height and weight for these patients have been switched. 
+It appears the height and weight for these patients have been switched.
 Switch this back for nmprep
 ```{r}
 nmprep.one <- lapplyBy(~ID, data=nmprep,  oneperID)
@@ -656,6 +656,7 @@ nmprep$GEND[nmprep$GEND == "M"] <- 1
 nmprep$GEND[nmprep$GEND == "F"] <- 0
 ffm.var1 <- ifelse(nmprep$GEND == 1, 6.68, 8.78)
 ffm.var2 <- ifelse(nmprep$GEND == 1, 216, 244)
+nmprep$IBW <- ifelse(datanew$GEND==1,50+0.9*(datanew$HT-152),45.5+0.9*(datanew$HT-152))
 nmprep$BMI <- nmprep$WT/(nmprep$HT/100)**2
 nmprep$FFM <- 9.27 * 10^3 * nmprep$WT / (ffm.var1 * 10^3 + ffm.var2 * nmprep$BMI)
 filename.out <- paste(data.dir,"extval_10156.csv",sep="/")
