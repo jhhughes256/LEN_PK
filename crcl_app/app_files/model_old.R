@@ -19,9 +19,9 @@ $INIT // Initial conditions for compartments
   AUC = 0  // Area under the curve compartment
 
 $PARAM  // Population parameters
-  POPCL = 12.4,  // Clearance, L/h
-  POPV1 = 75.4,  // Volume of central compartment, L
-  POPKTR = 13.5,  // Absorption rate constant, h^-1
+  POPCL = 10.3,  // Clearance, L/h
+  POPV1 = 75.2,  // Volume of central compartment, L
+  POPKTR = 13.3,  // Absorption rate constant, h^-1
 
   // Default covariate values for simulation
   STUDY = 0,  // Patient study
@@ -31,8 +31,8 @@ $PARAM  // Population parameters
 $OMEGA  // Omega covariance block
   block = TRUE
   labels = s(BSV_CL,BSV_V1)
-  0.3058  // BSV for CL
-  0.2499 0.2788  // BSV for V1
+  0.4914  // BSV for CL
+  0.199 0.3025  // BSV for V1
 
 $OMEGA  // Omega variance
   labels = s(BSV_KTR)
@@ -40,13 +40,19 @@ $OMEGA  // Omega variance
 
 $SIGMA  // Sigma
   block = FALSE
-  labels = s(ERR_PRO)
-  0.1849  // Proportional error combined
+  labels = s(ERR_ME,ERR_LO,ERR_HI)
+  0.2510  // Proportional error combined
+  0.1163  // Proportional error 5115 6003
+  0.3831  // Proportional error 8156 10016
 
 $MAIN  // Individual parameter values
   double CL = POPCL*pow(FFM/55,0.75)*exp(BSV_CL);
   double V1 = POPV1*(FFM/55)*exp(BSV_V1);
   double KTR = POPKTR*exp(BSV_KTR);
+  // Proportional residual unexplained variability
+  double ERR_PRO = ERR_ME;
+  if(STUDY >= 5115) ERR_PRO = ERR_LO;
+  if(STUDY >= 8156) ERR_PRO = ERR_HI;
 
 $ODE  // Differential equations
   dxdt_DEPOT = -KTR*DEPOT;
@@ -69,4 +75,4 @@ $CAPTURE  // Capture output
 '
 
 # Compile the model code
-mod.base <- mcode("popBASE",code)
+mod.old <- mcode("popOLD",code)

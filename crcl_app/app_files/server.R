@@ -29,9 +29,11 @@
 # Source the models
 	source("model_base.R")
 	source("model_cov.R")
+	source("model_old.R")
+	source("model_lopez.R")
 
 # ------------------------------------------------------------------------------
-  shinyServer(function(input, output) {
+  shinyServer(function(input, output, session) {
 
 		Rconc <- reactive({
 			ID <- 1:n
@@ -61,6 +63,10 @@
 				mod <- mod.base
 			} else if (input$mod == 2) {
 				mod <- mod.cov
+			} else if (input$mod == 3) {
+				mod <- mod.old
+			} else if (input$mod == 4) {
+				mod <- mod.lopez
 			}
 
     	conc.data <- mod %>%
@@ -121,4 +127,9 @@
 			}
       print(plotobj1)
     })  # renderPlot
+
+		# Close the R session when browser closes
+		session$onSessionEnded(function(){
+		 stopApp()
+		})  #endsession
   })

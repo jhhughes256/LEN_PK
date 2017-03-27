@@ -6,7 +6,9 @@
       "Choose Model",
       choices = list(
         "Structural Model" = 1,
-        "Covariate Model" = 2
+        "Covariate Model" = 2,
+        "Old Structural Model" = 3,
+        "Guglieri-Lopez Model" = 4
       ),
       selected = 1
     ),  # selectInput
@@ -16,7 +18,7 @@
       column(5,
         selectInput("crcl",
           "Creatinine Clearance (ml/min)",
-          choices = list(10, 30, 60, 90),
+          choices = list(15, 30, 45, 60, 75, 90, 105, 120),
           selected = 90
         )  # sliderInput
       ),  # column
@@ -25,7 +27,7 @@
           "Dose (mg):",
           value = 25,
           step = 5
-        )  # numericInput 
+        )  # numericInput
       ),  # column
       column(2,
         actionButton("save", "Save"),  # actionButton

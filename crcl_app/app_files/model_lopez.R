@@ -11,41 +11,37 @@ $INIT // Initial conditions for compartments
   TRAN1 = 0,  // Transit compartment 1
   TRAN2 = 0,  // Transit compartment 2
   TRAN3 = 0,  // Transit compartment 3
-  TRAN4 = 0,  // Transit compartment 4
-  TRAN5 = 0,  // Transit compartment 5
-  TRAN6 = 0,  // Transit compartment 6
-  TRAN7 = 0,  // Transit compartment 7
   CENT = 0,  // Central
   AUC = 0  // Area under the curve compartment
 
 $PARAM  // Population parameters
-  POPCL = 12.4,  // Clearance, L/h
-  POPV1 = 75.4,  // Volume of central compartment, L
-  POPKTR = 13.5,  // Absorption rate constant, h^-1
+  POPCL = 14,  // Clearance, L/h
+  POPV1 = 57,  // Volume of central compartment, L
+  POPKTR = 6.55,  // Absorption rate constant, h^-1
+
+  // Covariate effects
+  COV1 = 0.0065,	// Effect of creatinine clearance on clearance
+  COV2 = 1.37,  // Effect of body surface area on volume
 
   // Default covariate values for simulation
   STUDY = 0,  // Patient study
-	FFM = 55,  // Fat free mass (kg)
+	BSA = 1.73,  // Fat free mass (kg)
   CRCL = 90  // Creatinine clearance (umol/L)
 
-$OMEGA  // Omega covariance block
-  block = TRUE
-  labels = s(BSV_CL,BSV_V1)
-  0.3058  // BSV for CL
-  0.2499 0.2788  // BSV for V1
-
 $OMEGA  // Omega variance
-  labels = s(BSV_KTR)
-  0.3684  // BSV for KTR
+  labels = s(BSV_CL,BSV_V1,BSV_KTR)
+  0.0961  // BSV for CL
+  0.04  // BSV for V1
+  0.3721  // BSV for KTR
 
 $SIGMA  // Sigma
   block = FALSE
-  labels = s(ERR_PRO)
-  0.1849  // Proportional error combined
+  labels = s(ERR_POI)
+  0.0144  // Poisson error combined
 
 $MAIN  // Individual parameter values
-  double CL = POPCL*pow(FFM/55,0.75)*exp(BSV_CL);
-  double V1 = POPV1*(FFM/55)*exp(BSV_V1);
+  double CL = POPCL*(1+COV1*(CRCL-90))*exp(BSV_CL);
+  double V1 = POPV1*(1+COV2*(BSA-1.73))*exp(BSV_V1);
   double KTR = POPKTR*exp(BSV_KTR);
 
 $ODE  // Differential equations
@@ -53,20 +49,16 @@ $ODE  // Differential equations
   dxdt_TRAN1 = KTR*DEPOT -KTR*TRAN1;
   dxdt_TRAN2 = KTR*TRAN1 -KTR*TRAN2;
   dxdt_TRAN3 = KTR*TRAN2 -KTR*TRAN3;
-  dxdt_TRAN4 = KTR*TRAN3 -KTR*TRAN4;
-  dxdt_TRAN5 = KTR*TRAN4 -KTR*TRAN5;
-  dxdt_TRAN6 = KTR*TRAN5 -KTR*TRAN6;
-  dxdt_TRAN7 = KTR*TRAN6 -KTR*TRAN7;
-  dxdt_CENT = KTR*TRAN7 -CL/V1*CENT;
+  dxdt_CENT = KTR*TRAN3 -CL/V1*CENT;
   dxdt_AUC = CENT/V1;
 
 $TABLE  // Determine individual predictions
   double IPRE = CENT/V1;
-  double DV = IPRE*(1+ERR_PRO);
+  double DV = IPRE+pow(IPRE,0.5)*ERR_POI;
 
 $CAPTURE  // Capture output
   IPRE DV CL V1 KTR
 '
 
 # Compile the model code
-mod.base <- mcode("popBASE",code)
+mod.lopez <- mcode("popLOPEZ",code)

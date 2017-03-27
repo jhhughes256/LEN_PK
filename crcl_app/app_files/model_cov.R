@@ -18,12 +18,12 @@ $INIT // Initial conditions for compartments
 	AUC = 0  // Area under the curve compartment
 
 $PARAM  // Population parameters
-	POPCL = 11.1,  // Clearance, L/h
-	POPV1 = 71.7,  // Volume of central compartment, L
-	POPKTR = 13.3,  // Absorption rate constant, h^-1
+	POPCL = 12  // Clearance, L/h
+	POPV1 = 68.8,  // Volume of central compartment, L
+	POPKTR = 13.5,  // Absorption rate constant, h^-1
 
 	// Covariate effects
-	COV1 = 0.443,	// Effect of current smoking on clearance
+	COV1 = 0.224,	// Effect of creatine clearance on clearance
 
   // Default covariate values for simulation
 	STUDY = 0,  // Patient study
@@ -33,29 +33,23 @@ $PARAM  // Population parameters
 $OMEGA  // Omega covariance block
   block = TRUE
 	labels = s(BSV_CL,BSV_V1)
-	0.4733  // BSV for CL
-	0.2227 0.2926  // BSV for V1
+	0.2959  // BSV for CL
+	0.2469 0.2841  // BSV for V1
 
 $OMEGA  // Omega variance
 	labels = s(BSV_KTR)
-	0.3696  // BSV for KTR
+	0.3672  // BSV for KTR
 
 $SIGMA  // Sigma
   block = FALSE
-	labels = s(ERR_ME,ERR_LO,ERR_HI)
-	0.2510  // Proportional error combined
-	0.1142  // Proportional error 5115 6003
-	0.3831  // Proportional error 8156 10016
+	labels = s(ERR_PRO)
+	0.1849  // Proportional error combined
 
 $MAIN  // Determine covariate values
 	// Individual parameter values
 	double CL = POPCL*pow(FFM/55,0.75)*pow(CRCL/90,COV1)*exp(BSV_CL);
 	double V1 = POPV1*(FFM/55)*exp(BSV_V1);
 	double KTR = POPKTR*exp(BSV_KTR);
-	// Proportional residual unexplained variability
-	double ERR_PRO = ERR_ME;
-	if(STUDY >= 5115) ERR_PRO = ERR_LO;
-	if(STUDY >= 8156) ERR_PRO = ERR_HI;
 
 $ODE  // Differential equations
 	dxdt_DEPOT = -KTR*DEPOT;
