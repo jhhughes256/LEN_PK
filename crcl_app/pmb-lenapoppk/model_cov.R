@@ -71,4 +71,4 @@ $CAPTURE  // Capture output
   IPRE DV CL V1 KTR
 '
 	# Compile the model code
-	mod.cov <- mcode("popCOV",code)
+	mod <- mcode("popCOV",code)
