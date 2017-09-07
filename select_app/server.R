@@ -80,7 +80,7 @@ shinyServer(function(input, output, session) {
   
 # Output the flagged rows to keep a track of them
   output$flagged <- renderPrint({
-    nmprep[which(rv$flag == 1), c("X.ID", "TIME", "TAD", "STUDY")]
+    nmprep[which(rv$flag == 1), c("#ID", "TIME", "TAD", "STUDY")]
   })
   
 # Observe for when user wants to save the work they have done

@@ -8,7 +8,7 @@
 
 # Set the working directory
   master.dir <- "E:/Hughes/Data"
-  scriptname <- "nmprep_clin"
+  scriptname <- "nmprep_newclin"
   setwd(master.dir)
 
 # Load libraries
@@ -37,11 +37,12 @@
 
 ### ------------------------------------- Clinical Data ------------------------------------- ###
 ### Updated from datacheck_front.r 			#reproducible
-  file06003 <- "RAW_Clinical/datacheck_clin_06003_Output/06003_finaldata.csv"
+  file06003 <- "RAW_Clinical/datacheck_newclin_06003_Output/06003_finaldata.csv"
 	file05115 <- "RAW_Clinical/datacheck_clin_05115_Output/05115_finaldata.csv"
 	file08056 <- "RAW_Clinical/datacheck_clin_08056_Output/08056_finaldata.csv"
 	file10016 <- "RAW_Clinical/datacheck_clin_10016_Output/10016_finaldata.csv"
   data06003 <- read.csv(file06003, stringsAsFactors=F)
+  data06003$DVNORM <- data06003$DV/data06003$DOSEMG
 	data05115 <- read.csv(file05115, stringsAsFactors=F)
 	data08056 <- read.csv(file08056, stringsAsFactors=F)
 	data10016 <- read.csv(file10016, stringsAsFactors=F)
@@ -226,8 +227,8 @@
   write.csv(datacov, file=filename.out, quote=FALSE,row.names=FALSE)
 
 #Prepare nm file
-#ID TIME TAD AMT EVID OCC DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR IBW CRCL CRCL2 CRCL3 CRCL4 CRCL5 RACE DXCAT LOQ BSA BMI
-  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,31,30,32,33,34,35,23,21,36,19,20)]
+##ID TIME TAD AMT EVID OCC DV CMT MDV ADDL II STUDY GRP DOSELVL AGE SEX WT HT SECR IBW CRCL CRCL2 CRCL3 CRCL4 CRCL5 RACE DXCATNUM BLQ BSA BMI FFM FLAG
+  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,25,26,2,4,5,15,16,17,18,24,31,30,32,33,34,35,23,21,36,19,20)]
   nmprep <- rename(nmprep, c(GEND = "SEX"))
 
 	nmprep$WT[is.na(nmprep$WT)] <- 70

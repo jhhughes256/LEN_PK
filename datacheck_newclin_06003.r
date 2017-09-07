@@ -8,7 +8,7 @@
 
 # Set the working directory
    master.dir <- "E:/Hughes/Data"
-   scriptname <- "datacheck_clin_06003"
+   scriptname <- "datacheck_newclin_06003"
    setwd(master.dir)
 
 # Load libraries
@@ -19,6 +19,7 @@
    library(grid)
    library(reshape)
    library(stringr)
+   library(readxl)
 
 # Source utility functions file
    source("E:/Hughes/functions_utility.r")
@@ -35,43 +36,47 @@
 		dir.create(output.dir)
     }
 
-### ------------------------------------- Clinical Data ------------------------------------- ###
-### Updated from datacheck_front.r 			#reproducible
-   file.name.in <- "RAW_Clinical/rawdata-lena_06003_24hr_allinfo_crcl1.csv"
-   file.name.in2 <- "RAW_Clinical/rawdata-lena_06003_24hr_allinfo_CLLn30_average.csv"
+# -----------------------------------------------------------------------------
+# Read in .csv files
+   file.name.in <- "RAW_Clinical/rawdata-lena_06003/06003_24hr_allinfo_crcl1.csv"
+   file.name.in2 <- "RAW_Clinical/rawdata-lena_06003/06003_24hr_allinfo_CLLn30_average.csv"
    datanew <- read.csv(file.name.in, stringsAsFactors=F, na.strings=c("."))[1:17]
    datasub <- read.csv(file.name.in2,stringsAsFactors=F, na.strings=c("."))[1:16]
 
-#------------------------------------------------------------------------------------
-#Column names
-  #As presented
-   names(datanew)
+# Read in excel spreadsheets
+  file.name.in3 <- "RAW_Clinical/rawdata-lena_06003/Yao_06003_cycle2.xlsx"
+  datacyc <- as.data.frame(read_excel(file.name.in3, sheet = 1, skip = 1)[1:20])
 
-  #Sorted
-   sort(names(datanew))
+# -----------------------------------------------------------------------------
+# Check structure
+  names(datanew)
+  names(datacyc)
+  # datasub the same except missing CrCl1 column
 
-  #Structure
-   str(datanew)
+  str(datanew)
+  str(datacyc)
 
-  #datasub the same except missing CrCl1 column
+# -----------------------------------------------------------------------------
+# Check data for missing data
+  with(datanew, table(study, useNA = "always"))
 
-#------------------------------------------------------------------------------------
-#Plot PK data
+  with(datanew, table(dose..mg., useNA = "always"))
+  with(datasub, table(dose..mg., useNA = "always"))
+  with(datasub, table(dose..mg.,ID))
 
-   with(datanew, table(study, useNA = "always"))
+  table(datacyc[,"Dose (mg)"], useNA = "always")
+  table(datacyc[,"Dose (mg)"], datacyc$ID, useNA = "always")
+  tail(datacyc)
 
-   with(datanew, table(dose..mg., useNA = "always"))
-   with(datasub, table(dose..mg., useNA = "always"))
-   with(datasub, table(dose..mg.,ID))
+  datacyc <- datacyc[-which(is.na(datacyc$ID)),]
 
-  #Number of patients
-  npat <- length(unique(datanew$ID))
-  npat
-  nsub <- length(unique(datasub$ID))
-  nsub
+# Number of patients
+  length(unique(datanew$ID))
+  length(unique(datasub$ID))
+  length(unique(datacyc$ID))
 
-#-------------------------------------------------------------------------------
-#Convert datanew to old format
+# -----------------------------------------------------------------------------
+# Convert datanew to clean format
 
   datanew2 <- data.frame("ID" = datanew$ID, "STUDY" = 6003)
 
@@ -87,20 +92,20 @@
   datanew2$GRP[datanew$ID %in% unique(datasub$ID)] <- 1
   datanew2$GRP[datanew$dose..mg.<25&datanew2$GRP!=1] <- 2
 
-  #Dose Level 											     		   total patients = 61
-  #			Wk1				Wk2				Wk3
-  # ----------------------------------------------------    GROUP A   	npat = 30
-  #	 0	25mg single													   													npat =  3
-  #  1	2.5mg daily		5.0mg daily		5.0mg daily					   							npat = 18
-  #  2  2.5mg daily		5.0mg daily		7.5mg daily         								npat =  9
-  # ----------------------------------------------------    GROUP B	  	npat =  5
-  #  1  2.5mg daily   5.0mg daily   5.0mg daily 				   							npat =  3
-  #  2  2.5mg daily   5.0mg daily   7.5mg daily 				   							npat =  2
-  # ----------------------------------------------------    GROUP C   	npat = 24
-  #  3  25mg daily		25mg daily		25mg daily					  							npat =  4
-  #	 4	35mg daily		35mg daily		35mg daily					  							npat =  9
-  #  5	50mg daily		50mg daily		50mg daily					  							npat = 10
-  #	 6	75mg daily		75mg daily		75mg daily					 								npat =  3
+#Dose Level 											     		   total patients = 61
+#			Wk1				Wk2				Wk3
+# ----------------------------------------------------    GROUP A   	npat = 30
+#	 0	25mg single													   													npat =  3
+#  1	2.5mg daily		5.0mg daily		5.0mg daily					   							npat = 18
+#  2  2.5mg daily		5.0mg daily		7.5mg daily         								npat =  9
+# ----------------------------------------------------    GROUP B	  	npat =  5
+#  1  2.5mg daily   5.0mg daily   5.0mg daily 				   							npat =  3
+#  2  2.5mg daily   5.0mg daily   7.5mg daily 				   							npat =  2
+# ----------------------------------------------------    GROUP C   	npat = 24
+#  3  25mg daily		25mg daily		25mg daily					  							npat =  4
+#	 4	35mg daily		35mg daily		35mg daily					  							npat =  9
+#  5	50mg daily		50mg daily		50mg daily					  							npat = 10
+#	 6	75mg daily		75mg daily		75mg daily					 								npat =  3
   datanew2$DOSELVL <- 1
   datanew2$DOSELVL[datanew$dose..mg.==25] <- 0
   datanew2$DOSELVL[datanew$dose..mg.==25&datanew2$GRP==3] <- 3
@@ -120,6 +125,7 @@
 	datanew2$TAD <- datanew$time..hr.
 
   datanew2$WEEK <- ceiling(floor(datanew2$TIME/84)/2)+1
+  datanew2$WEEK[datanew2$WEEK == 5] <- 4
 
   datanew2$DV <- datanew$dv..ug.ml.    			 #ug/ml
   datanew2$DV[datanew2$DV <= 0] <- NA
@@ -127,17 +133,7 @@
   datanew2$MDV <- datanew$mdv
   datanew2$MDV[datanew2$DV<0.005] <- 1
 
-  #datanew2$BLQ <- 0
-  #datanew2$BLQ[datanew$NOTE == "DV_BLQ"] <- 1
-  #with(datanew2, table(BLQ, useNA = "always"))
-  #datanew2$DV[datanew2$BLQ==1] <- NA
-
   datanew2$LNDV <- log(datanew2$DV)
-
-  #datanew2$DNUM <- datanew$Dose.no
-  #datanew2$DNUM <- unlist(lapplyBy(~ID, data=datanew2, function(d) impute(d$DNUM)))
-
-  #datanew2$OCC <- datanew2$DNUM
 
   datanew2$AGE <- datanew$Age
 
@@ -150,8 +146,7 @@
 
   datanew2$BSA <- 0.007184*datanew2$WT**0.425*datanew2$HT**0.725
 
-  datanew2$BMI <- datanew2$WT/datanew2$HT**2
-
+  datanew2$BMI <- datanew2$WT/(datanew2$HT/100)^2
 
 	#DXCATNUM == 1 -> Chronic Lymphocytic Leukaemia - K. Maddocks et al. 2014
 	#DXCATNUM == 2 -> Acute Myeloid Leukaemia		- W. Blum et al. 2010
@@ -171,12 +166,57 @@
 
   datanew2$SECR <- datanew$SeCr..mg.dL.*88.4	#convert from mg/dL to umol/L
 
- #-----------------------------------------------------------------
-  dataall <- datanew2
+# -----------------------------------------------------------------------------
+  datacyc.dv <- data.frame(
+    ID = datacyc$ID,
+    STUDY = 06003,
+    XSAMP = 0,
+    DOSEMG = datacyc[, "Dose (mg)"],
+    AMT = NA,
+    RATE = NA,
+    TIME = 672 + datacyc[, "Actual sample time (hr)"],
+    TAD = datacyc[, "Actual sample time (hr)"],
+    WEEK = 5,
+    DV = as.numeric(datacyc[, 19])/1000,
+    MDV = 0,
+    LNDV = log(as.numeric(datacyc[, 19])/1000)
+  )
+  datacyc.dv <- datacyc.dv[-which(is.na(datacyc.dv$TAD)), ]
+  datacyc.dv$MDV[which(is.na(datacyc.dv$DV))] <- 1
+  datacyc.dv$XSAMP[which(datacyc.dv$TAD > 25)] <- 1
+
+  datacyc.dv$WEEK[which(datacyc.dv$TAD > 84)] <- 6
+  datacyc.dv$WEEK[which(datacyc.dv$TAD > 252)] <- 7
+  datacyc.dv$WEEK[which(datacyc.dv$TAD > 420)] <- 8
+
+  datacyc.cov <- datanew2[
+    datanew2$ID %in% unique(datacyc.dv$ID),
+    c("ID", "GRP", "DOSELVL", "AGE", "GEND", "WT", "HT", "BSA", "BMI", "DXCATNUM", "RACE", "RACE2", "SECR")
+  ]
+  datacyc.cov <- ddply(datacyc.cov, .(ID), function(x) {x[1,]})
+
+  datacyc.dvcov <- merge(datacyc.dv, datacyc.cov)
+  datacyc.dvcov <- orderBy(~ID+TIME, data=datacyc.dvcov)
+
+  datacyc.amt <- ddply(datacyc.dvcov, .(ID), function(x) {x[1,]})
+  datacyc.amt$XSAMP <- 0
+  datacyc.amt$AMT <- datacyc.amt$DOSEMG
+  datacyc.amt$RATE <- -2
+  datacyc.amt$TIME <- 672
+  datacyc.amt$TAD <- 0
+  datacyc.amt$WEEK <- 5
+  datacyc.amt$DV <- NA
+  datacyc.amt$MDV <- 0
+  datacyc.amt$LNDV <- NA
+
+  datanew3 <- rbind(datacyc.dvcov, datacyc.amt)
+
+# -----------------------------------------------------------------------------
+  dataall <- rbind(datanew2, datanew3)
 
   dataall <- orderBy(~ID+TIME, data=dataall)
 
-#-------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Check subject numbers
    with(dataall, table(ID))
 
@@ -371,7 +411,7 @@
   plotdata$DOSEMGf <- as.factor(plotdata$DOSEMG)
 
   plotdata$GRPf <- as.factor(plotdata$GRP)
-  levels(plotdata$STUDYf) <- paste("Group",levels(plotdata$STUDYf))
+  levels(plotdata$GRPf) <- paste("Group",levels(plotdata$GRPf))
 
   plotdata$VOSf <- as.factor(plotdata$VOS)
   levels(plotdata$VOSf) <- c("Placebo","Adrug")
@@ -426,8 +466,8 @@
  #Conc vs TIME Week 1
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(plotdata))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- ggplot(data=plotdata)
+  plotobj <-  plotobj + geom_point(aes(x=TAD, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)")
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
@@ -440,8 +480,8 @@
  #Conc vs TIME Week 1 per ID
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
-  plotobj <- ggplot(data=subset(plotdata))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <- ggplot(data=plotdata)
+  plotobj <-  plotobj + geom_point(aes(x=TAD, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
@@ -456,7 +496,7 @@
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
   plotobj <- ggplot(data=subset(plotdata,ID<36))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <-  plotobj + geom_point(aes(x=TAD, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
@@ -471,7 +511,7 @@
   plotobj <- NULL
   titletext <- paste("Observed Concentrations in Week 1\n")
   plotobj <- ggplot(data=subset(plotdata,ID>35))
-  plotobj <-  plotobj + geom_point(aes(x=TIME, y=DV, colour=DOSELVLf), size=3, alpha=0.5)
+  plotobj <-  plotobj + geom_point(aes(x=TAD, y=DV, colour=DOSE_bin), size=3, alpha=0.5)
   plotobj <- plotobj + ggtitle(titletext) #+ theme(legend.position="none")
   plotobj <- plotobj +  scale_y_log10("Concentration (ng/ml)",lim=c(0.001,5))
   plotobj <- plotobj +  scale_x_continuous("Time after first dose (hours)", lim=c(0,24))  #, lim=c(0,60), breaks=seq(from=0, to=60, by=24)
@@ -611,42 +651,6 @@ plotByFactor <- function(factorColname,factorText)
 
 
 #-----------------------------------------------------------------------------------------------------------------
-#Demographic Summary
-#AGE, SEX, WT, BSA
-
-   #Demographics All
-   #covDescriptive <- summaryBy(AGE+WT+BSA+BMI~1, data=covdataone, FUN=sumfuncCBIO)
-   #covDescriptive <- colwise(formatT)(covDescriptive)
-   #filename.out <- paste(output.dir,"demo_summary_all.csv",sep="/")
-   #writem.csv(t(covDescriptive), file=filename.out, row.names=F)
-
-
-  #Demographics by GEND
-   #covDescriptive <- summaryBy(AGE+WT+BSA+BMI~GEND, data=covdataone, FUN=sumfuncCBIO)
-   #covDescriptive <- colwise(formatT)(covDescriptive)
-   #filename.out <- paste(output.dir,"demo_summary_GEND.csv",sep="/")
-   #writem.csv(t(covDescriptive), file=filename.out, row.names=F)
-
-
-   #Define a custom age bin
-   #covdataone$AGEBIN <- cut2(covdataone$AGE, cuts=c(18,50,75,85))
-   #covdataone$AGEBIN <- as.numeric(paste(covdataone$AGEBIN))
-
-
-   #GEND Summary
-    #with(covdataone, table(GEND))
-
-    #with(covdataone, table(GEND,AGEBIN))
-
-
-   #RACE Summary
-    #RACEtable <-  with(dataallone, table(RACEf))
-
-    #filename.out <- paste(output.dir,"RACEtable.csv",sep="/")
-    #write.csv(RACEtable, file=filename.out, row.names=T)
-
-
-#-----------------------------------------------------------------------------------------------------------------
 #Index plots of covariates
 
 #Customize ggplot2 theme - R 2.15.3
@@ -711,7 +715,8 @@ plotIndexCat <- function(CovColname,CovText)
 	# [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
 	#[10] "TAD"			 "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
 	#[19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
-  dataone <- lapplyBy(~ID, data=dataall,  oneperID)		#one line per point, includes AMT value
+
+  dataone <- lapplyBy(~ID, data=datanew2,  oneperID)		#one line per point, includes AMT value
   dataone <- bind.list(dataone)
   dataone$RATE <- -2									#fix misplaced rate values
 
@@ -733,13 +738,70 @@ plotIndexCat <- function(CovColname,CovText)
   dataAMT$ADDL[dataAMT$DOSELVL==1&dataAMT$TIME==168] <- 13
   dataAMT$II <- 24
 
-  dataDV <- dataall[dataall$TIME>0,]					#all lines not included in dataAMT
+  dataDV <- datanew2[datanew2$TIME>0,]					#all lines not included in dataAMT
   dataDV$AMT <- NA														#remove extra AMT values
   dataDV$RATE <- NA														#fix misplaced rate values
   dataDV$ADDL <- NA
   dataDV$II <- NA
 
-  dataFIX <- orderBy(~ID+TIME, data=rbind(dataAMT,dataDV))
+  dataext <- lapplyBy(~ID, data=datanew3, oneperID)
+  dataext <- bind.list(dataext)
+  dataext$RATE <- -2
+  dataext$AMT <- dataext$DOSEMG
+  dataext$TIME <- 672
+  dataext$TAD <- 0
+
+  newlines3 <- dataext
+  newlines3$AMT <- datacyc.dvcov[datacyc.dvcov$WEEK == 6, "DOSEMG"]
+  newlines3$DOSEMG <- newlines3$AMT
+  newlines3$TIME <- 840
+  newlines3$WEEK <- 6
+
+  newlines4 <- dataext[which(dataext$ID %in% datacyc.dvcov[datacyc.dvcov$WEEK == 7, "ID"]),]
+  newlines4$AMT <- datacyc.dvcov[datacyc.dvcov$WEEK == 7, "DOSEMG"]
+  newlines4$DOSEMG <- newlines4$AMT
+  newlines4$TIME <- 1008
+  newlines4$WEEK <- 7
+
+  newlines5 <- dataext[which(dataext$ID %in% datacyc.dvcov[datacyc.dvcov$WEEK == 8, "ID"]),]
+  newlines5$AMT <- datacyc.dvcov[datacyc.dvcov$WEEK == 8, "DOSEMG"]
+  newlines5$DOSEMG <- newlines5$AMT
+  newlines5$TIME <- 1176
+  newlines5$WEEK <- 8
+
+  newlines <- rbind(dataext, newlines3, newlines4, newlines5)
+  dataAMT2 <- ddply(newlines, .(ID), function(x) {
+    doseInc <- diff(x$DOSEMG)
+    whichInc <- which(doseInc != 0)
+    if (length(whichInc) == 2) {
+      if (length(doseInc) == 2) {
+        x$ADDL <- c(6, 13, 0)
+        x$II <- 24
+        x[c(1:2), ]
+      } else if (whichInc[1] == 1) {
+        x$ADDL <- c(6, 6, 6, 0)
+        x$II <- 24
+        x[c(1:3), ]
+      }
+    } else if (length(whichInc) == 1) {
+      if (length(doseInc) == 3) {
+        x$ADDL <- c(13, 0, 6, 0)
+      } else {
+        x$ADDL <- c(13, 0, 6)
+      }
+      x$II <- 24
+      x[c(1,3), ]
+    } else {
+      x$ADDL <- 20
+      x$II <- 24
+      x[1, ]
+    }
+  })
+
+  datanew3$ADDL <- NA
+  datanew3$II <- NA
+
+  dataFIX <- orderBy(~ID+TIME, data=rbind(dataAMT,dataDV,dataAMT2,datanew3))
   colnames(dataFIX)[1] <- "#ID"
 
   colnames(dataFIX)[11] <- "DAY"

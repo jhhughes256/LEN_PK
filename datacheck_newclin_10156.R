@@ -1,0 +1,666 @@
+# Set the working directory
+  master.dir <- "C:/Users/hugjh001/Documents/LEN_PopPK"
+  scriptname <- "datacheck_clin_10156"
+  data.dir <- (paste0(master.dir,"/Data"))
+
+# Load libraries
+  library(ggplot2)
+  library(doBy)
+  library(plyr)
+  library(grid)
+  library(reshape2)
+  library(stringr)
+  library(readxl)
+  library(lubridate)
+  library(dplyr)
+
+# Source utility functions file
+  source(paste0(master.dir,"/functions_utility.r"))
+
+# Customize ggplot2 theme - R 2.15.3
+  setthemebw2.1()
+
+### ------------------------------------- Clinical Data ------------------------------------- ###
+### Updated from datacheck_front.r 			#reproducible
+  file.name.in1 <- paste0(data.dir,"/rawdata-lena_10156_datanew_excel.xlsx")
+  datanew.pkd <- read_excel(file.name.in1, sheet=1)  #pk data
+  #datanew.avg <- read_excel(file.name.in1, sheet=2)  #average cp
+  #datanew.plot <- read_excel(file.name.in1, sheet=3)  #plots
+  #datanew.relt <- read_excel(file.name.in1, sheet=4)  #pk data relative time
+  #datanew.avre <- read_excel(file.name.in1, sheet=5)  #pk data relative time (looks like this contains errors)
+  #datanew.act <- read_excel(file.name.in1, sheet=6)  #actual dose time
+
+  file.name.in2 <- paste0(data.dir,"/rawdata-lena_10156_datapk_excel.xlsx")
+  datapk.demog <- read_excel(file.name.in2, sheet=1)  #demographic data
+  #datapk.ig <- read_excel(file.name.in2, sheet=2)  #PD data - Ig
+  #datapk.tox <- read_excel(file.name.in2, sheet=3)  #toxicities
+  #datapk.clin <- read_excel(file.name.in2, sheet=4)  #response
+  #datapk.sero <- read_excel(file.name.in2, sheet=5)  #serotypes
+  datapk.dose <- read_excel(file.name.in2, sheet=6)  #actual dose times
+
+  theme_bw2 <- theme_set(theme_bw(base_size = 20))
+  theme_bw2 <- theme_update(plot.margin = unit(c(0.1,0.1,0.1,0.1), "npc"),
+  axis.title.x=element_text(size = 18, vjust = 0),
+  axis.title.y=element_text(size = 18, vjust = 1, angle = 90),
+  strip.text.x=element_text(size = 14),
+  strip.text.y=element_text(size = 14, angle = 90))
+
+#### First Tab of "pk data with new patient data.xlsx" (rawdata-lena_10156_datanew_excel.xlsx)
+
+names(datanew.pkd) <- str_replace_all(names(datanew.pkd),"[ ()#]",".")
+head(datanew.pkd)
+
+##### __Checking for errors in data__
+#__Patient.Number__
+
+with(datanew.pkd, table(Patient.Number, useNA = "always"))
+
+# Each ID has 8 concentration points, there appears to be one patient number
+# entered as NA. There is also a 8834-23 and 8834-23b, are these the same
+# patient?
+
+tmp <- with(datanew.pkd, which(is.na(Patient.Number)))
+datanew.pkd[(tmp-2):(tmp+2),]
+
+#Location of NA Patient.Number is located in the final cell of the column.
+#Additionally it appears that the penultimate row is missing values for many
+#columns. Appears to have just not been entered.
+
+with(datanew.pkd, data.frame(
+  pat.time = Sample.Points[Patient.Number == "8834-23"],
+  pat.conc.a = Lenalidomide.Conc..nM.[Patient.Number == "8834-23"],
+  pat.conc.b = Lenalidomide.Conc..nM.[Patient.Number == "8834-23b"]
+))
+
+#Patients 8834-23 and 8834-23b are not the same, two unique patients
+
+#__Time.Sample.Taken & Sample.Points__
+
+tmp <- dlply(datanew.pkd, .(Patient.Number), function(data) {
+  x <- as.character(data$Time.Sample.Taken)
+  last <- length(x)
+  as.duration(interval(x[last],x[1]))/3600
+})
+hist(unlist(tmp), main = "Time difference between first and last samples", xlab = "Time Difference (hours)")
+
+#Time difference between values given for first and final sample for each
+#individual is far less than 24 hours...
+
+#Due to the fact that the date never changes from the 30th December 1899 despite a day having passed by the 24 hour sample taken.
+
+nrow <- dim(datanew.pkd)[1]
+tmp <- ddply(datanew.pkd[-nrow,], .(Patient.Number), function(data) {
+  obs.time <- as.character(format(data$Time.Sample.Taken, "%H:%M:%S"))
+  obs.date <- as.character(data$Sample.Date)
+  obs.dt <- paste(obs.date, obs.time)
+  obs <- as.numeric(as.duration(interval(obs.dt[1], obs.dt))/3600)
+  pre <- data$Sample.Points
+  res <- obs - pre
+  data.frame(time = pre, residual = res)
+})
+plotobj <- NULL
+plotobj <- ggplot(tmp, aes(x=time, y=residual))
+plotobj <- plotobj + ggtitle("Sample.Points vs. Time.Sample.Taken")
+plotobj <- plotobj + geom_point(shape = 21)
+plotobj <- plotobj + geom_hline(yintercept = 0, linetype = "dashed")
+plotobj
+
+#Difference between the two values are not larger than 5 for the most part..
+#however there are 3-4 cases where the residuals are quite high...
+
+res.id <- unique(tmp[abs(tmp$residual)>=5,]$Patient.Number)
+sub.cols <- names(datanew.pkd) %in% c("Patient.Number","Sample.Date",
+                     "Sample.Points","Time.Sample.Taken")
+sub.data <- print(datanew.pkd[datanew.pkd$Patient.Number %in% res.id,sub.cols])
+
+#It appears there are NA's in the Time.Sample.Taken column for these patients.
+#For these values it would probably be best to assume that Time.Sample.Taken is
+#equal to Sample.Points. Is returning large residuals due to lubridate's handle
+#on converting a date pasted to an NA
+
+nrow <- dim(datanew.pkd)[1]
+tmp <- ddply(datanew.pkd[-nrow,], .(Patient.Number), function(data) {
+  pre <- data$Sample.Points
+  obs.time <- data$Time.Sample.Taken
+  obs.date <- data$Sample.Date
+  if(any(is.na(obs.time))) {
+    x <- which(is.na(obs.time))
+    obs.time[x] <- obs.time[x-1] + (pre[x]-pre[x-1])*3600
+  }
+  obs.dt <- paste(as.character(obs.date), format(obs.time, "%H:%M:%S"))
+  obs <- as.numeric(as.duration(interval(obs.dt[1], obs.dt))/3600)
+  res <- obs - pre
+  data.frame(time = pre, residual = res)
+})
+plotobj <- NULL
+plotobj <- ggplot(tmp, aes(x=time, y=residual))
+plotobj <- plotobj + ggtitle("Sample.Points vs. Time.Sample.Taken")
+plotobj <- plotobj + geom_point(shape = 21)
+plotobj <- plotobj + geom_hline(yintercept = 0, linetype = "dashed")
+plotobj
+
+#These NAs have been imputed by taking the previous number and adding the intended amount onwards. This gives it the same residual error as the point before hand.
+#Ideally this should be imputed from the *actual dose time* if available so as not to predict residual error
+#Additionally these values may be available in a separate data file
+
+#__Lenalidomide.Conc & The Rest__
+
+tail(with(datanew.pkd, table(Lenalidomide.Conc..nM., useNA = "always")))
+tmp <- which(datanew.pkd$Lenalidomide.Conc..nM. == "BD")
+datanew.pkd[(tmp-2):(tmp+2),]
+
+#Tail of table to search for NA values: seems there is one true NA (final row
+#of the data), but also 7 ND and 1 BD.
+#ND would be none detected. BD appears to be a typo, should be ND. These
+#characters should be set to NA.
+
+with(datanew.pkd, table(Type, useNA = "always"))
+with(datanew.pkd, table(Sample.Points, useNA = "always"))
+
+#Everything is fine here.
+
+##### __Summary of Issues__
+#* Final row is full of NAs
+#* Penultimate row is missing values
+#* The Sample.Date and Time.Sample.Taken will need to be combined
+#* Replace ND and BD in Lenalidomide.Conc..nM. with NAs
+#* Patient.Number `r res.id` will need some imputation for Time.Sample.Taken
+#    + Either by assuming half-hour sample times have zero residuals
+#    + Or by finding the actual dose time and imputing from there
+
+#### First Tab of "Data_PK analysis" (rawdata-lena_10156_datapk_excel.xlsx)
+
+names(datapk.demog) <- str_replace_all(names(datapk.demog),"[ ()#]",".")
+head(datapk.demog)
+
+##### __Checking for errors in data__
+#__Sequence.No__
+
+with(datapk.demog, table(Sequence.No, useNA = "always"))
+
+#No NAs which is good, however 8834-23b is missing. What else is missing?
+
+tmp <- list(
+  pkd.id = unique(na.omit(datanew.pkd$Patient.Number)),
+  demog.id = unique(datapk.demog$Sequence.No)
+)
+tmp1 <- which(tmp$demog.id %in% tmp$pkd.id)
+tmp2 <- which(!tmp$pkd.id %in% tmp$demog.id)
+id.length <- print(c(
+  pkd.length = length(tmp$pkd.id),
+  demog.length = length(tmp$demog.id),
+  pkd.in.demog.length = length(tmp1)
+))
+tmp$pkd.id[tmp2]
+
+#This data sheet has 8 more patients than datanew.pkd.
+#All of the datanew.pkd patients are accounted for excect for one, 8834-23b.
+
+#Hypotheses:
+
+#* The patient is in this new dataset, but with a different patient ID
+#* The patient is not in the dataset, therefore there are 9 more patients than
+#in datanew.pkd
+
+#__Demographic Data__
+
+with(datapk.demog, table(ID, useNA = "always"))
+with(datapk.demog, table(age, useNA = "always"))
+with(datapk.demog, table(gender, useNA = "always"))
+with(datapk.demog, table(weight, useNA = "always"))
+with(datapk.demog, table(height, useNA = "always"))
+
+#Everything is fine here.
+
+#### Sixth Tab of "Data_PK analysis" (rawdata-lena_10156_datapk_excel.xlsx)
+
+names(datapk.dose) <- names(datapk.dose) %>% str_replace_all("[ ()#]",".")
+head(datapk.dose)
+
+
+##### __Checking for errors in data__
+#__Sequence_No___
+
+datapk.dose$SEQUENCE_NO_ %>% table(useNA = "always")
+c(id.length, dose.length = datapk.dose$SEQUENCE_NO_ %>% unique() %>% length())
+tmp1 <- datapk.demog$Sequence.No
+tmp2 <- datapk.dose$SEQUENCE_NO_
+c(
+  all.match = !any(!tmp2 %in% tmp1),
+  any.23b = any(datapk.dose$SEQUENCE_NO_ == "8834-23b")
+)
+
+#Once again we have an extra 8-9 patients and missing patient 23b.
+#datapk.demog and datapk.dose have the same ID sets.
+
+#__START_TIME__
+
+datapk.dose$START_TIME %>% table(useNA = "always") %>% tail()
+
+#The dose times at the start of each cycle are not numerous, with 1465 values
+#not entered. The majority don't matter, however the times that match up with
+#the cycles in datanew.pkd do matter.
+
+#__COURSE_NUMBER__
+
+datapk.dose$COURSE_NUMBER %>% unique() %>% length()
+datapk.dose$COURSE_NUMBER %>% table(useNA = "always") %>% tail()
+
+#A large number of unique cycle numbers, but no NAs which is good. Will need to
+#extract the number from each cell.
+
+#__Dose Date & The Rest__
+
+tail(with(datapk.dose, table(FIRST_DOSE_DATE, useNA="always")))
+with(datapk.dose, table(DRUG, useNA="always"))
+with(datapk.dose, table(DOSE_LEVEL, useNA="always"))
+with(datapk.dose, table(DOSE_UNITS, useNA="always"))
+
+
+#### Collation of Data
+##### __Matching up cycles to determine dose times__
+
+dose.cycles <- datapk.dose$COURSE_NUMBER %>%
+  strsplit("[^0-9]+") %>%
+  unlist() %>%
+  as.numeric() %>%
+  na.omit()
+length(dose.cycles) == dim(datapk.dose)[1]
+table(dose.cycles, useNA = "always")
+
+#Split the cycle number away from the word cycle. REMINDER: Some cycles refer
+#to lenalidomide, others refer to the vaccine. Need to subset before collation!
+
+pkd.cd <- na.omit(datanew.pkd$Type) %>%
+  strsplit("[^0-9]+") %>%
+  unlist() %>%
+  as.numeric() %>%
+  na.omit()
+tmp <- length(pkd.cd)/2
+pkd.cycle <- pkd.cd[1:tmp*2-1]
+pkd.day <- pkd.cd[1:tmp*2] + 28*(pkd.cycle-1)
+list(
+  unique.cycles = unique(pkd.cycle),
+  unique.days = unique(pkd.day),
+  equal.length = dim(datanew.pkd)[1] == length(pkd.day) &
+    dim(datanew.pkd)[1] == length(pkd.cycle)
+)
+
+#Lengths not equal due to NA row at the bottom of datanew.pkd.
+
+#Desire to match up cycles to dose times, however issue still remains with ID
+#8834-23b. To find out which ID matches with 8834-23b the repeated information between
+#data.frames must be used.
+
+#* FIRST_DOSE_DATE & Sample.Date
+#    + The date of the samples should match up with the stat of the cycle
+#* SEGMENT & Type
+#    + Samples taken on cycle 2 -> Arm A
+#    + Samples taken on cycle 5 -> Arm B
+
+tmp1 <- datanew.pkd[datanew.pkd$Patient.Number == "8834-23b",]
+tmp2 <- pkd.cycle[datanew.pkd$Patient.Number == "8834-23b"]
+tmp <- list(
+  tmp1$Sample.Date[1],
+  paste("Arm", ifelse(tmp2[1] == 2, "A", "B"), "Treatment")
+)
+data.match <- datapk.dose[datapk.dose$FIRST_DOSE_DATE == tmp[1],]
+tmp <- print(list(
+  matched.ids = data.match$SEQUENCE_NO_[data.match$SEGMENT == tmp[2]],
+  id.in.pkd = data.match$SEQUENCE_NO_[data.match$SEGMENT == tmp[2]] %in%
+    datanew.pkd$Patient.Number
+))
+
+#Four IDs match the sample date and treatment arm of 8834-23b and only one of
+#them is not present in the pkd dataset. Therefore 8834-29 is the most likely
+#candidate to be 8834-23b.
+
+
+datapk.dose$CYCLE <- dose.cycles
+datanew <- datanew.pkd[-dim(datanew.pkd)[1], ]
+datanew$Day <- pkd.day
+datanew$Cycle <- pkd.cycle
+datanew$Patient.Number[datanew$Patient.Number == "8834-23b"] <-
+  tmp$matched.ids[!tmp$id.in.pkd]
+
+datapk.sub <- ddply(datanew, .(Patient.Number), function(x) {
+  y <- datapk.dose
+  cid <- unique(x$Patient.Number)
+  cycle <- unique(x$Cycle)
+  sub.cond <- y$SEQUENCE_NO_ == cid & y$CYCLE == cycle
+  sub.y <- datapk.dose[sub.cond, ]
+})
+with(datapk.sub, table(START_TIME, useNA = "always"))
+
+# Remove final row of datanew.pkd to start creating final data.frame "datanew".
+# Then using the unique cycle numbers determine whether there are dose starting
+# times for those IDs.
+#
+# There are 8 IDs out of the 41 that have matched start times. There are a few
+# options to handle this.
+
+# * Use the start times to determine what is time == 0
+#     + Problematic due to only 8 IDs having this information
+# * Assume that time == 0.5 is correct, thus determining time == 0
+#     + Good because everyone has a time == 0.5 with corresponding sample time
+#     + While not exact, earlier sample times should have lower time error
+# * Use a mixture of the two!
+#     + Exact start time when available, but time == 0.5 for the rest
+
+
+tmp1 <- datapk.sub$SEQUENCE_NO_[!is.na(datapk.sub$START_TIME)]
+tmp2 <- datanew[datanew$Patient.Number %in% tmp1, ]
+nrow <- dim(datanew)[1]
+tmp <- ddply(tmp2, .(Patient.Number), function(data) {
+  cid <- unique(data$Patient.Number)
+  start.sub <- datapk.sub[datapk.sub$SEQUENCE_NO_ == cid,]
+  start <- paste0(start.sub$FIRST_DOSE_DATE, " ", start.sub$START_TIME, ":00")
+  pre <- data$Sample.Points
+  obs.time <- data$Time.Sample.Taken
+  obs.date <- data$Sample.Date
+  if(any(is.na(obs.time))) {
+    x <- which(is.na(obs.time))
+    obs.time[x] <- obs.time[x-1] + (pre[x]-pre[x-1])*3600
+  }
+  obs.dt <- paste(as.character(obs.date), format(obs.time, "%H:%M:%S"))
+  obs <- as.numeric(as.duration(interval(start, obs.dt))/3600)
+  res <- obs - pre
+  data.frame(time = pre, residual = res)
+})
+tmp5 <- tmp
+tmp3 <- print(tmp$residual[tmp$time == 0.5])
+plotobj <- NULL
+plotobj <- ggplot(tmp, aes(x=time, y=residual))
+plotobj <- plotobj + ggtitle("Sample.Points vs. Time.Sample.Taken")
+plotobj <- plotobj + geom_point(shape = 21)
+plotobj <- plotobj + geom_hline(yintercept = 0, linetype = "dashed")
+plotobj
+
+# __Dilemna__: Two of the patients `r tmp5$Patient.Number[tmp5$time == 0.5][tmp3>=0.3]`
+# have a large residual at time == 0.5 (relative error of ~100%). This is pretty
+# excessive making the idea of using a mixed approach sound less ideal.
+#
+# It raises the question of datapk.dose's accuracy in dose start times. If that
+# many times have not been entered, then how accurate are the ones that have
+# been?
+#
+# __Decision__: Will assume time == 0.5 is correct for now. This may change on
+# observing the individual plots.
+#
+# Each patient requires times to be set so that dosing begins on the imputed dose
+# time. This is calculated by subtracting 30 minutes from the sample time
+# allocated to a Sample.Points value of 0.5. Using this time dosing will start 28
+# days beforehand at that time. As a result the last dose given before
+# concentrations are taken will have been given at time == 672.
+
+
+tmp <- datanew$Sample.Points
+tmp1 <- datanew$Time.Sample.Taken
+tmp2 <- datanew$Sample.Date
+if(any(is.na(tmp1))) {
+  x <- which(is.na(tmp1))
+  tmp1[x] <- tmp1[x-1] + (tmp[x]-tmp[x-1])*3600
+}
+datanew$DateTime <- paste(as.character(tmp2), format(tmp1, "%H:%M:%S"))
+int2dur.hours <- function(x, y) {
+  as.numeric(as.duration(interval(x, y))/3600)
+}
+new.times <- print(ddply(datanew, .(Patient.Number), function(data) {
+  x <- data$DateTime[data$Sample.Points == 0.5]
+  TALD <- as.POSIXct(x, tz = "GMT") - 60*30
+  zero <- as.character(TALD - 60*60*24*28)
+  data.frame(
+    Sample.Points = data$Sample.Points,
+    TIME = int2dur.hours(zero, data$DateTime),
+    TAD = int2dur.hours(as.character(TALD), data$DateTime)
+  )
+}))
+
+
+##### __Dosing of patients__
+
+tmp <- ddply(datanew, .(Patient.Number), function(x) {
+  y <- datapk.dose
+  cid <- unique(x$Patient.Number)
+  cycle <- unique(x$Cycle)
+  sub.cond <- y$SEQUENCE_NO_ == cid & y$CYCLE %in% c(cycle, cycle - 1)
+  sub.y <- datapk.dose[sub.cond, ]
+})
+dim(tmp)[1]
+with(tmp, table(DOSE_LEVEL, useNA = "always"))
+
+# Doses are not variable for the first two cycles of Len treatment (Arm A
+# being 1 & 2, B being 4 & 5)
+
+
+##### __Preparing data for pre-modeling analysis__
+# __Desired structure__: `r c("ID", "STUDY", "DOSEMG", "AMT", "EVID", "TIME",
+# "TAD", "MDV", "LNDV", "AGE", "GEND", "WT", "HT", "DXCAT", "DVNORM",
+# "ADDL", "II", "CMT", "OCC")`
+
+
+names(datapk.demog)[1] <- names(datanew)[3]
+data.arm <- datapk.dose[c(1,2)] %>%
+  data.frame() %>%
+  rename(Patient.Number = SEQUENCE_NO_) %>%
+  group_by(Patient.Number) %>%
+  do(.[1, ])
+datamerge <- datanew %>%
+  merge(new.times) %>%
+  merge(datapk.demog) %>%
+  merge(data.arm)
+nrow <- dim(datamerge)[1]
+dvprep <- matrix(nrow = nrow, ncol = 23) %>% data.frame()
+nmprep.names <- c("ID", "STUDY", "GRP", "DOSEMG", "AMT", "EVID", "TIME",
+"TAD", "DAY", "DV", "MDV", "LNDV", "AGE", "GEND", "WT", "HT", "BSA", "DXCAT", "DVNORM",
+"ADDL", "II", "CMT", "OCC")
+names(dvprep) <- nmprep.names
+dvprep.id <- datamerge$Patient.Number %>%
+  strsplit("[^0-9]+") %>%
+  unlist() %>%
+  as.numeric() %>%
+  na.omit()
+dvprep.dv <- as.numeric(datamerge$Lenalidomide.Conc..nM.)
+
+dvprep$ID <- dvprep.id[1:(nrow)*2]
+dvprep$STUDY <- "10156"
+dvprep$GRP <- ifelse(datamerge$SEGMENT == "Arm A Treatment", 1, 2)
+dvprep$DOSEMG <- 5
+dvprep$EVID <- 0
+dvprep$TIME <- datamerge$TIME
+dvprep$TAD <- datamerge$TAD
+dvprep$TAD[dvprep$TAD < 0] <- dvprep$TAD[dvprep$TAD < 0] + 24
+dvprep$TAD[dvprep$TAD >= 24] <- dvprep$TAD[dvprep$TAD >= 24] - 24
+dvprep$DV <- dvprep.dv*259.26/(1000*1000) #convert from nM to ug/L to ug/mL
+dvprep$MDV <- ifelse(is.na(dvprep$DV), 1, 0)
+dvprep$LNDV <- log(dvprep$DV)
+dvprep$AGE <- datamerge$age
+dvprep$GEND <- datamerge$gender
+dvprep$WT <- datamerge$weight
+dvprep$HT <- datamerge$height
+dvprep$BSA <- 0.007184 * dvprep$WT^0.425 * dvprep$HT^0.725
+dvprep$DXCAT <- 1
+dvprep$DVNORM <- dvprep$DV/dvprep$DOSEMG
+dvprep$CMT <- 2
+dvprep$OCC <- 2
+dvprep
+
+# The DV for the data has been collated and fixed for errors. NA's will be
+# converted to "." after the addition of AMT values.
+
+nrow <- dvprep$ID %>% unique() %>% length()
+amtprep <- ldply(1:nrow, function(i) {
+  cid <- unique(dvprep$ID)[i]
+  data.frame(
+    ID = cid,
+    STUDY = "10156",
+    GRP = dvprep$GRP[dvprep$ID == cid] %>% unique(),
+    DOSEMG = c(2.5, 5),
+    AMT = c(2.5, 5),
+    EVID = 1,
+    TIME = c(0, 672),
+    TAD = 0,
+    DAY = NA,
+    DV = NA,
+    MDV = 1,
+    LNDV = NA,
+    AGE = dvprep$AGE[dvprep$ID == cid] %>% unique(),
+    GEND = dvprep$GEND[dvprep$ID == cid] %>% unique(),
+    WT = dvprep$WT[dvprep$ID == cid] %>% unique(),
+    HT = dvprep$HT[dvprep$ID == cid] %>% unique(),
+    BSA = dvprep$BSA[dvprep$ID == cid] %>% unique(),
+    DXCAT = 1,
+    DVNORM = NA,
+    ADDL = c(27, 1),
+    II = 24,
+    CMT = 1,
+    OCC = c(1, 2)
+  )
+})
+any(names(amtprep) != names(dvprep))
+amtprep
+
+# Names of both amtprep and dvprep are the same, so they are find to be joined
+# together and ordered.
+
+nmprep <- dvprep %>% rbind(amtprep) %>% arrange(ID, TIME)
+nmprep
+
+# Data now in NONMEM format, ready for pre-modeling analysis.
+
+
+#### Pre-Modeling Analysis
+
+plotobj <- qplot(x = DV, geom = "histogram", data = nmprep)
+filename.out <- paste(data.dir,"Histogram_DV",sep="/")
+suppressWarnings(to.png(plotobj,filename.out))
+plotobj
+
+plotobj <- qplot(x = LNDV, geom = "histogram", data = nmprep)
+filename.out <- paste(data.dir,"Histogram_DVlog",sep="/")
+suppressWarnings(to.png(plotobj,filename.out))
+plotobj
+
+# Data has a wide range of values, seems almost log-bimodal...
+
+DVcount <- summaryBy(DV ~ STUDY, data=nmprep, FUN=lengthNA)
+names(DVcount) <- c("Group","DVcount")
+
+SUBcount <- ddply(nmprep, .(STUDY), function(df) count.unique(df$ID))
+names(SUBcount) <- c("Group","SUBcount")
+
+AMTcount <- ddply(nmprep, .(STUDY), function(df) lengthNA(df$AMT))
+names(AMTcount) <- c("Group","AMTcount")
+
+DVsum <- cbind(DVcount,SUBcount[-1],AMTcount[-1])
+DVsum$DVperSUB <-  round(DVsum$DVcount/DVsum$SUBcount,0)
+DVsum$AMTperSUB <-  round(DVsum$AMTcount/DVsum$SUBcount,0)
+
+filename.out <- paste(data.dir,"DVsum.csv",sep="/")
+write.csv(DVsum, file=filename.out)
+DVsum
+
+plotobj <- NULL
+titletext <- paste("Observed Concentrations\n")
+plotobj <- ggplot(data = nmprep)
+plotobj <- plotobj + ggtitle(titletext)
+plotobj <- plotobj + geom_point(aes(x = TAD, y = DV),
+  size = 1.5, alpha = 0.5, shape = 21)
+plotobj <- plotobj + scale_y_log10("Concentration (ng/ml)")
+plotobj <- plotobj + scale_x_continuous("Time after first dose (hours)")
+filename.out <- paste(data.dir,"ConcObs_vs_TAD",sep="/")
+to.png(plotobj,filename.out)
+plotobj
+
+plotobj2 <- plotobj + facet_wrap(~ID)
+filename.out <- paste(data.dir,"ConcObs_vs_TIME_byID",sep="/")
+to.png(plotobj2,filename.out)
+
+plotobj3 <- plotobj + facet_wrap(~GRP)
+filename.out <- paste(data.dir,"ConcObs_vs_TIME_byGRP",sep="/")
+to.png(plotobj3,filename.out)
+plotobj3
+
+nmprep.one <- lapplyBy(~ID, data=nmprep,  oneperID)
+nmprep.one <- bind.list(nmprep.one)
+nmprep.one$IDf <- factor(nmprep.one$ID)
+plotIndexCont <- function(CovColname,CovText) {
+  plotobj <- ggplot(data=nmprep.one)
+  plotobj <- plotobj + geom_point(aes_string(y=CovColname, x="IDf"), size=3)
+  plotobj <- plotobj + scale_x_discrete("Ranked patient index number (ID)")
+  CovText <- eval(parse(text=CovText))  #GOLD turn text into expression
+  plotobj <- plotobj + scale_y_continuous(name=CovText)
+  plotobj <- plotobj + theme(axis.text.x = element_blank())
+
+  filename.out <- paste(data.dir,"/IndexPlot_",CovColname,sep="")
+  to.png.wx1(plotobj,filename.out)
+  plotobj
+}
+
+plotIndexCat <- function(CovColname,CovText) {
+  plotobj <- ggplot(data=nmprep.one)
+  plotobj <- plotobj + geom_point(aes_string(y=CovColname, x="IDf"), size=3)
+  plotobj <- plotobj + scale_x_discrete("Ranked patient index number (ID)")
+  CovText <- eval(parse(text=CovText))  #GOLD turn text into expression
+  plotobj <- plotobj + scale_y_discrete(name=CovText)
+  plotobj <- plotobj + theme(axis.text.x = element_blank())
+
+  filename.out <- paste(data.dir,"/IndexPlot_",CovColname,sep="")
+  to.png.wx1(plotobj,filename.out)
+  plotobj
+}
+
+plotIndexCat("GEND", "Patient~Sex")
+plotIndexCont("AGE","Age~(years)")
+plotIndexCont("WT","Weight~(kg)")
+plotIndexCont("HT","Height~(cm)")
+
+# Something a little weird about some of these heights.
+
+tmp <- print(nmprep.one[nmprep.one$HT < 100,] %>% select(ID, AGE, WT, HT))$ID
+tmp1 <- nmprep$WT[nmprep$ID %in% tmp]
+nmprep$WT[nmprep$ID %in% tmp] <- nmprep$HT[nmprep$ID %in% tmp]
+nmprep$HT[nmprep$ID %in% tmp] <- tmp1
+
+# It appears the height and weight for these patients have been switched.
+# Switch this back for nmprep
+
+nmprep.one <- lapplyBy(~ID, data=nmprep,  oneperID)
+nmprep.one <- bind.list(nmprep.one)
+nmprep.one$IDf <- factor(nmprep.one$ID)
+plotIndexCont("WT","Weight~(kg)")
+plotIndexCont("HT","Height~(cm)")
+
+# This is ideal, save as output
+
+nmprep$DAY <- ceiling((nmprep$TIME+0.001)/24)
+clean.data <- nmprep
+nmprep[is.na(nmprep)] <- "."
+names(nmprep)[1] <- "#ID"
+nmprep$GEND[nmprep$GEND == "M"] <- 1
+nmprep$GEND[nmprep$GEND == "F"] <- 0
+ffm.var1 <- ifelse(nmprep$GEND == 1, 6.68, 8.78)
+ffm.var2 <- ifelse(nmprep$GEND == 1, 216, 244)
+nmprep$IBW <- ifelse(datanew$GEND==1,50+0.9*(datanew$HT-152),45.5+0.9*(datanew$HT-152))
+nmprep$BMI <- nmprep$WT/(nmprep$HT/100)**2
+nmprep$FFM <- 9.27 * 10^3 * nmprep$WT / (ffm.var1 * 10^3 + ffm.var2 * nmprep$BMI)
+filename.out <- paste(data.dir,"extval_10156.csv",sep="/")
+write.csv(nmprep, file = filename.out, quote=FALSE, row.names = FALSE)
+nmprep.one$GEND[nmprep.one$GEND == "M"] <- 1
+nmprep.one$GEND[nmprep.one$GEND == "F"] <- 0
+filename.out <- paste(data.dir, "10156_covdata.csv", sep="/")
+write.csv(nmprep.one[c(1:4, 13:16)], file = filename.out, quote = FALSE, row.names = FALSE)
+
+clean.data <- clean.data %>%
+    select(c(ID, STUDY, AMT, TIME, TAD, DAY, DV, MDV,
+      AGE, GEND, WT, HT, DXCAT)) %>%
+    rename(SEX = GEND, DVMGL = DV, WTKG = WT, HTCM = HT, DOSEMG = AMT)
+
+dxcat.l <- c("CLL", "AML", "ALL", "MM")
+clean.data$DXCAT <- factor(clean.data$DXCAT, levels = c(1, 2, 3, 4))
+levels(clean.data$DXCAT) <- dxcat.l
+
+clean.data$DOSEMG <- repeat.before(clean.data$DOSEMG)
+
+filename.out <- paste(data.dir,"10156_cleandata.csv",sep="/")
+write.csv(clean.data, file=filename.out, row.names=FALSE)
