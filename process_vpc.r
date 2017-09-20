@@ -52,7 +52,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 #-------------------------------------------------------------------------------
 #Process the simulated *.fit file.
 #Run name - Change this to the RUN you want to process
-	runname <- "RUN022_EXTVAL_NOCOV_VPC"
+	runname <- "RUN016_CL_CRCL2_FFM_VPC"
 
 #Process the fit file - Comment this out if you have already generated the csv; this will save time!
   processSIMdata(paste(runname,".ctl",sep=""))    # from the FUNCTION UTILITY
@@ -67,7 +67,7 @@ theme_bw2 <- theme_update(plot.margin = unit(c(1,0.5,3,0.5), "lines"),
 
 #-------------------------------------------------------------------------------
 #Read the original data
-	ORG.data <- read.csv("extval_10156_IBW.csv", stringsAsFactors=F, na.strings=".")
+	ORG.data <- read.csv("nmprep_flagged.csv", stringsAsFactors=F, na.strings=".")
   ORG.data <- rename(ORG.data, c("X.ID"="ID"))
   #ORG.data <- rename(ORG.data, c("TAFDE"="TIME"))  # rename time
   ORG.data <- subset (ORG.data, MDV==0 & EVID<=1) #removes data not used in the analysis commented out in the original CTL
