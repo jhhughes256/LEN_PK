@@ -770,6 +770,8 @@ plotIndexCat <- function(CovColname,CovText)
   newlines5$WEEK <- 8
 
   newlines <- rbind(dataext, newlines3, newlines4, newlines5)
+  newlines$MDV <- 1
+  newlines$DV <- NA
   dataAMT2 <- ddply(newlines, .(ID), function(x) {
     doseInc <- diff(x$DOSEMG)
     whichInc <- which(doseInc != 0)
@@ -798,10 +800,13 @@ plotIndexCat <- function(CovColname,CovText)
     }
   })
 
-  datanew3$ADDL <- NA
-  datanew3$II <- NA
+  dataDV2 <- datanew3[datanew3$TAD>0,]					#all lines not included in dataAMT
+  dataDV2$AMT <- NA														#remove extra AMT values
+  dataDV2$RATE <- NA														#fix misplaced rate values
+  dataDV2$ADDL <- NA
+  dataDV2$II <- NA
 
-  dataFIX <- orderBy(~ID+TIME, data=rbind(dataAMT,dataDV,dataAMT2,datanew3))
+  dataFIX <- orderBy(~ID+TIME, data=rbind(dataAMT,dataDV,dataAMT2,dataDV2))
   colnames(dataFIX)[1] <- "#ID"
 
   colnames(dataFIX)[11] <- "DAY"
