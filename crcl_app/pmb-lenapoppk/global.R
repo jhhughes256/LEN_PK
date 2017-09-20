@@ -25,7 +25,7 @@
 # Set seed for reproducible numbers
 	set.seed(123456)
 
-	TIME <- seq(from = 0,to = 24,by = 0.25)
+	TIME <- seq(from = 0,to = 24,by = 0.1)
 
 # Source the models
 	source("model_cov.R")

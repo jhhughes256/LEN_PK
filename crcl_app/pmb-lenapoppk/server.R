@@ -3,6 +3,8 @@
 shinyServer(function(input, output, session) {
 
 	Rconc <- reactive({
+		wt <- as.numeric(input$wt)
+	  ffm <- 9.27 * 10^3 * wt / (6.68 * 10^3 + 216 * wt/(1.75^2))
 		ID <- 1:n
 		ID2 <- sort(c(rep(ID, times = length(TIME))))
 		time <- rep(TIME, times = length(ID))
@@ -14,7 +16,7 @@ shinyServer(function(input, output, session) {
   		rate = 0,
   		cmt = 1,
 			CRCL = as.numeric(input$crcl),
-			FFM = as.numeric(input$ffm)
+			FFM = ffm
   	)
 
   	oral.dose.times <- 0
@@ -59,7 +61,7 @@ shinyServer(function(input, output, session) {
     plotobj1 <- NULL
     plotobj1 <- ggplot()
     plotobj1 <- plotobj1 + stat_summary(aes(x = time, y = IPRE), data = Rconc(),
-			geom = "line", fun.y = median, colour = cPalette[rv$n + 1], size = 1)
+			geom = "line", fun.y = median, colour = cPalette[rv$n + 1], size = 2)
 		if (input$ci90) {
 	    plotobj1 <- plotobj1 + stat_summary(aes(x = time, y = IPRE), data = Rconc(),
 				geom = "ribbon", fun.ymin = CI90lo, fun.ymax = CI90hi,
@@ -70,7 +72,7 @@ shinyServer(function(input, output, session) {
 		if (length(rv$Sconc) != 0) {
 			plotobj1 <- plotobj1 + stat_summary(
 				aes(x = TIME, y = IPRE, colour = palette), data = rv$Sconc,
-				geom = "line", fun.y = median, size = 1)
+				geom = "line", fun.y = median, size = 2)
       if (input$ci90) {
 				plotobj1 <- plotobj1 + stat_summary(
 					aes(x = TIME, y = IPRE, fill = palette), data = rv$Sconc,
