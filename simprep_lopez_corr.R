@@ -151,7 +151,7 @@
 # -----------------------------------------------------------------------------
 # Simulate patient demographics
 # Set number of simulated patients and simulation times
-  nid <- 1000
+  nid <- 15
   id_seq <- 1:nid
   times <- unique(c(seq(0, 4, 0.25), seq(4, 8, 0.5), seq(8, 24, 1)))
 
