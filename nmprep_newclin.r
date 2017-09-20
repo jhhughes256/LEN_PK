@@ -101,6 +101,7 @@
 	datanew$OCC[datanew$DAY>=4] <- 2
 	datanew$OCC[datanew$DAY>=8] <- 3
 	datanew$OCC[datanew$DAY>=15] <- 4
+  datanew$OCC[datanew$DAY>=22] <- 5
 
   fsex <- ifelse(datanew$GEND==1,1.23,1.04)
   datanew$CRCL <- (140-datanew$AGE)*datanew$WT*fsex/datanew$SECR  #CG w/ WT=ABW
@@ -201,7 +202,7 @@
 
 ### ------------------------------------- Covariate Data ------------------------------------- ###
 ###  			#reproducible
-  file06003 <- "RAW_Clinical/datacheck_clin_06003_Output/06003_covdata.csv"
+  file06003 <- "RAW_Clinical/datacheck_newclin_06003_Output/06003_covdata.csv"
 	file05115 <- "RAW_Clinical/datacheck_clin_05115_Output/05115_covdata.csv"
 	file08056 <- "RAW_Clinical/datacheck_clin_08056_Output/08056_covdata.csv"
 	file10016 <- "RAW_Clinical/datacheck_clin_10016_Output/10016_covdata.csv"
@@ -299,6 +300,7 @@
   flagprep$FLAG[flagprep$ID == 166 & flagprep$OCC == 1 & flagprep$TAD == 24] <- 1
   flagprep$FLAG[flagprep$ID == 168 & flagprep$OCC == 2 & flagprep$TAD == 24] <- 1
   flagprep$FLAG[flagprep$ID == 173 & flagprep$OCC == 2 & flagprep$TAD == 24] <- 1
+  names(flagprep)[1] <- "#ID"
 
   filename.out <- paste(output.dir,"nmprep_flagged.csv",sep="/")
   write.csv(flagprep, file=filename.out, quote=FALSE,row.names=FALSE)
