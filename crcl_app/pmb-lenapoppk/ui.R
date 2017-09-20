@@ -31,16 +31,16 @@
         # Column 1
         column(width = 10, style = "font-size: 18px",
           fluidRow(
-            selectInput("ffm",
-              "Fat Free Mass (kg):",
-              choices = list(45, 55, 65),
-              selected = 55
+            selectInput("wt",
+              "Total Body Weight (kg):",
+              choices = list(50, 70, 90, 110, 130),
+              selected = 70
             )  # numericInput.ffm
           ),  # fluidRow.ffm
           fluidRow(
             selectInput("crcl",
               "Creatinine Clearance (ml/min):",
-              choices = list(30, 60, 90, 120),
+              choices = list(30, 60, 90, 120, 150),
               selected = 90
             )  # sliderInput.crcl
           ),  # fluidRow.crcl

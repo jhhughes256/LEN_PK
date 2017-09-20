@@ -32,7 +32,7 @@
 
   output.dir <- paste(working.dir, scriptname, "_Output", sep = "")
   if(!file.exists(output.dir)) {
-	 dir.create(output.dir)
+   dir.create(output.dir)
   }
 
 # --------------------------- Clinical Data -----------------------------------
@@ -489,11 +489,19 @@ plotByFactor <- function(factorColname,factorText)
   # plotIndexCat("DXCATNUM","Diagnosis~Category")
   plotIndexCont("SECR","Serum~Creatinine~(umol/L)")
 
+<<<<<<< Updated upstream
 # --------------------
 # Data prep
-	#  [1] "# ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
-	# [10] "TAD"			 "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
-	# [19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
+  #  [1] "# ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
+  # [10] "TAD"			 "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
+  # [19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
+=======
+#--------------------
+#Data prep
+  # [1] "#ID"      "STUDY"    "XSAMP"    "GRP"      "DOSELVL"  "DOSEMG"   "AMT"      "RATE"     "TIME"
+  #[10] "TAD"			 "DAY"      "DV"       "MDV"      "LNDV"     "AGE"      "GEND"     "WT"       "HT"
+  #[19] "BSA"      "BMI"      "DXCATNUM" "RACE"     "RACE2"    "SECR"     "DVNORM"   "ADDL"     "II"
+>>>>>>> Stashed changes
 
   dataFIX <- data.frame("ID" = (dataall$ID+75), "STUDY" = dataall$STUDY)
 
@@ -501,10 +509,10 @@ plotByFactor <- function(factorColname,factorText)
   dataFIX$GRP <- 4
   dataFIX$DOSELVL <- dataall$DOSELVL
   dataFIX$DOSEMG <- dataall$DOSEMG
-	dataFIX$AMT <- dataall$AMT
+  dataFIX$AMT <- dataall$AMT
   dataFIX$RATE <- 0
   dataFIX$TIME <- dataall$TIME
-	dataFIX$TAD <- dataall$TIME
+  dataFIX$TAD <- dataall$TIME
   dataFIX$DAY <- 1
   dataFIX$DV <- dataall$DV
   dataFIX$MDV <- dataall$MDV
@@ -526,19 +534,19 @@ plotByFactor <- function(factorColname,factorText)
   dataFIX$ADDL[!is.na(dataFIX$AMT)] <- 20
 
   dataFIX$II <- NA
-	dataFIX$II[!is.na(dataFIX$AMT)] <- 24
+  dataFIX$II[!is.na(dataFIX$AMT)] <- 24
 
-	colnames(dataFIX)[1] <- "# ID"
+  colnames(dataFIX)[1] <- "#ID"
 
-	filename.out <- paste(output.dir,"05115_finaldata.csv",sep="/")
+  filename.out <- paste(output.dir,"05115_finaldata.csv",sep="/")
   write.csv(dataFIX, file=filename.out, row.names=FALSE)
 
-# ------------------
-# Covariate data
-	#  [1] "UID"      "ID"       "STUDY"    "GRP"      "DOSELVL"  "DOSEMG"   "AGE"      "GEND"
-	#  [8] "WEIGHTLB" "HEIGHTFT" "DXCATNUM" "RACE"     "SECRMGDL"
+#------------------
+#Covariate data
+  # [1] "UID"      "ID"       "STUDY"    "GRP"      "DOSELVL"  "DOSEMG"   "AGE"      "GEND"
+  # [8] "WEIGHTLB" "HEIGHTFT" "DXCATNUM" "RACE"     "SECRMGDL"
 
-	dataCOV <- data.frame("UID" = (dataallone$ID+75), "ID" = dataallone$ID, "STUDY" = dataallone$STUDY)
+  dataCOV <- data.frame("UID" = (dataallone$ID+75), "ID" = dataallone$ID, "STUDY" = dataallone$STUDY)
 
   dataCOV$GRP <- 4
   dataCOV$DOSELVL <- dataallone$DOSELVL
@@ -551,7 +559,7 @@ plotByFactor <- function(factorColname,factorText)
   dataCOV$RACE <- dataallone$RACE
   dataCOV$SECRMGDL <- dataallone$SECR/88.4
 
-	filename.out <- paste(output.dir,"05115_covdata.csv",sep="/")
+  filename.out <- paste(output.dir,"05115_covdata.csv",sep="/")
   write.csv(dataCOV, file=filename.out, row.names=FALSE)
 
 #  ------------------------------------------------------------------------------
