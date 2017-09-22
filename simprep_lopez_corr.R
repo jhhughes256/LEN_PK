@@ -182,7 +182,7 @@
   ffm_c1 <- sex*6.68e3
   ffm_c1[ffm_c1 == 0] <- 8.78e3
   ffm_c2 <- sex*216
-  ffm_c2[ffm_c2 == 0] <- 248
+  ffm_c2[ffm_c2 == 0] <- 244
   ffm <- 9.27 * 10^3
   bmi <- wt/(ht/100)^2
   ffm <- 9.27e3 * wt / (ffm_c1 + ffm_c2 * bmi)
