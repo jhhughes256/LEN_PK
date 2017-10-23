@@ -134,7 +134,7 @@
 	titletext <- "pcVPC - Uppsala Style\n"
   p <- NULL
 	p <- ggplot(data = ORG.data)
-	p <- p + ggtitle(titletext)
+	# p <- p + ggtitle(titletext)
 
 	p <- p + geom_point(aes(x = TADBIN, y = pcY), colour = "blue", shape = 1)
 	p <- p + stat_summary(aes(x = TADBIN, y = pcY), fun.y = median,
@@ -159,7 +159,7 @@
 	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), data = SIM.data.bystudy,
 		fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
 
-	p <- p + scale_y_log10("Prediction Corrected Concentration (mg/L)\n")
+	p <- p + scale_y_log10("Prediction Corrected\nConcentration (mg/L)\n")
 	p <- p + scale_x_continuous("\nTime (hours)", breaks = 0:12*2)
 	p
 

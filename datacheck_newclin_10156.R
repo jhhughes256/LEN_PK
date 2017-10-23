@@ -1,7 +1,7 @@
 # Set the working directory
-  master.dir <- "C:/Users/hugjh001/Documents/LEN_PopPK"
+  master.dir <- "E:/Hughes/Git/LEN_PK"
   scriptname <- "datacheck_clin_10156"
-  data.dir <- (paste0(master.dir,"/Data"))
+  data.dir <- "E:/Hughes/Data/RAW_Clinical/rawdata-lena_10156"
 
 # Load libraries
   library(ggplot2)
@@ -22,7 +22,7 @@
 
 ### ------------------------------------- Clinical Data ------------------------------------- ###
 ### Updated from datacheck_front.r 			#reproducible
-  file.name.in1 <- paste0(data.dir,"/rawdata-lena_10156_datanew_excel.xlsx")
+  file.name.in1 <- paste0(data.dir,"/pk data with new patient data.xlsx")
   datanew.pkd <- read_excel(file.name.in1, sheet=1)  #pk data
   #datanew.avg <- read_excel(file.name.in1, sheet=2)  #average cp
   #datanew.plot <- read_excel(file.name.in1, sheet=3)  #plots
@@ -30,13 +30,16 @@
   #datanew.avre <- read_excel(file.name.in1, sheet=5)  #pk data relative time (looks like this contains errors)
   #datanew.act <- read_excel(file.name.in1, sheet=6)  #actual dose time
 
-  file.name.in2 <- paste0(data.dir,"/rawdata-lena_10156_datapk_excel.xlsx")
+  file.name.in2 <- paste0(data.dir,"/Data_PK analysis.xlsx")
   datapk.demog <- read_excel(file.name.in2, sheet=1)  #demographic data
   #datapk.ig <- read_excel(file.name.in2, sheet=2)  #PD data - Ig
   #datapk.tox <- read_excel(file.name.in2, sheet=3)  #toxicities
   #datapk.clin <- read_excel(file.name.in2, sheet=4)  #response
   #datapk.sero <- read_excel(file.name.in2, sheet=5)  #serotypes
   datapk.dose <- read_excel(file.name.in2, sheet=6)  #actual dose times
+
+  file.name.in3 <- paste0(data.dir,"/Creatinine Serum Levels - Deidentified.xls")
+  datasecr <- read_excel(file.name.in3, sheet = 1)
 
   theme_bw2 <- theme_set(theme_bw(base_size = 20))
   theme_bw2 <- theme_update(plot.margin = unit(c(0.1,0.1,0.1,0.1), "npc"),
@@ -315,11 +318,16 @@ tmp <- print(list(
 #them is not present in the pkd dataset. Therefore 8834-29 is the most likely
 #candidate to be 8834-23b.
 
+# As 8834-23b is being renamed the secr data should be merged in at this point
+names(datasecr) <- str_replace_all(names(datasecr),"[ ()#/]",".")
+subsecr.colnames <- c("Patient.Number", "Creatinine.Serum..mg.dL.")
+subsecr <- datasecr[subsecr.colnames]
 
 datapk.dose$CYCLE <- dose.cycles
 datanew <- datanew.pkd[-dim(datanew.pkd)[1], ]
 datanew$Day <- pkd.day
 datanew$Cycle <- pkd.cycle
+datanew <- merge(datanew, subsecr)
 datanew$Patient.Number[datanew$Patient.Number == "8834-23b"] <-
   tmp$matched.ids[!tmp$id.in.pkd]
 
@@ -438,8 +446,7 @@ with(tmp, table(DOSE_LEVEL, useNA = "always"))
 # "TAD", "MDV", "LNDV", "AGE", "GEND", "WT", "HT", "DXCAT", "DVNORM",
 # "ADDL", "II", "CMT", "OCC")`
 
-
-names(datapk.demog)[1] <- names(datanew)[3]
+names(datapk.demog)[1] <- names(datanew)[1]
 data.arm <- datapk.dose[c(1,2)] %>%
   data.frame() %>%
   rename(Patient.Number = SEQUENCE_NO_) %>%
@@ -452,7 +459,8 @@ datamerge <- datanew %>%
 nrow <- dim(datamerge)[1]
 dvprep <- matrix(nrow = nrow, ncol = 23) %>% data.frame()
 nmprep.names <- c("ID", "STUDY", "GRP", "DOSEMG", "AMT", "EVID", "TIME",
-"TAD", "DAY", "DV", "MDV", "LNDV", "AGE", "GEND", "WT", "HT", "BSA", "DXCAT", "DVNORM",
+"TAD", "DAY", "DV", "MDV", "LNDV", "AGE", "GEND", "WT", "HT",
+"SECR", "DXCAT", "DVNORM",
 "ADDL", "II", "CMT", "OCC")
 names(dvprep) <- nmprep.names
 dvprep.id <- datamerge$Patient.Number %>%
@@ -478,7 +486,7 @@ dvprep$AGE <- datamerge$age
 dvprep$GEND <- datamerge$gender
 dvprep$WT <- datamerge$weight
 dvprep$HT <- datamerge$height
-dvprep$BSA <- 0.007184 * dvprep$WT^0.425 * dvprep$HT^0.725
+dvprep$SECR <- datamerge$Creatinine.Serum..mg.dL.*88.4
 dvprep$DXCAT <- 1
 dvprep$DVNORM <- dvprep$DV/dvprep$DOSEMG
 dvprep$CMT <- 2
@@ -508,7 +516,7 @@ amtprep <- ldply(1:nrow, function(i) {
     GEND = dvprep$GEND[dvprep$ID == cid] %>% unique(),
     WT = dvprep$WT[dvprep$ID == cid] %>% unique(),
     HT = dvprep$HT[dvprep$ID == cid] %>% unique(),
-    BSA = dvprep$BSA[dvprep$ID == cid] %>% unique(),
+    SECR = dvprep$SECR[dvprep$ID == cid] %>% unique(),
     DXCAT = 1,
     DVNORM = NA,
     ADDL = c(27, 1),
@@ -639,11 +647,16 @@ nmprep[is.na(nmprep)] <- "."
 names(nmprep)[1] <- "#ID"
 nmprep$GEND[nmprep$GEND == "M"] <- 1
 nmprep$GEND[nmprep$GEND == "F"] <- 0
+nmprep$BMI <- nmprep$WT/(nmprep$HT/100)**2
 ffm.var1 <- ifelse(nmprep$GEND == 1, 6.68, 8.78)
 ffm.var2 <- ifelse(nmprep$GEND == 1, 216, 244)
-nmprep$IBW <- ifelse(datanew$GEND==1,50+0.9*(datanew$HT-152),45.5+0.9*(datanew$HT-152))
-nmprep$BMI <- nmprep$WT/(nmprep$HT/100)**2
 nmprep$FFM <- 9.27 * 10^3 * nmprep$WT / (ffm.var1 * 10^3 + ffm.var2 * nmprep$BMI)
+nmprep$BSA <- 0.007184*nmprep$WT^0.425*nmprep$HT^0.725
+ibw.var <- ifelse(nmprep$GEND == 1, 50, 45.5)
+nmprep$IBW <- ibw.var + 0.9*(nmprep$HT - 152)
+crcl.var <- ifelse(nmprep$GEND == 1, 1.23, 1.04)
+nmprep$CRCL <- (140 - nmprep$AGE)*nmprep$WT*crcl.var/nmprep$SECR
+nmprep$CRCL2 <- (140 - nmprep$AGE)*nmprep$IBW*crcl.var/nmprep$SECR
 filename.out <- paste(data.dir,"extval_10156.csv",sep="/")
 write.csv(nmprep, file = filename.out, quote=FALSE, row.names = FALSE)
 nmprep.one$GEND[nmprep.one$GEND == "M"] <- 1

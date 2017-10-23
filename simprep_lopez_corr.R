@@ -151,18 +151,18 @@
 # -----------------------------------------------------------------------------
 # Simulate patient demographics
 # Set number of simulated patients and simulation times
-  nid <- 15
+  nstudy <- 1000
+  nid_perstudy <- 15
+  nid <- nstudy*nid_perstudy
   id_seq <- 1:nid
   times <- unique(c(seq(0, 4, 0.25), seq(4, 8, 0.5), seq(8, 24, 1)))
 
 # Sample doses and sex given demographic proportions
   dose <- sample(dose_cat, nid, replace = T, prob = dose_prob)
-
   sex <- rbinom(nid, 1, sex_prob)
 
-# Simulate covariate values
-# Weight and Height will be correlated
-# Creatinine clearance will be independent for simplicity... despite physiology
+# Set up correlation matrix for height and weight
+# Age does not require correlation as Cockroft-Gault handles this
   r11 <- 1  # correlation between weight and weight
   r12 <- 0.7  # correlation between weight and height
   r22 <- 1  # correlation between height and height
@@ -170,26 +170,47 @@
     r11, r12,
     r12, r22
   ), 2, 2)  # symmetrical correlation matrix
+
+# Simulate covariate values
   corrsim <- trunc_mvrnorm(nid, c(wt_mean, ht_mean), c(wt_sd, ht_sd), corr,
-    c(wt_range[1], ht_range[1]), c(wt_range[2], ht_range[2]), T)
+    c(wt_range[1], ht_range[1]), c(wt_range[2], ht_range[2]), log = T)
   wt <- corrsim[, 1]
   ht <- corrsim[, 2]
-  crcl <- trunc_rnorm(nid, crcl_mean, crcl_sd, crcl_range, T)
+  age <- trunc_rnorm(nid, age_mean, age_sd, age_range, log = F)
+  secr <- trunc_rnorm(nid, secr_mean, secr_sd, secr_range, log = T)
+  crcl_sex <- sex*1.23
+  crcl_sex[crcl_sex == 0] <- 1.04
+  crcl <- (140 - age)*wt*crcl_sex/secr
+
+# Resample until crcl is within the range outlined in the paper
+  repeat {
+    resample <- crcl < min(crcl_range) | crcl > max(crcl_range)
+    if (!any(resample)) break  # if none to resample exit loop
+    replace <- which(resample)
+    new_nid <- length(replace)
+    new_corrsim <- trunc_mvrnorm(new_nid, c(wt_mean, ht_mean), c(wt_sd, ht_sd),
+      corr, c(wt_range[1], ht_range[1]), c(wt_range[2], ht_range[2]), log = T)
+    wt[replace] <- new_corrsim[, 1]
+    ht[replace] <- new_corrsim[, 2]
+    age[replace] <- trunc_rnorm(new_nid, age_mean, age_sd, age_range, log = F)
+    secr[replace] <- trunc_rnorm(new_nid, secr_mean, secr_sd, secr_range, log = T)
+    crcl[replace] <- (140 - age[replace])*wt[replace]*crcl_sex[replace]/secr[replace]
+  }
 
 # Perform transformations on covariate values to attain BSA and FFM
   bsa <- 0.007184*wt^0.425*ht^0.725
-
   ffm_c1 <- sex*6.68e3
   ffm_c1[ffm_c1 == 0] <- 8.78e3
   ffm_c2 <- sex*216
   ffm_c2[ffm_c2 == 0] <- 244
-  ffm <- 9.27 * 10^3
   bmi <- wt/(ht/100)^2
   ffm <- 9.27e3 * wt / (ffm_c1 + ffm_c2 * bmi)
+
 # -----------------------------------------------------------------------------
 # Prepare simulation dataset
   simprep_amt <- data.frame(
     ID = id_seq,
+    STUDY = ceiling(id_seq/15),
     AMT = dose,
     SEX = sex,
     WT = round(wt, 2),
@@ -217,5 +238,5 @@
 
 # Save as .csv to directory
   names(simprep)[1] <- "#ID"
-  filename_out <- paste(output_dir,"simdata_lopez_mvr.csv",sep="/")
+  filename_out <- paste(output_dir,"simdata_lopez_mvr15000.csv",sep="/")
   write.csv(simprep, file = filename_out, quote = F, row.names = F)

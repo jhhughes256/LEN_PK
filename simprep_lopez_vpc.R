@@ -14,6 +14,7 @@
 # Load required packages
   library(ggplot2)
   library(Hmisc)
+  library(plyr)
 
 # Source functions
 	source("E:/Hughes/functions_utility.r")
@@ -27,112 +28,174 @@
     strip.text.y=element_text(size = 16, angle = 90))
 
 # Confidence intervals - from function utility
-  CI90lo <- function(x) quantile(x, probs=0.05)
-  CI90hi <- function(x) quantile(x, probs=0.95)
+  CI90lo <- function(x) quantile(x, probs = 0.05)
+  CI90hi <- function(x) quantile(x, probs = 0.95)
 
-  CI95lo <- function(x) quantile(x, probs=0.025)
-  CI95hi <- function(x) quantile(x, probs=0.975)
+  CI95lo <- function(x) quantile(x, probs = 0.025)
+  CI95hi <- function(x) quantile(x, probs = 0.975)
 
 # -----------------------------------------------------------------------------
-# Process the simulated *.fit file.
-# This simulated file will be the "observed" data
-  runname <- "RUN002_LOPEZ"
-  # processSIMdata(paste(runname, ".ctl", sep = ""))
-  ORG.data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
-    stringsAsFactors = F, na.strings = ".")
-  ORG.data <- ORG.data[ORG.data$MDV == 0, ]
-
-# This simulated file will be the simulation data
-	runname <- "RUN001_BASE"
+# Load the three separate simulation files
+	# runname <- "RUN003_BASE15"
+  # runname <- "RUN006_BASE50"
+  runname <- "RUN009_BASE15000"
   # processSIMdata(paste(runname,".ctl",sep=""))
-  SIM.data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
+  base_data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
     stringsAsFactors = F, na.strings = ".")
-  SIM.data <- SIM.data[SIM.data$MDV == 0, ]
+  base_data <- base_data[base_data$MDV == 0, ]
+
+  # runname <- "RUN004_LOPEZ15"
+  # runname <- "RUN007_LOPEZ50"
+  runname <- "RUN010_LOPEZ15000"
+  # processSIMdata(paste(runname,".ctl",sep=""))
+  lopez_data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
+    stringsAsFactors = F, na.strings = ".")
+  lopez_data <- lopez_data[lopez_data$MDV == 0, ]
+
+  # runname <- "RUN005_CELGENE15"
+  # runname <- "RUN008_CELGENE50"
+  runname <- "RUN011_CELGENE15000"
+  # processSIMdata(paste(runname,".ctl",sep=""))
+  celgene_data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
+    stringsAsFactors = F, na.strings = ".")
+  celgene_data <- celgene_data[celgene_data$MDV == 0, ]
+  celgene_data$DV <- exp(celgene_data$DV)
 
 # -----------------------------------------------------------------------------
-# Assign factors to covariates
 # Time binning
-  timebin_cuts <- c(1.02, 2.02, 3.02, 4.02, 6.02, 8.02, 12.02, 16.02, 20.02, 24.02)
-  ORG.data$TIMEBIN <- cut2(ORG.data$TIME, cuts = timebin_cuts, levels.mean = T)
-  ORG.data$TIMEBIN <- as.numeric(paste(ORG.data$TIMEBIN))
+  timebin_cuts <- c(0.52, 1.02, 1.52, 2.02, 2.52, 3.02, 3.52, 4.02, 5.02, 6.02,
+    7.02, 8.02, 10.02, 12.02, 14.02, 16.02, 18.02, 20.02, 22.02, 24.02)
+  base_data$TIMEBIN <- cut2(base_data$TIME, cuts = timebin_cuts, levels.mean = T)
+  base_data$TIMEBIN <- as.numeric(paste(base_data$TIMEBIN))
 
-  SIM.data$TIMEBIN <- cut2(SIM.data$TIME, cuts = timebin_cuts, levels.mean = T)
-  SIM.data$TIMEBIN <- as.numeric(paste(SIM.data$TIMEBIN))
+  lopez_data$TIMEBIN <- cut2(lopez_data$TIME, cuts = timebin_cuts, levels.mean = T)
+  lopez_data$TIMEBIN <- as.numeric(paste(lopez_data$TIMEBIN))
+
+  celgene_data$TIMEBIN <- cut2(celgene_data$TIME, cuts = timebin_cuts, levels.mean = T)
+  celgene_data$TIMEBIN <- as.numeric(paste(celgene_data$TIMEBIN))
 
 # Covariates
-  ORG.data$IDf <- as.factor(ORG.data$ID)
-  ORG.data$SEXf <- factor(ORG.data$SEX, labels=c("F", "M"))
-  ORG.data$DOSEf <- factor(ifelse(ORG.data$DOSELVL<=5,1,2),
-    labels=c("Dose <10mg","Dose >10mg"))
-  ORG.data$CRCLf <- factor(ifelse(ORG.data$CRCL2<=60,1,2),
+# Assign factors to covariates
+  base_data$IDf <- as.factor(base_data$ID)
+  base_data$SEXf <- factor(base_data$SEX, labels=c("F", "M"))
+  base_data$CRCLf <- factor(ifelse(base_data$CRCL2<=60,1,2),
     labels=c("CrCl <60mL/min","CrCl >60mL/min"))
 
-  SIM.data$IDf <- as.factor(SIM.data$ID)
-  SIM.data$SEXf <- factor(SIM.data$SEX, labels=c("F", "M"))
-  SIM.data$DOSEf <- factor(ifelse(SIM.data$DOSELVL<=5,1,2),
-    labels=c("Dose <10mg","Dose >10mg"))
-  SIM.data$CRCLf <- factor(ifelse(SIM.data$CRCL2<=60,1,2),
+  lopez_data$IDf <- as.factor(lopez_data$ID)
+  lopez_data$SEXf <- factor(lopez_data$SEX, labels=c("F", "M"))
+  lopez_data$CRCLf <- factor(ifelse(lopez_data$CRCL2<=60,1,2),
+    labels=c("CrCl <60mL/min","CrCl >60mL/min"))
+
+  celgene_data$IDf <- as.factor(celgene_data$ID)
+  celgene_data$SEXf <- factor(celgene_data$SEX, labels=c("F", "M"))
+  celgene_data$CRCLf <- factor(ifelse(celgene_data$CRCL2<=60,1,2),
     labels=c("CrCl <60mL/min","CrCl >60mL/min"))
 
 # -----------------------------------------------------------------------------
-  # Uppsala Style VPC
-  # Calculate 5, 50 and 95 percentiles for each simulated study (S)
-  SIM.data.bystudy.median <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) median(df$DV))
-  SIM.data.bystudy.median <- rename(SIM.data.bystudy.median, c("V1"="medianS"))
+# Uppsala Style VPC
+# Calculate 5, 50 and 95 percentiles for each simulated study (S)
+  # base_data_bysim <- ddply(base_data, .(SIM, TIMEBIN), function(x) {
+  base_data_bysim <- ddply(base_data, .(STUDY, TIMEBIN), function(x) {
+    data.frame(
+      Model = "Hughes et. al",
+      medianS = median(x$DV),
+      loCI90S = CI90lo(x$DV),
+      hiCI90S = CI90hi(x$DV)
+    )
+  })
 
-  SIM.data.bystudy.loCI <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) CI90lo(df$DV))
-  SIM.data.bystudy.loCI <- rename(SIM.data.bystudy.loCI, c("5%"="loCI90S"))
+  # lopez_data_bysim <- ddply(lopez_data, .(SIM, TIMEBIN), function(x) {
+  lopez_data_bysim <- ddply(lopez_data, .(STUDY, TIMEBIN), function(x) {
+    data.frame(
+      Model = "Guglieri-Lopez et. al",
+      medianS = median(x$DV),
+      loCI90S = CI90lo(x$DV),
+      hiCI90S = CI90hi(x$DV)
+    )
+  })
 
-  SIM.data.bystudy.hiCI <- ddply(SIM.data, .(SIM,TIMEBIN), function(df) CI90hi(df$DV))
-  SIM.data.bystudy.hiCI <- rename(SIM.data.bystudy.hiCI, c("95%"="hiCI90S"))
+  # celgene_data_bysim <- ddply(celgene_data, .(SIM, TIMEBIN), function(x) {
+  celgene_data_bysim <- ddply(celgene_data, .(STUDY, TIMEBIN), function(x) {
+    data.frame(
+      Model = "Connarn et. al",
+      medianS = median(x$DV),
+      loCI90S = CI90lo(x$DV),
+      hiCI90S = CI90hi(x$DV)
+    )
+  })
 
-  SIM.data.bystudy <- data.frame(SIM.data.bystudy.median, "loCI90S"=SIM.data.bystudy.loCI$loCI90S, "hiCI90S"=SIM.data.bystudy.hiCI$hiCI90S)
+  data_bysim <- rbind(base_data_bysim, lopez_data_bysim, celgene_data_bysim)
 
-  plotobj <- NULL
-  plotobj2 <- NULL
+  p1 <- NULL
 
-  #Titletext with 3 lines
-  titletext <- expression(atop(VPC~plot~Uppsala~Style,
-                               atop(italic("Red solid line shows mean of data, dashed lines shows 90% CI of data"),
-                                    "Black lines show median and 90% CI for simulated data. Ribbons show 95% CI around sim. data")))
+  titletext <- "VPC - Uppsala Style\n"
+  p1 <- ggplot(aes(colour = Model), data = data_bysim)
+  p1 <- p1 + ggtitle(titletext)
 
-  #titletext <- "VPC - Uppsala Style\n"
-  plotobj <- ggplot(data=ORG.data)
+	p1 <- p1 + stat_summary(aes(x = TIMEBIN, y = medianS),
+		fun.y = median, geom = "line", size = 1)
+	p1 <- p1 + stat_summary(aes(x = TIMEBIN, y = loCI90S),
+		fun.y = median, geom = "line", linetype = "dashed", size = 0.8)
+	p1 <- p1 + stat_summary(aes(x = TIMEBIN, y = hiCI90S),
+		fun.y = median, geom = "line", linetype = "dashed", size = 0.8)
 
-  #Median simulated with confidence band
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="red")
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=medianS), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", size=1)
+  p1 <- p1 + scale_colour_manual(values = c("red", "blue", "green4"))
+	p1 <- p1 + scale_y_log10("Lenalidomide Concentration (mg/L)\n")
+	p1 <- p1 + scale_x_continuous("\nTime (hours)", breaks = 0:12*2)
+  p1 <- p1 + coord_cartesian(ylim = c(0.0001, 1))
+	p1
 
-  #Lower 90% CI simulated with confidence band
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=loCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
-
-  #Upper 90% CI simulated with confidence band
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, geom="ribbon", fun.ymin="CI95lo", fun.ymax="CI95hi", alpha=0.3, fill="blue")
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=hiCI90S), data=SIM.data.bystudy, fun.y=median, geom="line", colour="black", linetype="dashed", size=1)
+  ggsave("Uppsala_VPC.png", width=20, height=16, units=c("cm"))
 
 
-  plotobj <- plotobj + geom_point(aes(x=TIMEBIN, y=DV), colour="blue", shape = 1)
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=DV), fun.y=median, geom="line", colour="red", size=1)
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=DV), fun.y=CI90lo, geom="line", colour="red", linetype="dashed", size=1)
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=DV), fun.y=CI90hi, geom="line", colour="red", linetype="dashed", size=1)
-  # For simulated data: add median, CI90lo, CI90hi
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=DV), data=SIM.data, fun.y=median, geom="line", colour="black", size=1)
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=DV), data=SIM.data, fun.y=CI90lo, geom="line", colour="black", size=1)
-  plotobj <- plotobj + stat_summary(aes(x=TIMEBIN, y=DV), data=SIM.data, fun.y=CI90hi, geom="line", colour="black", size=1)
+  p2 <- NULL
 
-  plotobj <- plotobj +  theme(plot.title = element_text(size = rel(1)))
-  plotobj <- plotobj + ggtitle(titletext)
-  plotobj <- plotobj + scale_y_continuous("Concentration (ug/L)\n")
-  plotobj <- plotobj + scale_x_log10("\nTime after dose (hours)")
-  #plotobj <- plotobj + facet_wrap(~DVIDf)
-  plotobj <- plotobj + theme(strip.background = element_rect(fill = "grey95", colour = "grey50"))
-  plotobj
+  titletext <- "VPC - Uppsala Style\n"
+  p2 <- ggplot(data = data_bysim)
+  # p2 <- p2 + ggtitle(titletext)
+
+  p2 <- p2 + stat_summary(aes(x = TIMEBIN, y = medianS, fill = Model),
+    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", alpha = 0.2)
+  p2 <- p2 + stat_summary(aes(x = TIMEBIN, y = medianS, colour = Model),
+    fun.y = median, geom = "line", size = 1)
+
+  p2 <- p2 + stat_summary(aes(x = TIMEBIN, y = loCI90S, colour = Model),
+    fun.y = median, geom = "line", linetype = "dashed", size = 0.8, alpha = 0.5)
+  p2 <- p2 + stat_summary(aes(x = TIMEBIN, y = hiCI90S, colour = Model),
+    fun.y = median, geom = "line", linetype = "dashed", size = 0.8, alpha = 0.5)
+
+  p2 <- p2 + scale_colour_manual(values = c("red", "blue", "green4"))
+  p2 <- p2 + scale_fill_manual(values = c("red", "blue", "green4"))
+  p2 <- p2 + scale_y_log10("Lenalidomide Concentration (mg/L)\n",
+    breaks = c(0.001, 0.01, 0.1, 1))
+  p2 <- p2 + scale_x_continuous("\nTime (hours)", breaks = 0:12*2)
+  p2 <- p2 + coord_cartesian(ylim = c(0.001, 1))
+  p2
 
   #normal scale- non-facetted
   ggsave("Uppsala_VPC.png", width=20, height=16, units=c("cm"))
 
-  # log Y-scale-non- facetted
-  plotobj2 <- plotobj + scale_y_log10("Concentration (ug/L)\n")
-  plotobj2
-  ggsave("Uppsala_VPC_log.png", width=20, height=16, units=c("cm"))
+  # p <- NULL
+  #
+  # titletext <- "VPC - Uppsala Style\n"
+  # p <- ggplot(aes(colour = Model), data = data_bysim)
+  # p <- p + ggtitle(titletext)
+  #
+  # # p <- p + stat_summary(aes(x = TIMEBIN, y = medianS),
+  # #   geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "red", alpha = 0.3)
+  # p <- p + stat_summary(aes(x = TIMEBIN, y = medianS),
+  #   fun.y = median, geom = "line", size = 1)
+  # # p <- p + stat_summary(aes(x = TIMEBIN, y = loCI90S),
+  # #   geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "red", alpha = 0.1)
+  # p <- p + stat_summary(aes(x = TIMEBIN, y = loCI90S),
+  #   fun.y = median, geom = "line", linetype = "dashed", size = 0.8)
+  # # p <- p + stat_summary(aes(x = TIMEBIN, y = hiCI90S),
+  # # 	geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "red", alpha = 0.1)
+  # p <- p + stat_summary(aes(x = TIMEBIN, y = hiCI90S),
+  #   fun.y = median, geom = "line", linetype = "dashed", size = 0.8)
+  #
+  # p <- p + scale_colour_manual(values = c("red", "blue", "green4"))
+  # p <- p + scale_y_log10("Lenalidomide Concentration (mg/L)\n")
+  # p <- p + scale_x_continuous("\nTime (hours)", breaks = 0:12*2)
+  # p <- p + coord_cartesian(ylim = c(0.0001, 1))
+  # p
