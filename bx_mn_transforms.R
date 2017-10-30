@@ -12,12 +12,12 @@
   eta <- rnorm(1000, 0, sqrt(var))
   
 # Apply Box-Cox transform
-  par_bx <- 0.1
+  par_bx <- 2
   phi <- exp(eta)
   eta_bx <- (phi**par_bx-1)/par_bx
   
 # Apply Manly transform
-  par_man <- 1.5
+  par_man <- -18
   eta_man <- (phi*par_man-1)/par_man
   
 # Compare the distributions
@@ -32,5 +32,3 @@
   p <- p + scale_x_continuous(lim = c(0, 5))
   p <- p + facet_wrap(~type, ncol = 3)
   p
-
-  
