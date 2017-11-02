@@ -7,7 +7,7 @@
 	graphics.off()
 
 # Set the working directory
-   master.dir <- "E:/Hughes/Data/PK/REDO"
+   master.dir <- "E:/Hughes/Data/PK/FLAG"
    scriptname <- "process_fit"
    setwd(master.dir)
 
@@ -81,7 +81,7 @@
 #Write to file
   write.csv(fitdata, file=file.name.out)
 
-	nmprep <- read.csv("E:/Hughes/Data/PK/REDO/COV24/nmprep_flagged.csv")
+	nmprep <- read.csv("E:/Hughes/Data/PK/FLAG/nmprep_flagged.csv")
 
 #Remove dose events & missing values
   fitdata <- subset(fitdata, MDV==0)
@@ -362,7 +362,7 @@ if (ncol(etadata)>1)  #more than 1 ETA is scatterplot matrix
 covcat.cols <- c("STUDYf","DOSELVLf","GENDf","RACEf","DXCATf","OCCf")
 
 #Get the columns with continuous covariates
-covcont.cols <- c("AGE","WT","HT","SECR","CRCL","IBW")
+covcont.cols <- c("AGE","WT","HT","SECR","CRCL2","IBW")
 
 #-------------------------------------------------------------------------------------------------------
 #Categorical covariates
