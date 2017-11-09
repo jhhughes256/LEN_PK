@@ -299,5 +299,8 @@
   flagprep$FLAG[flagprep$ID == 168 & flagprep$OCC == 2 & flagprep$TAD == 24] <- 1
   flagprep$FLAG[flagprep$ID == 173 & flagprep$OCC == 2 & flagprep$TAD == 24] <- 1
 
+  # FIX BSA
+  flagprep$BSA <- 0.007184*flagprep$WT**0.425*flagprep$HT**0.725
+
   filename.out <- paste(output.dir,"nmprep_flagged.csv",sep="/")
   write.csv(flagprep, file=filename.out, quote=FALSE,row.names=FALSE)

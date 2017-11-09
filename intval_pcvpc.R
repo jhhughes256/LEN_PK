@@ -6,7 +6,7 @@
   graphics.off()
 
 # Set the working directory
-  master.dir <- "E:/Hughes/Data/PK/EXT_VAL"
+  master.dir <- "E:/Hughes/Data/PK/FLAG"
   setwd(master.dir)
 
 # Load required packages
@@ -36,19 +36,19 @@
 # -----------------------------------------------------------------------------
 # Read in data for plotting
 # Process the simulated *.fit files
-	runname1 <- "RUN001_BASE"
+	runname1 <- "RUN016_CL_CRCL2_FFM_VPC"
   # processSIMdata(paste(runname1,".ctl",sep=""))
-  SIM.data1 <- read.csv(paste(runname1, ".nm7/", runname1, ".fit.csv", sep = ""),
+  SIM.data1 <- read.csv(paste("COV15/", runname1, ".nm7/", runname1, ".fit.csv", sep = ""),
     stringsAsFactors = F, na.strings = ".")
   SIM.data1 <- SIM.data1[SIM.data1$MDV == 0, ]
 
-  runname2 <- "RUN002_LOPEZ"
+  runname2 <- "RUN029_LOPEZ"
   # processSIMdata(paste(runname2,".ctl",sep=""))
   SIM.data2 <- read.csv(paste(runname2, ".nm7/", runname2, ".fit.csv", sep = ""),
     stringsAsFactors = F, na.strings = ".")
   SIM.data2 <- SIM.data2[SIM.data2$MDV == 0, ]
 
-  runname3 <- "RUN003_CELGENE"
+  runname3 <- "RUN028_CELGENE"
   # processSIMdata(paste(runname3,".ctl",sep=""))
   SIM.data3 <- read.csv(paste(runname3, ".nm7/", runname3, ".fit.csv", sep = ""),
     stringsAsFactors = F, na.strings = ".")
@@ -58,14 +58,14 @@
   SIM.data3$IPRED <- exp(SIM.data3$IPRED)
 
 # Read in the original data
-  ORG.data <- read.csv("extval_10156.csv", stringsAsFactors = F, na.strings = ".")
+  ORG.data <- read.csv("nmprep_flagged.csv", stringsAsFactors = F, na.strings = ".")
 	names(ORG.data)[names(ORG.data) == "X.ID"] <- "ID"
-  ORG.data <- ORG.data[ORG.data$MDV == 0, ]
+  ORG.data <- ORG.data[ORG.data$MDV == 0 & ORG.data$FLAG == 0, ]
 
 # -----------------------------------------------------------------------------
 # Assign factors to covariates
 # Time binning
-  bin_cuts <- c(0.25, 0.75, 1.5, 2.5, 3.75, 5.5, 7, 25)
+  bin_cuts <- c(0.52, 1.02, 2.02, 3.02, 5.02, 8.02, 49)
   ORG.data$TADBIN <- cut2(ORG.data$TAD, cuts = bin_cuts, levels.mean = T)
   ORG.data$TADBIN <- as.numeric(paste(ORG.data$TADBIN))
   # with(ORG.data, table(TADBIN))
@@ -215,9 +215,10 @@
 	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S, group = MODEL), data = SIM.data.bystudy,
     fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
 
-	p <- p + scale_y_log10("Prediction Corrected\nConcentration (mg/L)\n", lim = c(-0.05, 0.25))
+	p <- p + scale_y_log10("Prediction Corrected\nConcentration (mg/L)\n",
+    lim = c(5e-5, 5), breaks = c(0.001, 0.01, 0.1, 1))
 	p <- p + scale_x_continuous("\nTime (hours)", breaks = 0:8*3)
   p <- p + facet_wrap(~MODEL, ncol = 3)
 	p
 
-  ggsave("extval_pcvpc3.png", width = 24, height = 16, units = c("cm"))
+  ggsave("intval_pcvpc2.png", width = 24, height = 16, units = c("cm"))

@@ -36,11 +36,16 @@
 # -----------------------------------------------------------------------------
 # Read in data for plotting
 # Process the simulated *.fit file.
-	runname <- "RUN016_CL_CRCL2_FFM_VPC"
+	runname <- "RUN023_CL_CRCL2_FFM_KTR_STUDY_VPC"
   # processSIMdata(paste(runname,".ctl",sep=""))
   SIM.data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
     stringsAsFactors = F, na.strings = ".")
   SIM.data <- SIM.data[SIM.data$MDV == 0, ]
+  if (runname == "RUN028_CELGENE") {
+    SIM.data$DV <- exp(SIM.data$DV)
+    SIM.data$PRED <- exp(SIM.data$PRED)
+    SIM.data$IPRED <- exp(SIM.data$IPRED)
+  }
 
 # Read in the original data
   ORG.data <- read.csv("nmprep_flagged.csv", stringsAsFactors = F, na.strings = ".")
@@ -164,4 +169,12 @@
 	p
 
 	ggsave(paste0(runname, ".nm7/PCVPC_poster.png"),
+	  width = 20, height = 16, units = c("cm"))
+
+  p + facet_wrap(~CRCLf)
+  ggsave(paste0(runname, ".nm7/PCVPC_byCRCL.png"),
+	  width = 20, height = 16, units = c("cm"))
+
+  p + facet_wrap(~STUDYf)
+  ggsave(paste0(runname, ".nm7/PCVPC_bySTUDY.png"),
 	  width = 20, height = 16, units = c("cm"))

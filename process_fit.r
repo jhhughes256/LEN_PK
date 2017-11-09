@@ -83,6 +83,16 @@
 
 	nmprep <- read.csv("E:/Hughes/Data/PK/FLAG/nmprep_flagged.csv")
 
+	# nmprep$STUDYf <- factor(nmprep$STUDY)
+	# levels(nmprep$STUDYf) <- paste("Study", levels(nmprep$STUDYf))
+	#
+	# p <- NULL
+	# p <- ggplot(data = nmprep)
+	# p <- p + geom_density(aes(x = CRCL2))
+	# p <- p + facet_wrap(~STUDYf)
+	# p
+	# to.png.sqr(p,"crcl_density")
+
 #Remove dose events & missing values
   fitdata <- subset(fitdata, MDV==0)
 	fitdata$HT[fitdata$HT==0&fitdata$GEND==1] <- 1.75
@@ -347,6 +357,23 @@ if (ncol(etadata)>1)  #more than 1 ETA is scatterplot matrix
   plotobj <- plotobj +  scale_y_continuous("distribution density")
   to.png(plotobj,"etascatter")
 }
+
+# ETA3
+plotobj <- NULL
+plotobj <- ggplot(data=etadata)
+plotobj <- plotobj + geom_density(aes(x=ETA3, y=..density..), colour="black")
+plotobj <- plotobj +  scale_x_continuous("ETA3", lim = c(-2, 2))
+plotobj <- plotobj +  scale_y_continuous("distribution density")
+plotobj
+to.png(plotobj,"ETA3_density")
+
+plotobj <- NULL
+plotobj <- ggplot(data=etadata)
+plotobj <- plotobj + geom_density(aes(x=exp(ETA3), y=..density..), colour="black")
+plotobj <- plotobj +  scale_x_continuous("exp(ETA3)", lim = c(0, 3.5))
+plotobj <- plotobj +  scale_y_continuous("distribution density")
+plotobj
+to.png(plotobj,"exp_ETA3_density")
 
 #--------------------------------------------------------------------------------------------------
 #Look at ETA versus covariate relationships
