@@ -17,7 +17,7 @@
   eta_bx <- (phi**par_bx-1)/par_bx
   
 # Apply Manly transform
-  par_man <- -18
+  par_man <- 0.5
   eta_man <- (phi*par_man-1)/par_man
   
 # Compare the distributions
