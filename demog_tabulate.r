@@ -95,3 +95,13 @@
   sum.fun.all(all.studies)
   with(all.studies, table(DXCATNUM))
   with(all.studies, table(DOSEMG))
+
+  maledata <- ldply(data[1:4], function(x) {
+    indata <- x[x$GEND == 1,]
+    out <- indata[,c("UID", "STUDY", "AGE", "WT", "HT")]
+  })
+
+  femaledata <- ldply(data[1:4], function(x) {
+    indata <- x[x$GEND == 0,]
+    out <- indata[,c("UID", "STUDY", "AGE", "WT", "HT")]
+  })

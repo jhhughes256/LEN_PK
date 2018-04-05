@@ -6,7 +6,7 @@
   graphics.off()
 
 # Set the working directory
-  master.dir <- "E:/Hughes/Data/PK/FLAG/COV15"
+  master.dir <- "E:/Hughes/Data/PK/FLAG"
   setwd(master.dir)
 
 # Load required packages
@@ -36,29 +36,40 @@
 # -----------------------------------------------------------------------------
 # Read in data for plotting
 # Process the simulated *.fit file.
-	runname <- "RUN023_CL_CRCL2_FFM_KTR_STUDY_VPC"
-  # processSIMdata(paste(runname,".ctl",sep=""))
+	runname <- "RUN004_ALL_HLOQ_VPC"
+  processSIMdata(paste(runname,".ctl",sep=""))
   SIM.data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
     stringsAsFactors = F, na.strings = ".")
   SIM.data <- SIM.data[SIM.data$MDV == 0, ]
-  if (runname == "RUN028_CELGENE") {
+  if (runname == "RUN028_CELGENE" | runname == "RUN022_CELGENE") {
     SIM.data$DV <- exp(SIM.data$DV)
     SIM.data$PRED <- exp(SIM.data$PRED)
     SIM.data$IPRED <- exp(SIM.data$IPRED)
   }
 
 # Read in the original data
+  # ORG.data <- read.csv("allnmprep_flagged.csv", stringsAsFactors = F, na.strings = ".")
   ORG.data <- read.csv("nmprep_flagged.csv", stringsAsFactors = F, na.strings = ".")
+  # ORG.data <- read.csv("nmprep_earlymdv_LOQ.csv", stringsAsFactors = F, na.strings = ".")
+  # ORG.data <- read.csv("nmprep_earlymdv_HLOQ.csv", stringsAsFactors = F, na.strings = ".")
+  # ORG.data <- read.csv("allnmprep_earlymdv_LOQ.csv", stringsAsFactors = F, na.strings = ".")
+  # ORG.data <- read.csv("allnmprep_earlymdv_HLOQ.csv", stringsAsFactors = F, na.strings = ".")
+
 	names(ORG.data)[names(ORG.data) == "X.ID"] <- "ID"
   ORG.data <- ORG.data[ORG.data$MDV == 0 & ORG.data$FLAG == 0, ]
+
+  SIM.data <- SIM.data[-(SIM.data$ID %in% 119:121), ]
+  ORG.data <- ORG.data[-(ORG.data$ID %in% 119:121), ]
+
 
 # -----------------------------------------------------------------------------
 # Assign factors to covariates
 # Time binning
-	bin_cuts <- c(0.52, 1.02, 2.02, 3.02, 5.02, 8.02, 49)
+  bin_cuts <- c(0.52, 1.02, 2.02, 3.02, 5.02, 9.02, 49)
+	# bin_cuts <- c(0.52, 1.02, 1.52, 2.02, 2.52, 3.02, 4.02, 6.02, 8.02, 49)
   ORG.data$TADBIN <- cut2(ORG.data$TAD, cuts = bin_cuts, levels.mean = T)
   ORG.data$TADBIN <- as.numeric(paste(ORG.data$TADBIN))
-	# with(ORG.data, table(TADBIN))
+	with(ORG.data, table(TADBIN))
 
   SIM.data$TADBIN <- cut2(SIM.data$TAD, cuts = bin_cuts, levels.mean = T)
   SIM.data$TADBIN <- as.numeric(paste(SIM.data$TADBIN))
@@ -177,4 +188,8 @@
 
   p + facet_wrap(~STUDYf)
   ggsave(paste0(runname, ".nm7/PCVPC_bySTUDY.png"),
+	  width = 20, height = 16, units = c("cm"))
+
+  p + facet_wrap(~DOSEf)
+  ggsave(paste0(runname, ".nm7/PCVPC_byDOSE.png"),
 	  width = 20, height = 16, units = c("cm"))

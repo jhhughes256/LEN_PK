@@ -37,18 +37,32 @@
 
 ### ------------------------------------- Clinical Data ------------------------------------- ###
 ### Updated from datacheck_front.r 			#reproducible
-  file06003 <- "RAW_Clinical/datacheck_newclin_06003_Output/06003_finaldata.csv"
+  file06003 <- "RAW_Clinical/datacheck_clin_06003_Output/06003_finaldata.csv"
 	file05115 <- "RAW_Clinical/datacheck_clin_05115_Output/05115_finaldata.csv"
 	file08056 <- "RAW_Clinical/datacheck_clin_08056_Output/08056_finaldata.csv"
 	file10016 <- "RAW_Clinical/datacheck_clin_10016_Output/10016_finaldata.csv"
+  file10156 <- "PK/EXT_VAL/extval_10156.csv"
   data06003 <- read.csv(file06003, stringsAsFactors=F)
-  data06003$DVNORM <- data06003$DV/data06003$DOSEMG
 	data05115 <- read.csv(file05115, stringsAsFactors=F)
 	data08056 <- read.csv(file08056, stringsAsFactors=F)
-	data10016 <- read.csv(file10016, stringsAsFactors=F)
+  data10016 <- read.csv(file10016, stringsAsFactors=F)
+	data10156 <- read.csv(file10156, stringsAsFactors=F)
+
+# Fix 10156 so that is binds with other data
+  data10156$X.ID <- data10156$X.ID + 182
+  data10156$XSAMP <- 0
+  data10156$GRP <- data10156$GRP + 8
+  data10156$AMT <- as.numeric(data10156$AMT)
+  data10156$DV <- as.numeric(data10156$DV)
+  data10156$DOSELVL <- 4
+  data10156$RATE <- 0
+  names(data10156)[18] <- "DXCATNUM"
+  data10156$RACE <- 1
+  data10156$RACE2 <- 1
+  sub10156 <- data10156[-c(6, 22:23, 25, 27:29)]
 
 #FINAL datacheck and process for nmprep
-  datanew <- rbind(data06003,data05115,data08056,data10016)
+  datanew <- rbind(data06003,data05115,data08056,data10016,sub10156)
 	names(datanew)
   str(datanew)
   npat <- length(unique(datanew$X.ID))
@@ -71,6 +85,7 @@
 	dose.levels <- rep(0,length(datanew$DOSELVL))
 	dose.levels[datanew$DOSEMG==2.5&datanew$STUDY==8056] <- 1
 	dose.levels[datanew$DOSEMG==5&datanew$STUDY==8056] <- 4
+  dose.levels[datanew$STUDY==10156] <- 4
 	dose.levels[datanew$DOSEMG==7.5&datanew$STUDY==8056] <- 5
 	dose.levels[datanew$DOSEMG==15] <- 6
 	dose.levels[datanew$DOSEMG==20] <- 7
@@ -101,7 +116,6 @@
 	datanew$OCC[datanew$DAY>=4] <- 2
 	datanew$OCC[datanew$DAY>=8] <- 3
 	datanew$OCC[datanew$DAY>=15] <- 4
-  datanew$OCC[datanew$DAY>=22] <- 5
 
   fsex <- ifelse(datanew$GEND==1,1.23,1.04)
   datanew$CRCL <- (140-datanew$AGE)*datanew$WT*fsex/datanew$SECR  #CG w/ WT=ABW
@@ -125,6 +139,8 @@
   datanew$BLQ <- 0
   datanew$BLQ[datanew$MDV == 1 & round(datanew$TAD) == 0] <- 1
   datanew$BLQ[datanew$MDV == 1 & round(datanew$TAD) >= 20] <- 1
+  datanew$BLQ[datanew$MDV == 0 & datanew$DV < 0.00025926] <- 1
+  datanew$MDV[datanew$MDV == 0 & datanew$DV < 0.00025926] <- 1
 
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
@@ -202,7 +218,7 @@
 
 ### ------------------------------------- Covariate Data ------------------------------------- ###
 ###  			#reproducible
-  file06003 <- "RAW_Clinical/datacheck_newclin_06003_Output/06003_covdata.csv"
+  file06003 <- "RAW_Clinical/datacheck_clin_06003_Output/06003_covdata.csv"
 	file05115 <- "RAW_Clinical/datacheck_clin_05115_Output/05115_covdata.csv"
 	file08056 <- "RAW_Clinical/datacheck_clin_08056_Output/08056_covdata.csv"
 	file10016 <- "RAW_Clinical/datacheck_clin_10016_Output/10016_covdata.csv"
@@ -228,8 +244,8 @@
   write.csv(datacov, file=filename.out, quote=FALSE,row.names=FALSE)
 
 #Prepare nm file
-##ID TIME TAD AMT EVID OCC DV CMT MDV ADDL II STUDY GRP DOSELVL AGE SEX WT HT SECR IBW CRCL CRCL2 CRCL3 CRCL4 CRCL5 RACE DXCATNUM BLQ BSA BMI FFM FLAG
-  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,25,26,2,4,5,15,16,17,18,24,31,30,32,33,34,35,23,21,36,19,20)]
+#ID TIME TAD AMT EVID OCC DV MDV ADDL II STUDY GRP DOSELVL AGE GEND WT HT SECR IBW CRCL CRCL2 CRCL3 CRCL4 CRCL5 RACE DXCAT LOQ BSA BMI
+  nmprep <- datanew[c(1,9,10,7,8,29,12,28,13,26,27,2,4,5,15,16,17,18,24,31,30,32,33,34,35,23,21,36,19,20)]
   nmprep <- rename(nmprep, c(GEND = "SEX"))
 
 	nmprep$WT[is.na(nmprep$WT)] <- 70
@@ -300,7 +316,9 @@
   flagprep$FLAG[flagprep$ID == 166 & flagprep$OCC == 1 & flagprep$TAD == 24] <- 1
   flagprep$FLAG[flagprep$ID == 168 & flagprep$OCC == 2 & flagprep$TAD == 24] <- 1
   flagprep$FLAG[flagprep$ID == 173 & flagprep$OCC == 2 & flagprep$TAD == 24] <- 1
-  names(flagprep)[1] <- "#ID"
 
-  filename.out <- paste(output.dir,"nmprep_flagged.csv",sep="/")
+  # FIX BSA
+  flagprep$BSA <- 0.007184*flagprep$WT**0.425*flagprep$HT**0.725
+
+  filename.out <- paste(output.dir,"allnmprep_flagged_BLQ.csv",sep="/")
   write.csv(flagprep, file=filename.out, quote=FALSE,row.names=FALSE)

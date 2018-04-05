@@ -113,6 +113,10 @@
 	fitdata$DOSELVLf <- factor(fitdata$DOSELVL)
 	levels(fitdata$DOSELVLf) <- paste(c(2.5,2.5,2.5,5,7.5,15,20,25,30,35,50,75),
 																		c("mg QD","mg-5mg QD","mg-7.5mg QD",rep("mg QD",9)),sep="")
+	fitdata$DOSEMG <- factor(fitdata$DOSELVL)
+	levels(fitdata$DOSEMG) <- c(rep(2.5, 3), 5, 7.5, 15, 20, 25, 30, 35, 50, 75)
+	fitdata$DOSEMG <- as.numeric(as.character(fitdata$DOSEMG))
+
 	fitdata$GENDf <- factor(fitdata$GEND)
 	levels(fitdata$GENDf) <- c("F","M")
 
@@ -389,7 +393,7 @@ to.png(plotobj,"exp_ETA3_density")
 covcat.cols <- c("STUDYf","DOSELVLf","GENDf","RACEf","DXCATf","OCCf")
 
 #Get the columns with continuous covariates
-covcont.cols <- c("AGE","WT","HT","SECR","CRCL2","IBW")
+covcont.cols <- c("DOSEMG", "AGE","WT","HT","SECR","CRCL2","IBW")
 
 #-------------------------------------------------------------------------------------------------------
 #Categorical covariates

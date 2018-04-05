@@ -123,6 +123,8 @@
   datanew$BLQ <- 0
   datanew$BLQ[datanew$MDV == 1 & round(datanew$TAD) == 0] <- 1
   datanew$BLQ[datanew$MDV == 1 & round(datanew$TAD) >= 20] <- 1
+  datanew$BLQ[datanew$MDV == 0 & datanew$DV < 0.00025926] <- 1
+  datanew$MDV[datanew$MDV == 0 & datanew$DV < 0.00025926] <- 1
 
 #Create summary tables
 	datanew$DOSELVL <- dose.levels
@@ -302,5 +304,5 @@
   # FIX BSA
   flagprep$BSA <- 0.007184*flagprep$WT**0.425*flagprep$HT**0.725
 
-  filename.out <- paste(output.dir,"nmprep_flagged.csv",sep="/")
+  filename.out <- paste(output.dir,"nmprep_flagged_BLQ.csv",sep="/")
   write.csv(flagprep, file=filename.out, quote=FALSE,row.names=FALSE)

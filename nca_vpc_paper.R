@@ -14,6 +14,8 @@
   library(Hmisc)
 	library(doBy)
 	library(plyr)
+  library(reshape2)
+  library(cowplot)
 
 # Source functions
 	source("E:/Hughes/functions_utility.r")
@@ -146,10 +148,10 @@
   NCAdata.SIM$AUC0t <- trim_extreme(NCAdata.SIM$AUC0t)
   NCAdata.SIM$CMAX <- trim_extreme(NCAdata.SIM$CMAX)
 
-  NCAdata.SIM2 <- cbind(SOURCE = "Simulated", NCAdata.SIM)
+  NCAdata.SIM2 <- cbind(SOURCE = "Sim", NCAdata.SIM)
   names(NCAdata.SIM2)
 
-  NCAdata.ORG2 <- cbind(SOURCE = "Observed", SIM = 0, NCAdata.ORG)
+  NCAdata.ORG2 <- cbind(SOURCE = "Obs", SIM = 0, NCAdata.ORG)
   names(NCAdata.ORG2)
 
   NCAdata.ALL <- rbind(NCAdata.SIM2, NCAdata.ORG2)
@@ -163,49 +165,115 @@
 	NCAdata.ALL$CRCLf <- factor(ifelse(NCAdata.ALL$CRCL2 <= 60, 1, 2),
 	  labels = c("CrCl <60mL/min", "CrCl >60mL/min"))
 
-  logscaleticks2 <- sort(c(
+  logscaleticks2 <- 10^sort(c(
     seq(from = -10, to = 10, by = 1),
     seq(from = log10(0.000003), to = log10(300000), by = 1)
   ))
 
+  NCAdata.MELT <- melt(NCAdata.ALL, measure.vars = c("AUC0t", "CMAX", "TMAX"))
+
+  sumstat.ALL <- ddply(NCAdata.ALL, .(SOURCE), function(x) {
+    data.frame(
+      AUCy05 = quantile(x$AUC0t, 0.05, na.rm = T),
+      AUCy25 = quantile(x$AUC0t, 0.25, na.rm = T),
+      AUCy50 = median(x$AUC0t, na.rm = T),
+      AUCy75 = quantile(x$AUC0t, 0.75, na.rm = T),
+      AUCy95 = quantile(x$AUC0t, 0.95, na.rm = T),
+      CMAXy05 = quantile(x$CMAX, 0.05, na.rm = T),
+      CMAXy25 = quantile(x$CMAX, 0.25, na.rm = T),
+      CMAXy50 = median(x$CMAX, na.rm = T),
+      CMAXy75 = quantile(x$CMAX, 0.75, na.rm = T),
+      CMAXy95 = quantile(x$CMAX, 0.95, na.rm = T),
+      TMAXy05 = quantile(x$TMAX, 0.05, na.rm = T),
+      TMAXy25 = quantile(x$TMAX, 0.25, na.rm = T),
+      TMAXy50 = median(x$TMAX, na.rm = T),
+      TMAXy75 = quantile(x$TMAX, 0.75, na.rm = T),
+      TMAXy95 = quantile(x$TMAX, 0.95, na.rm = T)
+    )
+  })
+
 # Plot AUC
-  p <- NULL
-  p <- ggplot(data = NCAdata.ALL)
-  p <- p + geom_boxplot(aes(x = SOURCE, y = AUC0t), notch = F)
-  # p <- p + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
+  p1 <- NULL
+  p1 <- ggplot(data = NCAdata.ALL)
+  p1 <- p1 + geom_boxplot(aes(x = SOURCE, y = AUC0t), notch = F)
+  # p1 <- p1 + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
   #    fun.data = boxplot.give.n, geom = "text", size = 6, colour = "red")
-  p <- p + scale_x_discrete("Data Source")
-  p <- p + scale_y_log10("AUC (ng/ml * h)")  #, lim = c(0,35)
-  p <- p + ggtitle("VPC of lenalidomide exposure by AUC0-24\n")
-  # p <- p + facet_wrap(~STUDYf, ncol = 2, scales = "free_y")
-  p
-  ggsave(paste0(runname, ".nm7/auc_ncavpc.png"),
-    width = 32, height = 42, units = c("cm"))
+  p1 <- p1 + scale_x_discrete("\n")
+  p1 <- p1 + scale_y_log10("AUC (ng/ml * h)\n", breaks = logscaleticks2)  #, lim = c(0,35)
 
 # Plot Cmax
-  p <- NULL
-  p <- ggplot(data = NCAdata.ALL)
-  p <- p + geom_boxplot(aes(x = SOURCE, y = CMAX), notch = F)
-  # p <- p + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
+  p2 <- NULL
+  p2 <- ggplot(data = NCAdata.ALL)
+  p2 <- p2 + geom_boxplot(aes(x = SOURCE, y = CMAX), notch = F)
+  # p2 <- p2 + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
   #    fun.data = boxplot.give.n, geom = "text", size = 6, colour = "red")
-  p <- p + scale_x_discrete("Data Source")
-  p <- p + scale_y_log10("AUC (ng/ml * h)")  #, lim = c(0,35)
-  p <- p + ggtitle("VPC of lenalidomide Cmax\n")
-  # p <- p + facet_wrap(~STUDYf, ncol = 2, scales = "free_y")
-  p
-  # ggsave(paste0(runname, ".nm7/cmax_ncavpc_STUDY.png"),
-  #   width = 32, height = 42, units = c("cm"))
+  p2 <- p2 + scale_x_discrete("\nData Source")
+  p2 <- p2 + scale_y_log10("Cmax (ng/ml)\n", breaks = logscaleticks2)  #, lim = c(0,35)
 
 # Plot Tmax
-  p <- NULL
-  p <- ggplot(data = NCAdata.ALL)
-  p <- p + geom_boxplot(aes(x = SOURCE, y = TMAX), notch = F)
-  # p <- p + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
+  p3 <- NULL
+  p3 <- ggplot(data = NCAdata.ALL)
+  p3 <- p3 + geom_boxplot(aes(x = SOURCE, y = TMAX), notch = F)
+  # p3 <- p3 + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
   #    fun.data = boxplot.give.n, geom = "text", size = 6, colour = "red")
-  p <- p + scale_x_discrete("Data Source")
-  p <- p + scale_y_log10("AUC (ng/ml * h)")  #, lim = c(0,35)
-  p <- p + ggtitle("VPC of lenalidomide Cmax\n")
-  p <- p + facet_wrap(~STUDYf, ncol = 2, scales = "free_y")
-  # p
-  ggsave(paste0(runname, ".nm7/tmax_ncavpc_STUDY.png"),
-    width = 32, height = 42, units = c("cm"))
+  p3 <- p3 + scale_x_discrete("\n")
+  p3 <- p3 + scale_y_log10("tmax (ng/ml * h)\n", breaks = logscaleticks2)  #, lim = c(0,35)
+
+  p4 <- plot_grid(p1, p2, p3, nrow = 1)
+  p4
+  ggsave(paste0(runname, ".nm7/ncavpc_ALL.png"),
+    width = 32, height = 21, units = c("cm"))
+
+# Identity boxplots
+  p1 <- NULL
+  p1 <- ggplot(data = sumstat.ALL)
+  p1 <- p1 + geom_boxplot(aes(x = SOURCE, ymin = AUCy05, lower = AUCy25, middle = AUCy50, upper = AUCy75, ymax = AUCy95),
+    notch = F, stat = "identity")
+  # p1 <- p1 + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
+  #    fun.data = boxplot.give.n, geom = "text", size = 6, colour = "red")
+  p1 <- p1 + scale_x_discrete("\n")
+  p1 <- p1 + scale_y_log10("AUC (ng/ml * h)", breaks = logscaleticks2)  #, lim = c(0,35)
+
+  # Plot Cmax
+  p2 <- NULL
+  p2 <- ggplot(data = sumstat.ALL)
+  p2 <- p2 + geom_boxplot(aes(x = SOURCE, ymin = CMAXy05, lower = CMAXy25, middle = CMAXy50, upper = CMAXy75, ymax = CMAXy95),
+    notch = F, stat = "identity")
+  # p2 <- p2 + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
+  #    fun.data = boxplot.give.n, geom = "text", size = 6, colour = "red")
+  p2 <- p2 + scale_x_discrete("\nData Source          ")
+  p2 <- p2 + scale_y_log10("Cmax (ng/ml)", breaks = logscaleticks2[-0.03])  #, lim = c(0,35)
+
+  # Plot Tmax
+  p3 <- NULL
+  p3 <- ggplot(data = sumstat.ALL)
+  p3 <- p3 + geom_boxplot(aes(x = SOURCE, ymin = TMAXy05, lower = TMAXy25, middle = TMAXy50, upper = TMAXy75, ymax = TMAXy95),
+    notch = F, stat = "identity")
+  # p3 <- p3 + stat_summary(aes_string(x = covname, y = "CL"), data = statdata,
+  #    fun.data = boxplot.give.n, geom = "text", size = 6, colour = "red")
+  p3 <- p3 + scale_x_discrete("\n")
+  p3 <- p3 + scale_y_log10("tmax (hours)", breaks = logscaleticks2)  #, lim = c(0,35)
+
+  p4 <- plot_grid(p1, p2, p3, nrow = 1, rel_widths = c(1.01, 1.08, 0.899),
+    labels = c("A", "B", "C"), label_fontface = "plain")
+  p4
+  ggsave(paste0(runname, ".nm7/ncavpc_ALL_identity.png"),
+    width = 17.4, height = 15.7, units = c("cm"))
+  ggsave(paste0(runname, ".nm7/ncavpc_ALL_identity.eps"),
+    dpi = 1200, device = cairo_ps, fallback_resolution = 1200,
+    width = 17.4, height = 15.7, units = c("cm"))
+
+
+# Plot Predicted vs. Observed Metrics
+  NCAdata.SIM3 <- melt(NCAdata.SIM2, measure.vars = c("AUC0t", "CMAX", "TMAX"), value.name = "METRIC.SIM")
+  NCAdata.OBS3 <- melt(NCAdata.ORG2, measure.vars = c("AUC0t", "CMAX", "TMAX"), value.name = "METRIC.OBS")
+
+  NCAdata.MELT2 <- ddply(NCAdata.SIM3, .(SIM), function(x) {
+    x$METRIC.OBS <- NCAdata.OBS3$METRIC.OBS
+    x
+  })
+
+  p5 <- NULL
+  p5 <- ggplot(data = NCAdata.MELT2)
+  p5 <- p5 + geom_point(aes(x = METRIC.OBS, y = METRIC.SIM), alpha = 0.5)
+  p5

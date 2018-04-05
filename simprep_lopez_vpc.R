@@ -25,7 +25,9 @@
     axis.title.x=element_text(size = 18, vjust = 0),
     axis.title.y=element_text(size = 18, vjust = 0, angle = 90),
     strip.text.x=element_text(size = 16),
-    strip.text.y=element_text(size = 16, angle = 90))
+    strip.text.y=element_text(size = 16, angle = 90),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 12))
 
 # Confidence intervals - from function utility
   CI90lo <- function(x) quantile(x, probs = 0.05)
@@ -97,7 +99,7 @@
   # base_data_bysim <- ddply(base_data, .(SIM, TIMEBIN), function(x) {
   base_data_bysim <- ddply(base_data, .(STUDY, TIMEBIN), function(x) {
     data.frame(
-      Model = "Hughes et. al",
+      Model = "Hughes et al.",
       medianS = median(x$DV),
       loCI90S = CI90lo(x$DV),
       hiCI90S = CI90hi(x$DV)
@@ -107,7 +109,7 @@
   # lopez_data_bysim <- ddply(lopez_data, .(SIM, TIMEBIN), function(x) {
   lopez_data_bysim <- ddply(lopez_data, .(STUDY, TIMEBIN), function(x) {
     data.frame(
-      Model = "Guglieri-Lopez et. al",
+      Model = "Guglieri-Lopez et al.",
       medianS = median(x$DV),
       loCI90S = CI90lo(x$DV),
       hiCI90S = CI90hi(x$DV)
@@ -117,7 +119,7 @@
   # celgene_data_bysim <- ddply(celgene_data, .(SIM, TIMEBIN), function(x) {
   celgene_data_bysim <- ddply(celgene_data, .(STUDY, TIMEBIN), function(x) {
     data.frame(
-      Model = "Connarn et. al",
+      Model = "Connarn et al.",
       medianS = median(x$DV),
       loCI90S = CI90lo(x$DV),
       hiCI90S = CI90hi(x$DV)
@@ -168,12 +170,14 @@
   p2 <- p2 + scale_fill_manual(values = c("red", "blue", "green4"))
   p2 <- p2 + scale_y_log10("Lenalidomide Concentration (mg/L)\n",
     breaks = c(0.001, 0.01, 0.1, 1))
-  p2 <- p2 + scale_x_continuous("\nTime (hours)", breaks = 0:12*2)
+  p2 <- p2 + scale_x_continuous("\nTime (hours)", breaks = 0:6*4)
   p2 <- p2 + coord_cartesian(ylim = c(0.001, 1))
   p2
 
   #normal scale- non-facetted
-  ggsave("Uppsala_VPC.png", width=20, height=16, units=c("cm"))
+  ggsave("Uppsala_VPC.png", width=17.4, height=14, units=c("cm"))
+  ggsave("Uppsala_VPC.eps", width=17.4, height=14, units=c("cm"),
+    dpi = 1200, device = cairo_ps, fallback_resolution = 1200)
 
   # p <- NULL
   #

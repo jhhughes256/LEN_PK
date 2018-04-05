@@ -36,14 +36,14 @@
 # -----------------------------------------------------------------------------
 # Read in data for plotting
 # Process the simulated *.fit file.
-	runname <- "RUN016_CL_CRCL2_FFM_VPC"
-  # processSIMdata(paste(runname,".ctl",sep=""))
+	runname <- "RUN038_CL_CRCL2_FFM_CATGT150_2_VPC"
+  processSIMdata(paste(runname,".ctl",sep=""))
   SIM.data <- read.csv(paste(runname, ".nm7/", runname, ".fit.csv", sep = ""),
     stringsAsFactors = F, na.strings = ".")
   SIM.data <- SIM.data[SIM.data$MDV == 0, ]
 
 # Read in the original data
-  ORG.data <- read.csv("nmprep_flagged.csv", stringsAsFactors = F, na.strings = ".")
+  ORG.data <- read.csv("allnmprep_flagged.csv", stringsAsFactors = F, na.strings = ".")
 	names(ORG.data)[names(ORG.data) == "X.ID"] <- "ID"
   ORG.data <- ORG.data[ORG.data$MDV == 0 & ORG.data$FLAG == 0, ]
 
@@ -68,6 +68,12 @@
 	  labels = c("Dose <10mg", "Dose >10mg"))
 	ORG.data$CRCLf <- factor(ifelse(ORG.data$CRCL2 <= 60, 1, 2),
 	  labels = c("CrCl <60mL/min", "CrCl >60mL/min"))
+  ORG.data$CRCL2f <- 1
+  ORG.data$CRCL2f[ORG.data$CRCL2 >= 60] <- 2
+  ORG.data$CRCL2f[ORG.data$CRCL2 >= 90] <- 3
+  ORG.data$CRCL2f[ORG.data$CRCL2 > 120] <- 4
+  ORG.data$CRCL2f <- factor(ORG.data$CRCL2f,
+    labels = c("CrCl <60mL/min", "CrCl 60-90mL/min", "CrCl 90-120mL/min", "CrCl >120mL/min"))
 
 	SIM.data$IDf <- as.factor(SIM.data$ID)
 	SIM.data$RACEf <- factor(SIM.data$RACE, labels = c("White", "Other"))
@@ -78,6 +84,12 @@
 	  labels = c("Dose <10mg", "Dose >10mg"))
 	SIM.data$CRCLf <- factor(ifelse(SIM.data$CRCL2 <= 60, 1, 2),
 	  labels = c("CrCl <60mL/min", "CrCl >60mL/min"))
+  SIM.data$CRCL2f <- 1
+  SIM.data$CRCL2f[SIM.data$CRCL2 >= 60] <- 2
+  SIM.data$CRCL2f[SIM.data$CRCL2 >= 90] <- 3
+  SIM.data$CRCL2f[SIM.data$CRCL2 > 120] <- 4
+  SIM.data$CRCL2f <- factor(SIM.data$CRCL2f,
+    labels = c("CrCl <60mL/min", "CrCl 60-90mL/min", "CrCl 90-120mL/min", "CrCl >120mL/min"))
 
 # -----------------------------------------------------------------------------
 # Create pcVPC using Xpose method
@@ -131,3 +143,7 @@
 
   ggsave(paste0(runname, ".nm7/VPC_poster.png"),
 	  width = 20, height = 16, units = c("cm"))
+
+  p + facet_wrap(~CRCL2f)
+  ggsave(paste0(runname, ".nm7/VPC_byCRCL.png"),
+    width = 20, height = 16, units = c("cm"))
