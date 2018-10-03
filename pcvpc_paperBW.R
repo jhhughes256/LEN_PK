@@ -164,14 +164,14 @@
   SIM.data3$MODEL <- 3
   SIM.data <- rbind(SIM.data1, SIM.data2, SIM.data3)
   SIM.data$MODEL <- factor(SIM.data$MODEL)
-  levels(SIM.data$MODEL) <- c("Hughes et al.", "Connarn et al.", "Guglieri-Lopez et al.")
+  levels(SIM.data$MODEL) <- c("Present Model", "Connarn et al. (2017)", "Guglieri-Lopez et al. (2017)")
 
   ORG.data1$MODEL <- 1
   ORG.data2$MODEL <- 2
   ORG.data3$MODEL <- 3
   ORG.data <- rbind(ORG.data1, ORG.data2, ORG.data3)
   ORG.data$MODEL <- factor(ORG.data$MODEL)
-  levels(ORG.data$MODEL) <- c("Hughes et al.", "Connarn et al.", "Guglieri-Lopez et al.")
+  levels(ORG.data$MODEL) <- c("Present Model", "Connarn et al. (2017)", "Guglieri-Lopez et al. (2017)")
 
 # -----------------------------------------------------------------------------
 # Create pcVPC using Xpose method
@@ -196,35 +196,37 @@
 	p <- ggplot(data = ORG.data)
 	# p <- p + ggtitle(titletext)
 
-  p <- p + geom_point(aes(x = TADBIN, y = pcY, group = MODEL), colour = "blue", shape = 1)
-  p <- p + stat_summary(aes(x = TADBIN, y = pcY, group = MODEL), fun.y = median,
-    geom = "line", colour = "red", size = 1)
-  p <- p + stat_summary(aes(x = TADBIN, y = pcY, group = MODEL), fun.y = CI90lo,
-    geom = "line", colour = "red", linetype = "dashed", size = 1)
-  p <- p + stat_summary(aes(x = TADBIN, y = pcY, group = MODEL), fun.y = CI90hi,
-    geom = "line", colour = "red", linetype = "dashed", size = 1)
+  p <- p + stat_summary(aes(x = TADBIN, y = medianS, group = MODEL), data = SIM.data.bystudy,
+    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "grey")
 
-	p <- p + stat_summary(aes(x = TADBIN, y = medianS, group = MODEL), data = SIM.data.bystudy,
-    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", alpha = 0.3, fill = "red")
+
+  p <- p + stat_summary(aes(x = TADBIN, y = loCI90S, group = MODEL), data = SIM.data.bystudy,
+    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "grey")
+  p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S, group = MODEL), data = SIM.data.bystudy,
+    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "grey")
+
+  p <- p + geom_point(aes(x = TADBIN, y = pcY, group = MODEL), colour = "#999999", shape = 1)
+
   p <- p + stat_summary(aes(x = TADBIN, y = medianS, group = MODEL), data = SIM.data.bystudy,
     fun.y = median, geom = "line", colour = "black", size = 1)
+  p <- p + stat_summary(aes(x = TADBIN, y = pcY, group = MODEL), fun.y = median,
+    geom = "line", colour = "grey40", size = 1)
+  p <- p + stat_summary(aes(x = TADBIN, y = pcY, group = MODEL), fun.y = CI90lo,
+    geom = "line", colour = "grey40", linetype = "dashed", size = 1)
+  p <- p + stat_summary(aes(x = TADBIN, y = pcY, group = MODEL), fun.y = CI90hi,
+    geom = "line", colour = "grey40", linetype = "dashed", size = 1)
 
-	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S, group = MODEL), data = SIM.data.bystudy,
-    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", alpha = 0.3, fill = "blue")
 	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S, group = MODEL), data = SIM.data.bystudy,
     fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
-
-	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S, group = MODEL), data = SIM.data.bystudy,
-    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", alpha = 0.3, fill = "blue")
 	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S, group = MODEL), data = SIM.data.bystudy,
     fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
 
 	p <- p + scale_y_log10("Prediction Corrected\nConcentration (mg/L)\n", labels = comma)
 	p <- p + scale_x_continuous("\nTime (hours)", breaks = 0:8*3)
-  p <- p + coord_cartesian(ylim = c(0.00001, 100))
+  p <- p + coord_cartesian(ylim = c(0.00001, 100),)
   p <- p + facet_wrap(~MODEL, nrow = 3)
 	p
 
-  ggsave("pcvpc_paper.png", width = 17.4, height = 23.4, units = c("cm"))
-  ggsave("pcvpc_paper.eps", width = 17.4, height = 23.4, units = c("cm"),
+  ggsave("pcvpc_paperBW.png", width = 17.4, height = 23.4, units = c("cm"))
+  ggsave("pcvpc_paperBW.eps", width = 17.4, height = 23.4, units = c("cm"),
     dpi = 1200, device = cairo_ps, fallback_resolution = 1200)

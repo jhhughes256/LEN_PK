@@ -60,6 +60,11 @@
     stringsAsFactors = F, na.strings = ".")
   SIM.data3 <- SIM.data3[SIM.data3$MDV == 0, ]
 
+  runname4 <- "RUN043_DAHUT"
+  processSIMdata(paste(runname4,".ctl",sep=""))
+  SIM.data4 <- read.csv(paste(runname4, ".nm7/", runname4, ".fit.csv", sep = ""),
+    stringsAsFactors = F, na.strings = ".")
+  SIM.data4 <- SIM.data4[SIM.data4$MDV == 0, ]
 
 # Read in the original data
   ORG.data <- read.csv("nmprep_flagged.csv", stringsAsFactors = F, na.strings = ".")
@@ -80,6 +85,8 @@
   SIM.data2$TADBIN <- as.numeric(paste(SIM.data2$TADBIN))
   SIM.data3$TADBIN <- cut2(SIM.data3$TAD, cuts = bin_cuts, levels.mean = T)
   SIM.data3$TADBIN <- as.numeric(paste(SIM.data3$TADBIN))
+  SIM.data4$TADBIN <- cut2(SIM.data4$TAD, cuts = bin_cuts, levels.mean = T)
+  SIM.data4$TADBIN <- as.numeric(paste(SIM.data4$TADBIN))
 
 # Covariates
 	ORG.data$IDf <- as.factor(ORG.data$ID)
@@ -90,14 +97,18 @@
   SIM.data1$IDf <- as.factor(SIM.data1$ID)
   SIM.data2$IDf <- as.factor(SIM.data2$ID)
 	SIM.data3$IDf <- as.factor(SIM.data3$ID)
+	SIM.data4$IDf <- as.factor(SIM.data4$ID)
   SIM.data1$SEXf <- factor(SIM.data1$SEX, labels = c("F", "M"))
   SIM.data2$SEXf <- factor(SIM.data2$SEX, labels = c("F", "M"))
 	SIM.data3$SEXf <- factor(SIM.data3$SEX, labels = c("F", "M"))
+	SIM.data4$SEXf <- factor(SIM.data4$SEX, labels = c("F", "M"))
   SIM.data1$CRCLf <- factor(ifelse(SIM.data1$CRCL2 <= 60, 1, 2),
     labels = c("CrCl <60mL/min", "CrCl >60mL/min"))
   SIM.data2$CRCLf <- factor(ifelse(SIM.data2$CRCL2 <= 60, 1, 2),
     labels = c("CrCl <60mL/min", "CrCl >60mL/min"))
 	SIM.data3$CRCLf <- factor(ifelse(SIM.data3$CRCL2 <= 60, 1, 2),
+	  labels = c("CrCl <60mL/min", "CrCl >60mL/min"))
+	SIM.data4$CRCLf <- factor(ifelse(SIM.data4$CRCL2 <= 60, 1, 2),
 	  labels = c("CrCl <60mL/min", "CrCl >60mL/min"))
 
 # -----------------------------------------------------------------------------
@@ -114,6 +125,8 @@
   SIM.data2BIN <- summaryBy(PRED ~ TADBIN, SIM.data2, FUN = median, na.rm = T)
 	SIM.data3$PRED <- as.numeric(SIM.data3$PRED)
 	SIM.data3BIN <- summaryBy(PRED ~ TADBIN, SIM.data3, FUN = median, na.rm = T)
+	SIM.data4$PRED <- as.numeric(SIM.data4$PRED)
+	SIM.data4BIN <- summaryBy(PRED ~ TADBIN, SIM.data4, FUN = median, na.rm = T)
 
 # Merge median PREDs into simulated dataset matching for their TIMEBIN
 	SIM.data1 <- merge(SIM.data1, SIM.data1BIN, by = c("TADBIN"), all = T)
@@ -137,10 +150,18 @@
 	ORG.data3 <- ORG.data[with(ORG.data,
 		order(ORG.data$ID, ORG.data$TAD, ORG.data$TADBIN)), ]
 
+  SIM.data4 <- merge(SIM.data4, SIM.data4BIN, by = c("TADBIN"), all = T)
+  names(SIM.data4)[names(SIM.data4) == "PRED.median"] <- "PREDMED"
+	SIM.data4 <- SIM.data4[with(SIM.data4,
+		order(SIM.data4$SIM, SIM.data4$ID, SIM.data4$TAD, SIM.data4$TADBIN)), ]
+	ORG.data4 <- ORG.data[with(ORG.data,
+		order(ORG.data$ID, ORG.data$TAD, ORG.data$TADBIN)), ]
+
 # Subset for one simulation of the same length of the original dataset
   SIM.data1ONE <- SIM.data1[SIM.data1$SIM == 1, ]
   SIM.data2ONE <- SIM.data2[SIM.data2$SIM == 1, ]
 	SIM.data3ONE <- SIM.data3[SIM.data3$SIM == 1, ]
+	SIM.data4ONE <- SIM.data4[SIM.data4$SIM == 1, ]
 
 # Add median PRED for each TIMEBIN to the orignal dataset
 	ORG.data1$PREDMED <- SIM.data1ONE$PREDMED
@@ -149,6 +170,8 @@
   ORG.data2$PRED <- SIM.data2ONE$PRED
   ORG.data3$PREDMED <- SIM.data3ONE$PREDMED
   ORG.data3$PRED <- SIM.data3ONE$PRED
+  ORG.data4$PREDMED <- SIM.data4ONE$PREDMED
+  ORG.data4$PRED <- SIM.data4ONE$PRED
 
 # Calculate the prediction corrected observed and simulated DVs
 	ORG.data1$pcY <- (ORG.data1$DV)*(ORG.data1$PREDMED)/(ORG.data1$PRED)
@@ -157,21 +180,25 @@
   SIM.data2$pcY <- (SIM.data2$DV)*(SIM.data2$PREDMED)/(SIM.data2$PRED)
   ORG.data3$pcY <- (ORG.data3$DV)*(ORG.data3$PREDMED)/(ORG.data3$PRED)
   SIM.data3$pcY <- (SIM.data3$DV)*(SIM.data3$PREDMED)/(SIM.data3$PRED)
+  ORG.data4$pcY <- (ORG.data4$DV)*(ORG.data4$PREDMED)/(ORG.data4$PRED)
+  SIM.data4$pcY <- (SIM.data4$DV)*(SIM.data4$PREDMED)/(SIM.data4$PRED)
 
 # Combine the 3 SIM.data's and 3 ORG.datat's into a single SIM.data and ORG.data
   SIM.data1$MODEL <- 1
   SIM.data2$MODEL <- 2
   SIM.data3$MODEL <- 3
-  SIM.data <- rbind(SIM.data1, SIM.data2, SIM.data3)
+  SIM.data4$MODEL <- 4
+  SIM.data <- rbind(SIM.data1, SIM.data2, SIM.data3, SIM.data4)
   SIM.data$MODEL <- factor(SIM.data$MODEL)
-  levels(SIM.data$MODEL) <- c("Hughes et al.", "Connarn et al.", "Guglieri-Lopez et al.")
+  levels(SIM.data$MODEL) <- c("Hughes et al.", "Connarn et al.", "Guglieri-Lopez et al.", "Dahut et al.")
 
   ORG.data1$MODEL <- 1
   ORG.data2$MODEL <- 2
   ORG.data3$MODEL <- 3
-  ORG.data <- rbind(ORG.data1, ORG.data2, ORG.data3)
+  ORG.data4$MODEL <- 4
+  ORG.data <- rbind(ORG.data1, ORG.data2, ORG.data3, ORG.data4)
   ORG.data$MODEL <- factor(ORG.data$MODEL)
-  levels(ORG.data$MODEL) <- c("Hughes et al.", "Connarn et al.", "Guglieri-Lopez et al.")
+  levels(ORG.data$MODEL) <- c("Hughes et al.", "Connarn et al.", "Guglieri-Lopez et al.", "Dahut et al.")
 
 # -----------------------------------------------------------------------------
 # Create pcVPC using Xpose method
@@ -221,10 +248,10 @@
 
 	p <- p + scale_y_log10("Prediction Corrected\nConcentration (mg/L)\n", labels = comma)
 	p <- p + scale_x_continuous("\nTime (hours)", breaks = 0:8*3)
-  p <- p + coord_cartesian(ylim = c(0.00001, 100))
+  p <- p + coord_cartesian(ylim = c(0.00001, 100),)
   p <- p + facet_wrap(~MODEL, nrow = 3)
 	p
-
-  ggsave("pcvpc_paper.png", width = 17.4, height = 23.4, units = c("cm"))
-  ggsave("pcvpc_paper.eps", width = 17.4, height = 23.4, units = c("cm"),
-    dpi = 1200, device = cairo_ps, fallback_resolution = 1200)
+  #
+  # ggsave("pcvpc_paper.png", width = 17.4, height = 23.4, units = c("cm"))
+  # ggsave("pcvpc_paper.eps", width = 17.4, height = 23.4, units = c("cm"),
+  #   dpi = 1200, device = cairo_ps, fallback_resolution = 1200)
