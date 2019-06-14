@@ -122,20 +122,25 @@
   p <- p + stat_summary(aes(x = TADBIN, y = DV), fun.y = CI90hi,
     geom = "line", colour = "red", linetype = "dashed", size = 1)
 
-	p <- p + stat_summary(aes(x = TADBIN, y = medianS), data = SIM.data.bystudy,
-    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", alpha = 0.3, fill = "red")
-  p <- p + stat_summary(aes(x = TADBIN, y = medianS), data = SIM.data.bystudy,
-    fun.y = median, geom = "line", colour = "black", size = 1)
+	p <- p + stat_summary(aes(x = TADBIN, y = medianS), 
+	  fun.ymin = "CI95lo", fun.ymax = "CI95hi",
+	  data = SIM.data.bystudy, geom = "ribbon", alpha = 0.3, fill = "red")
+  p <- p + stat_summary(aes(x = TADBIN, y = medianS), fun.y = median, 
+    data = SIM.data.bystudy, geom = "line", colour = "black", size = 1)
 
-	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S), data = SIM.data.bystudy,
-    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", alpha = 0.3, fill = "blue")
-	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S), data = SIM.data.bystudy,
-    fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
+	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S),
+	  fun.ymin = "CI95lo", fun.ymax = "CI95hi",
+    data = SIM.data.bystudy, geom = "ribbon", alpha = 0.3, fill = "blue")
+	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S), fun.y = median, 
+	  data = SIM.data.bystudy, geom = "line", colour = "black", 
+	  linetype = "dashed", size = 1)
 
-	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), data = SIM.data.bystudy,
-    geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", alpha = 0.3, fill = "blue")
-	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), data = SIM.data.bystudy,
-    fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
+	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), 
+	  fun.ymin = "CI95lo", fun.ymax = "CI95hi",
+	  data = SIM.data.bystudy, geom = "ribbon", alpha = 0.3, fill = "blue")
+	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), fun.y = median, 
+    data = SIM.data.bystudy, geom = "line", colour = "black", 
+	  linetype = "dashed", size = 1)
 
 	p <- p + scale_y_log10("Concentration (mg/L)\n")
 	p <- p + scale_x_continuous("\nTime (hours)", breaks = 0:12*2)

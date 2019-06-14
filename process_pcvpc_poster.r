@@ -61,7 +61,6 @@
   SIM.data <- SIM.data[-(SIM.data$ID %in% 119:121), ]
   ORG.data <- ORG.data[-(ORG.data$ID %in% 119:121), ]
 
-
 # -----------------------------------------------------------------------------
 # Assign factors to covariates
 # Time binning
@@ -160,20 +159,25 @@
 	p <- p + stat_summary(aes(x = TADBIN, y = pcY), fun.y = CI90hi,
 		geom = "line", colour = "red", linetype = "dashed", size = 1)
 
-	p <- p + stat_summary(aes(x = TADBIN, y = medianS), data = SIM.data.bystudy,
-	  geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "red", alpha = 0.3)
-	p <- p + stat_summary(aes(x = TADBIN, y = medianS), data = SIM.data.bystudy,
-		fun.y = median, geom = "line", colour = "black", size = 1)
+	p <- p + stat_summary(aes(x = TADBIN, y = medianS), 
+	  fun.ymin = "CI95lo", fun.ymax = "CI95hi",
+	  data = SIM.data.bystudy, geom = "ribbon", fill = "red", alpha = 0.3)
+	p <- p + stat_summary(aes(x = TADBIN, y = medianS), fun.y = median, 
+	  data = SIM.data.bystudy, geom = "line", colour = "black", size = 1)
 
-	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S), data = SIM.data.bystudy,
-	  geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "blue", alpha = 0.3)
-	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S), data = SIM.data.bystudy,
-		fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
+	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S), 
+	  fun.ymin = "CI95lo", fun.ymax = "CI95hi", 
+	  data = SIM.data.bystudy, geom = "ribbon", fill = "blue", alpha = 0.3)
+	p <- p + stat_summary(aes(x = TADBIN, y = loCI90S), fun.y = median, 
+	  data = SIM.data.bystudy, geom = "line", colour = "black", 
+	  linetype = "dashed", size = 1)
 
-	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), data = SIM.data.bystudy,
-		geom = "ribbon", fun.ymin = "CI95lo", fun.ymax = "CI95hi", fill = "blue", alpha = 0.3)
-	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), data = SIM.data.bystudy,
-		fun.y = median, geom = "line", colour = "black", linetype = "dashed", size = 1)
+	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), 
+	  fun.ymin = "CI95lo", fun.ymax = "CI95hi", 
+	  data = SIM.data.bystudy, geom = "ribbon", fill = "blue", alpha = 0.3)
+	p <- p + stat_summary(aes(x = TADBIN, y = hiCI90S), fun.y = median, 
+	  data = SIM.data.bystudy, geom = "line", colour = "black", 
+	  linetype = "dashed", size = 1)
 
 	p <- p + scale_y_log10("Prediction Corrected\nConcentration (mg/L)\n")
 	p <- p + scale_x_continuous("\nTime (hours)", breaks = 0:12*2)
